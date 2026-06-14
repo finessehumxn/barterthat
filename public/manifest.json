@@ -1,0 +1,20 @@
+{
+  "short_name": "BarterThat",
+  "name": "BarterThat — swap everything",
+  "description": "The AI-matched marketplace where you trade everything — skills, goods, gear, even co-founders — without cash.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#080808",
+  "background_color": "#080808",
+  "categories": ["shopping", "business", "lifestyle"]
+}
