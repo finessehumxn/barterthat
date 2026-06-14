@@ -4,13 +4,13 @@ const G = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
     :root {
-      --g:#16A567;--gd:#0D7A4A;--gl:rgba(22,165,103,0.12);
-      --bk:#080808;--s1:#111;--s2:#181818;--s3:#202020;--s4:#2A2A2A;
-      --tx:#F2EFE9;--t2:#9A9890;--t3:#525250;
-      --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.13);
-      --am:#E9A92A;--amb:rgba(233,169,42,0.12);
-      --rd:#E04848;--rdb:rgba(224,72,72,0.1);
-      --bl:#4F94D4;--blb:rgba(79,148,212,0.12);
+      --g:#EF5D47;--gd:#D94433;--gl:rgba(239,93,71,0.12);
+      --bk:#0E1825;--s1:#16243F;--s2:#1C2D4F;--s3:#243660;--s4:#2E4275;
+      --tx:#FFE3D1;--t2:#C4B5A8;--t3:#7A6E66;
+      --bd:rgba(255,227,209,0.08);--bd2:rgba(255,227,209,0.16);
+      --am:#E8B14A;--amb:rgba(232,177,74,0.12);
+      --rd:#EF5D47;--rdb:rgba(239,93,71,0.1);
+      --bl:#4A90D9;--blb:rgba(74,144,217,0.12);
       --pu:#9B72DD;--pub:rgba(155,114,221,0.12);
       --r:12px;--rs:7px;--rp:100px;
       --fd:'Syne',sans-serif;--fb:'Instrument Sans',sans-serif;
@@ -38,19 +38,19 @@ const G = () => (
     .card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;transition:border-color .15s}
     .card:hover{border-color:var(--bd2)}
     .pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:var(--rp);font-size:11px;font-weight:600;white-space:nowrap}
-    .pg{background:var(--gl);color:#0D9A5A}.pa{background:var(--amb);color:var(--am)}.pr{background:var(--rdb);color:var(--rd)}.pb{background:var(--blb);color:var(--bl)}.pp{background:var(--pub);color:var(--pu)}.pd{background:var(--s3);color:var(--t2)}
+    .pg{background:var(--gl);color:#EF5D47}.pa{background:var(--amb);color:var(--am)}.pr{background:var(--rdb);color:var(--rd)}.pb{background:var(--blb);color:var(--bl)}.pp{background:var(--pub);color:var(--pu)}.pd{background:var(--s3);color:var(--t2)}
     .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:800;flex-shrink:0}
     .ifield{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx);padding:10px 13px;transition:border-color .15s}
     .ifield:focus{border-color:var(--g)}.ifield::placeholder{color:var(--t3)}
     select.ifield option{background:var(--s2)}
     .ndot{width:7px;height:7px;border-radius:50%;background:var(--g);animation:pulse 2s infinite;flex-shrink:0}
     .b2b-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--rp);font-size:10px;font-weight:700;background:var(--pub);color:var(--pu);border:1px solid rgba(155,114,221,0.3)}
-    .credit{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--rp);font-size:12px;font-weight:700;background:linear-gradient(90deg,rgba(233,169,42,0.18),rgba(155,114,221,0.18));color:var(--am);border:1px solid rgba(233,169,42,0.3)}
+    .credit{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--rp);font-size:12px;font-weight:700;background:linear-gradient(90deg,rgba(232,177,74,0.18),rgba(155,114,221,0.18));color:var(--am);border:1px solid rgba(232,177,74,0.3)}
     .chip{padding:5px 12px;border-radius:var(--rp);font-size:12px;cursor:pointer;border:1px solid var(--bd);background:var(--s3);color:var(--t2);transition:all .15s}
-    .chip.on{border-color:var(--g);background:var(--gl);color:#0D9A5A}
+    .chip.on{border-color:var(--g);background:var(--gl);color:#EF5D47}
     .arrowline{flex:1;height:2px;min-width:14px;background-image:linear-gradient(90deg,var(--g) 55%,transparent 55%);background-size:9px 2px;animation:flow .6s linear infinite}
     .maprow{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;animation:drift 5s ease-in-out infinite}
-    .ring{position:absolute;border-radius:50%;border:1px solid rgba(22,165,103,0.18)}
+    .ring{position:absolute;border-radius:50%;border:1px solid rgba(239,93,71,0.18)}
     .feed{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--bd)}
     .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,0.18);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
   `}</style>
@@ -252,11 +252,11 @@ function Av({ ini, avc, size = 38, style = {}, onClick }) {
   return <div className="av" onClick={onClick} style={{ width: size, height: size, background: avc, fontSize: size * .32, color: "rgba(255,255,255,0.9)", ...style }}>{ini}</div>;
 }
 function Score({ score }) {
-  const c = score >= 90 ? "#16A567" : score >= 75 ? "#E9A92A" : "#E04848";
+  const c = score >= 90 ? "#EF5D47" : score >= 75 ? "#E8B14A" : "#EF5D47";
   return <span style={{ fontSize: 11, fontWeight: 700, color: c, background: `${c}18`, padding: "2px 7px", borderRadius: 100 }}>⬡ {score}</span>;
 }
 function Stars({ r }) {
-  return <span style={{ fontSize: 11 }}>{[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= Math.round(r) ? "#E9A92A" : "#333" }}>★</span>)}<span style={{ color: "var(--t2)", marginLeft: 3 }}>{(r||0).toFixed(1)}</span></span>;
+  return <span style={{ fontSize: 11 }}>{[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= Math.round(r) ? "#E8B14A" : "#333" }}>★</span>)}<span style={{ color: "var(--t2)", marginLeft: 3 }}>{(r||0).toFixed(1)}</span></span>;
 }
 function TypeBadge({ t }) {
   const m = TYPE_META[t] || TYPE_META.service;
@@ -279,7 +279,7 @@ function CertBadge({ cert }) {
   return <span className="pill pp" style={{ margin: "2px 3px 2px 0" }}>{cert}</span>;
 }
 function OwnedBadge({ id }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: "var(--rp)", background: "linear-gradient(90deg,rgba(22,165,103,0.16),rgba(233,169,42,0.16))", color: "var(--am)", border: "1px solid rgba(233,169,42,0.28)", margin: "2px 3px 2px 0" }}>♥ {BADGE_LABEL(id)}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: "var(--rp)", background: "linear-gradient(90deg,rgba(239,93,71,0.16),rgba(232,177,74,0.16))", color: "var(--am)", border: "1px solid rgba(232,177,74,0.28)", margin: "2px 3px 2px 0" }}>♥ {BADGE_LABEL(id)}</span>;
 }
 function SpecTag({ s }) {
   return <span style={{ fontSize: 10, color: "var(--t2)", padding: "2px 8px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", margin: "2px 3px 2px 0", display: "inline-block" }}>{s}</span>;
@@ -290,7 +290,7 @@ function Splash({ onEnter }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 20px", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "44px 44px", opacity: .5 }} />
-      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(22,165,103,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div className="fu" style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
         <div className="pill pp" style={{ marginBottom: 18 }}>◆ AI-matched · circular trades · zero cash</div>
         <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}>
@@ -473,7 +473,7 @@ function RequestDeckModal({ onClose }) {
               </div>
               <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>message</label><textarea className="ifield" rows={3} value={f.message} onChange={e => set("message", e.target.value)} placeholder="what caught your eye?" style={{ resize: "none" }} /></div>
             </div>
-            {status === "error" && <div style={{ background: "var(--rdb)", border: "1px solid rgba(224,72,72,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", fontSize: 12, color: "var(--rd)", marginTop: 12 }}>Something went wrong sending that. Try again, or email {PITCH.contactEmail} directly.</div>}
+            {status === "error" && <div style={{ background: "var(--rdb)", border: "1px solid rgba(239,93,71,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", fontSize: 12, color: "var(--rd)", marginTop: 12 }}>Something went wrong sending that. Try again, or email {PITCH.contactEmail} directly.</div>}
             <button className="btn bp" style={{ width: "100%", marginTop: 16 }} disabled={!valid || status === "sending"} onClick={submit}>
               {status === "sending" ? "sending…" : "send request →"}
             </button>
@@ -553,7 +553,7 @@ function InvestorPitch({ onBack, onEnter }) {
             <div style={{ display: "flex", alignItems: "flex-end", gap: 7, height: 130 }}>
               {GMV.map((g, i) => (
                 <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: "100%", height: `${(g.v / maxV) * 100}%`, background: i === GMV.length - 1 ? "var(--g)" : "linear-gradient(180deg,var(--gd),rgba(22,165,103,0.25))", borderRadius: "4px 4px 0 0", minHeight: 4 }} />
+                  <div style={{ width: "100%", height: `${(g.v / maxV) * 100}%`, background: i === GMV.length - 1 ? "var(--g)" : "linear-gradient(180deg,var(--gd),rgba(239,93,71,0.25))", borderRadius: "4px 4px 0 0", minHeight: 4 }} />
                   <div style={{ fontSize: 8, color: "var(--t3)" }}>{g.v}</div>
                 </div>
               ))}
@@ -777,7 +777,7 @@ function Signup({ onDone }) {
             </select>
             <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>B2B swaps match within 1 bracket — both parties have something to lose</div>
           </div>}
-          <div style={{ background: "var(--amb)", border: "1px solid rgba(233,169,42,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 That Credits</strong> in your account to get you trading.</div>
+          <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 That Credits</strong> in your account to get you trading.</div>
         </div>}
 
         {step === 1 && <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
@@ -983,7 +983,7 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
           {["All", ...Object.keys(TYPE_META)].map(tk => (
-            <button key={tk} onClick={() => setType(tk)} style={{ padding: "3px 10px", borderRadius: "var(--rp)", border: `1px solid ${type === tk ? "var(--g)" : "var(--bd)"}`, background: type === tk ? "var(--gl)" : "transparent", color: type === tk ? "#0D9A5A" : "var(--t2)", fontSize: 11, cursor: "pointer" }}>{tk === "All" ? "all types" : TYPE_META[tk].l}</button>
+            <button key={tk} onClick={() => setType(tk)} style={{ padding: "3px 10px", borderRadius: "var(--rp)", border: `1px solid ${type === tk ? "var(--g)" : "var(--bd)"}`, background: type === tk ? "var(--gl)" : "transparent", color: type === tk ? "#EF5D47" : "var(--t2)", fontSize: 11, cursor: "pointer" }}>{tk === "All" ? "all types" : TYPE_META[tk].l}</button>
           ))}
         </div>
       </div>
@@ -993,7 +993,7 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
           <button onClick={() => setShowCats(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", background: showCats ? "var(--s3)" : "transparent", color: "var(--t2)", cursor: "pointer", fontSize: 12 }}>
             {showCats ? "▲" : "▼"} browse all {CATS.length} categories
           </button>
-          <button onClick={() => setShowSupport(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: `1px solid ${support.length ? "rgba(233,169,42,0.4)" : "var(--bd)"}`, background: support.length ? "var(--amb)" : (showSupport ? "var(--s3)" : "transparent"), color: support.length ? "var(--am)" : "var(--t2)", cursor: "pointer", fontSize: 12 }}>
+          <button onClick={() => setShowSupport(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: `1px solid ${support.length ? "rgba(232,177,74,0.4)" : "var(--bd)"}`, background: support.length ? "var(--amb)" : (showSupport ? "var(--s3)" : "transparent"), color: support.length ? "var(--am)" : "var(--t2)", cursor: "pointer", fontSize: 12 }}>
             ♥ support community-owned{support.length ? ` · ${support.length}` : ""}
           </button>
         </div>
@@ -1010,9 +1010,9 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
         )}
         {showCats && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(165px,1fr))", gap: 6, marginBottom: 12 }}>
-            <button onClick={() => { setCat("All"); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === "All" ? "var(--g)" : "var(--bd)"}`, background: cat === "All" ? "var(--gl)" : "var(--s3)", color: cat === "All" ? "#0D9A5A" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>◈ All categories</button>
+            <button onClick={() => { setCat("All"); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === "All" ? "var(--g)" : "var(--bd)"}`, background: cat === "All" ? "var(--gl)" : "var(--s3)", color: cat === "All" ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>◈ All categories</button>
             {CATS.map(c => (
-              <button key={c.id} onClick={() => { setCat(c.label); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === c.label ? "var(--g)" : "var(--bd)"}`, background: cat === c.label ? "var(--gl)" : "var(--s3)", color: cat === c.label ? "#0D9A5A" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>{c.icon} {c.label}</button>
+              <button key={c.id} onClick={() => { setCat(c.label); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === c.label ? "var(--g)" : "var(--bd)"}`, background: cat === c.label ? "var(--gl)" : "var(--s3)", color: cat === c.label ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>{c.icon} {c.label}</button>
             ))}
           </div>
         )}
@@ -1044,10 +1044,10 @@ function MapView({ listings, onView }) {
   const pos = (id) => { const a = (id * 2654435761) % 1000 / 1000, b = (id * 40503) % 1000 / 1000; return { left: 8 + a * 80, top: 10 + b * 74 }; };
   return (
     <div style={{ padding: "8px 14px" }}>
-      <div style={{ position: "relative", height: 380, borderRadius: "var(--r)", border: "1px solid var(--bd)", overflow: "hidden", background: "radial-gradient(circle at 50% 50%, rgba(22,165,103,0.08), var(--s1) 70%)" }}>
+      <div style={{ position: "relative", height: 380, borderRadius: "var(--r)", border: "1px solid var(--bd)", overflow: "hidden", background: "radial-gradient(circle at 50% 50%, rgba(239,93,71,0.08), var(--s1) 70%)" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "38px 38px", opacity: .4 }} />
         {[120, 230, 340].map((s, i) => <div key={i} className="ring" style={{ width: s, height: s, left: `calc(50% - ${s/2}px)`, top: `calc(50% - ${s/2}px)` }} />)}
-        <div style={{ position: "absolute", left: "calc(50% - 7px)", top: "calc(50% - 7px)", width: 14, height: 14, borderRadius: "50%", background: "var(--g)", boxShadow: "0 0 0 4px rgba(22,165,103,0.2)" }}>
+        <div style={{ position: "absolute", left: "calc(50% - 7px)", top: "calc(50% - 7px)", width: 14, height: 14, borderRadius: "50%", background: "var(--g)", boxShadow: "0 0 0 4px rgba(239,93,71,0.2)" }}>
           <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "var(--g)", animation: "ping 2s infinite" }} />
         </div>
         {pts.map(l => { const p = pos(l.id); return (
@@ -1247,7 +1247,7 @@ function Community({ listings, user, onView, onPropose, onNav }) {
       <Section title="⚇ Community Squads" sub="Rotating crews tackling jobs no one should face alone" items={squads} color="var(--g)" />
       <Section title="♡ Mutual Aid" sub="Neighbors helping neighbors — give what you can, get what you need" items={aid} color="var(--bl)" />
 
-      <div className="card" style={{ background: "var(--blb)", borderColor: "rgba(79,148,212,0.25)" }}>
+      <div className="card" style={{ background: "var(--blb)", borderColor: "rgba(74,144,217,0.25)" }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--bl)", marginBottom: 6 }}>🔒 protected by design</div>
         <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Every member is platform-verified with a That Score. Cash & credit top-ups sit in escrow until both sides confirm. B2B & venture deals generate a smart contract. Community trust, enforced by tech.</div>
       </div>
@@ -1298,7 +1298,7 @@ function Detail({ l, user, onBack, onPropose }) {
       </div>
 
       {l.b2b && (
-        <div style={{ background: taxMatch ? "rgba(22,165,103,0.08)" : "var(--rdb)", border: `1px solid ${taxMatch ? "rgba(22,165,103,0.25)" : "rgba(224,72,72,0.3)"}`, borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 10, fontSize: 12 }}>
+        <div style={{ background: taxMatch ? "rgba(239,93,71,0.08)" : "var(--rdb)", border: `1px solid ${taxMatch ? "rgba(239,93,71,0.25)" : "rgba(239,93,71,0.3)"}`, borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 10, fontSize: 12 }}>
           <div style={{ fontWeight: 700, color: taxMatch ? "var(--g)" : "var(--rd)", marginBottom: 4 }}>{taxMatch ? "✓ B2B bracket eligible" : "⚠ B2B bracket mismatch"}</div>
           <div style={{ color: "var(--t2)", lineHeight: 1.5 }}>{l.name.split(" ")[0]} is in bracket <strong>{l.taxBracket || "$44k–$95k"}</strong>. {taxMatch ? "You're within range for a protected B2B swap." : "B2B swaps are limited to within 1 bracket for mutual protection."}</div>
         </div>
@@ -1331,11 +1331,11 @@ function Detail({ l, user, onBack, onPropose }) {
       )}
 
       {l.rate > 0 && <>
-        <div style={{ background: "rgba(22,165,103,0.07)", border: "1px solid rgba(22,165,103,0.2)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
+        <div style={{ background: "rgba(239,93,71,0.07)", border: "1px solid rgba(239,93,71,0.2)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--g)", marginBottom: 5 }}>⇄ value match zone</div>
           <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Fair swap: any service or item valued <strong style={{ color: "var(--tx)" }}>${Math.round(l.rate * .9)}–${Math.round(l.rate * 1.1)}</strong>. Balance the rest with That Credits.</div>
         </div>
-        <div style={{ background: "var(--amb)", border: "1px solid rgba(233,169,42,0.25)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
+        <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--am)", marginBottom: 9 }}>◎ top-up calculator</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>your value</div><input type="number" value={myRate} min={10} step={5} onChange={e => setMyRate(+e.target.value)} className="ifield" style={{ width: 75, textAlign: "center", padding: "7px 8px" }} /></div>
@@ -1348,7 +1348,7 @@ function Detail({ l, user, onBack, onPropose }) {
         </div>
       </>}
 
-      <div style={{ background: "var(--blb)", border: "1px solid rgba(79,148,212,0.2)", borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 16 }}>
+      <div style={{ background: "var(--blb)", border: "1px solid rgba(74,144,217,0.2)", borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--bl)", marginBottom: 4 }}>🔒 escrow protection</div>
         <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5 }}>Top-ups held by BarterThat until both confirm delivery. 72-hr dispute window.{l.b2b || l.type === "venture" ? " This deal includes a smart contract." : ""}</div>
       </div>
@@ -1402,7 +1402,7 @@ function ProposeModal({ l, user, onClose, onSend }) {
                 <div style={{ fontSize: 10, color: "var(--t2)" }}>{thH} × ${l.rate}</div>
               </div>
             </div>
-            {diff !== 0 && <div style={{ padding: "8px 12px", background: diff > 0 ? "var(--gl)" : "var(--amb)", borderRadius: "var(--rs)", marginBottom: 12, fontSize: 12, color: diff > 0 ? "#0D9A5A" : "var(--am)" }}>
+            {diff !== 0 && <div style={{ padding: "8px 12px", background: diff > 0 ? "var(--gl)" : "var(--amb)", borderRadius: "var(--rs)", marginBottom: 12, fontSize: 12, color: diff > 0 ? "#EF5D47" : "var(--am)" }}>
               {diff > 0 ? `${l.name.split(" ")[0]} adds a $${Math.abs(diff)} top-up to you` : `you add a $${Math.abs(diff)} top-up — pay with ⬡ credits or cash, held in escrow`}
             </div>}
             <div style={{ marginBottom: 10 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your offer</label><input className="ifield" value={svc} onChange={e => setSvc(e.target.value)} placeholder="what will you provide?" /></div>
@@ -1530,7 +1530,7 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 10, background: "radial-gradient(circle at 90% 0%, rgba(233,169,42,0.12), var(--s2) 60%)" }}>
+      <div className="card" style={{ marginBottom: 10, background: "radial-gradient(circle at 90% 0%, rgba(232,177,74,0.12), var(--s2) 60%)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 2 }}>That Credits balance</div>
@@ -1798,7 +1798,7 @@ export default function App() {
       {renderMain()}
       <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} />
       {proposeTo && <ProposeModal l={proposeTo} user={user} onClose={() => setProposeTo(null)} onSend={handleSend} />}
-      {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(233,169,42,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
+      {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(232,177,74,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
     </>
   );
 }
