@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 
 const G = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     :root {
       --g:#EF5D47;--gd:#D94433;--gl:rgba(239,93,71,0.12);
       --bk:#0E1825;--s1:#16243F;--s2:#1C2D4F;--s3:#243660;--s4:#2E4275;
@@ -13,7 +13,7 @@ const G = () => (
       --bl:#4A90D9;--blb:rgba(74,144,217,0.12);
       --pu:#9B72DD;--pub:rgba(155,114,221,0.12);
       --r:12px;--rs:7px;--rp:100px;
-      --fd:'Syne',sans-serif;--fb:'Instrument Sans',sans-serif;
+      --fd:'Inter',sans-serif;--fb:'Inter',sans-serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bk);color:var(--tx);font-family:var(--fb);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}

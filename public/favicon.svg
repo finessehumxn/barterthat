@@ -1,9 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" role="img" aria-label="BarterThat">
-  <rect width="44" height="44" rx="12" fill="#16243F"/>
-  <g stroke="#EF5D47" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M11 18 H30"/>
-    <path d="M26 13 L33 18 L26 23"/>
-    <path d="M33 26 H14"/>
-    <path d="M18 21 L11 26 L18 31"/>
-  </g>
+  <rect width="44" height="44" rx="12" fill="#EF5D47"/>
+  <text x="22" y="31" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="800" fill="#FFE3D1" letter-spacing="-0.5">Bt</text>
 </svg>

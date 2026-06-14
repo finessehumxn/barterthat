@@ -1,12 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 238 44" width="238" height="44" role="img" aria-label="BarterThat">
-  <rect x="2" y="2" width="40" height="40" rx="11" fill="#EF5D47"/>
-  <g stroke="#FFE3D1" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M13 18 H28"/>
-    <path d="M25 14 L30 18 L25 22"/>
-    <path d="M31 26 H16"/>
-    <path d="M19 22 L14 26 L19 30"/>
-  </g>
-  <text x="54" y="31" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" font-weight="800" letter-spacing="-1">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 48" width="252" height="48" role="img" aria-label="BarterThat">
+  <rect x="2" y="4" width="40" height="40" rx="12" fill="#EF5D47"/>
+  <text x="22" y="33" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="23" font-weight="800" fill="#FFE3D1" letter-spacing="-0.5">Bt</text>
+  <text x="53" y="33" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-1.2">
     <tspan fill="#FFE3D1">Barter</tspan><tspan fill="#EF5D47">That</tspan>
   </text>
+  <circle cx="244" cy="15" r="4" fill="#E8B14A"/>
 </svg>
