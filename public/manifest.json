@@ -1,22 +1,14 @@
 {
-  "name": "MedCompanion AI",
-  "short_name": "MedCompanion",
-  "description": "Understand your health in plain language",
-  "start_url": "/app",
-  "display": "standalone",
-  "background_color": "#FDFBF7",
-  "theme_color": "#0D4855",
-  "orientation": "portrait",
+  "short_name": "BarterThat",
+  "name": "BarterThat — Swap Skills. Build Community.",
   "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+    { "src": "favicon.png", "sizes": "64x64", "type": "image/png" },
+    { "src": "logo192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "logo512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#16243F",
+  "background_color": "#0D1B2A",
+  "orientation": "portrait-primary"
 }
