@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { ALL_CATS } from "./categories";
 
 const G = () => (
   <style>{`
@@ -57,30 +58,7 @@ const G = () => (
 );
 
 // ── CATEGORIES — "everything is barterable" ──────────────────────────────────
-const CATS = [
-  { id:"talent", label:"Talent & Ventures", icon:"◆", t:"venture", subs:["Co-founder search","Technical co-founder / CTO","Fractional CTO / CMO / CFO","Startup advisor & mentor","Pitch deck & presentation design","Investor pitch coaching","Fundraising & grant help","MVP / prototype build","Business strategy","Equity-for-services","Brand & GTM partner","Recruiting & hiring help"] },
-  { id:"survival", label:"Survival & Preparedness", icon:"▲", t:"experience", subs:["Wilderness survival & bushcraft","First aid & CPR training","Self-defense & safety","Food preservation & canning","Off-grid & solar setup","Water purification","Emergency & disaster planning","Foraging & wild food","Firearms safety (licensed)","Homesteading basics","Ham radio & comms"] },
-  { id:"aid", label:"Mutual Aid & Community", icon:"⚇", t:"aid", subs:["Rides & transportation help","Moving & heavy lifting","Meal trains & food drops","Childcare circle","Elder check-ins & companionship","Job referrals & resume help","Translation & interpreting","Repair café (fix it together)","Disaster & crisis response","Skill mentorship","Tool & equipment lending circle","Newcomer & immigrant support"] },
-  { id:"goods", label:"Goods & Resale", icon:"⬓", t:"goods", subs:["Furniture & home decor","Electronics & gadgets","Clothing, shoes & sneakers","Collectibles & trading cards","Tools & hardware","Baby & kids gear","Appliances","Books & media","Instruments & gear","Sporting goods","Handmade & vintage","Jewelry & watches"] },
-  { id:"rentals", label:"Rentals & Lending", icon:"⟳", t:"rental", subs:["Tools & power equipment","Party & event rentals","Vehicles & trailers","Cameras & A/V gear","Spaces, studios & venues","Instruments","Camping & outdoor gear","Storage space","Pop-up / booth space","Bikes & scooters"] },
-  { id:"digital", label:"Digital & Virtual", icon:"◧", t:"digital", subs:["Templates & presets","Online courses","Ebooks & guides","Software & licenses","Domains & websites","AI prompts & models","Shoutouts & ad swaps","Game items & accounts","Digital art & NFTs","Stock photos & video","Newsletters & audiences"] },
-  { id:"bigticket", label:"Big-Ticket & Experiences", icon:"✦", t:"experience", subs:["Vehicles & RVs","Property / stay nights","Timeshare & cabin swaps","Event & concert tickets","Travel experiences","Classes, retreats & workshops","Boats & watercraft","Land & lot access","Memberships & passes"] },
-  { id:"beauty", label:"Beauty & Wellness", icon:"❋", t:"service", subs:["Hair braiding & locs","Natural hair styling","Lash extensions","Nail art & manicures","Wig ventilation & making","Esthetician services","Massage therapy","IV hydration therapy","Chiropractic care","Personal training","Yoga & breathwork","Barber services","Makeup artistry","Microblading"] },
-  { id:"food", label:"Food & Farming", icon:"◉", t:"goods", subs:["Meal prepping & delivery","Sourdough bread & baking","Custom cakes & pastries","Food by the pound (beef, chicken, etc)","Farm eggs, milk & dairy","Honey & bee products","Fresh herbs & spice bundles","Fruits & vegetables","Catering & event food","Hot sauce & preserves"] },
-  { id:"home", label:"Home & Trade Services", icon:"⌂", t:"service", subs:["Interior & exterior painting","Electrical work (licensed)","Plumbing (licensed)","HVAC services","Roofing (licensed)","General handyman","Home remodeling","Patio & deck installation","Gutter cleaning","TV & wall mounting","Flooring installation","Pressure washing","Solar installation (licensed)"] },
-  { id:"garden", label:"Garden & Outdoor", icon:"❧", t:"service", subs:["Lawn care & mowing","Landscaping & design","Plant care & propagation","Tree trimming & removal","Garden planting","Snow removal","Herb garden setup","Composting & soil prep","Beekeeping setup"] },
-  { id:"creative", label:"Creative & Design", icon:"◈", t:"service", subs:["Graphic design","Photography","Videography & editing","Logo & brand identity","Social media content","Illustration & art","Music production","Podcast editing","Crochet & fiber arts","Candles & body products","Pottery & ceramics","Custom clothing & sewing"] },
-  { id:"tech", label:"Tech & Digital", icon:"⬡", t:"service", subs:["Web development","App development","IT support & repair","Network setup","SEO & digital marketing","Data analysis","AI & automation","Computer repair","Phone repair","Smart home setup","Business digitization & organizing"] },
-  { id:"events", label:"Events & Celebrations", icon:"◇", t:"service", subs:["Wedding planning","Event coordination","Florist & floral design","DJ services","Live music","Party rentals","Photo booth rental","Event decorating","Venue consulting"] },
-  { id:"care", label:"Care & Support", icon:"♡", t:"service", subs:["Child care & babysitting","Elder care (CNA)","Pet sitting","Pet grooming","Pet food & treats","Dog training","Homework tutoring","Special needs support","Postpartum doula","Senior companionship"] },
-  { id:"lessons", label:"Lessons & Coaching", icon:"◎", t:"service", subs:["Music lessons (all instruments)","Language tutoring","Academic tutoring","Business coaching","Life coaching","Cooking classes","Art & drawing lessons","Dance lessons","Horseback riding lessons","Martial arts instruction","Financial literacy coaching"] },
-  { id:"auto", label:"Auto & Transportation", icon:"⊕", t:"service", subs:["Car detailing","Auto maintenance & oil change","Tire rotation & balancing","Car wash","Mobile mechanic","Car audio installation","Parking spot rental","Airport shuttle","RV maintenance"] },
-  { id:"professional", label:"Professional & B2B", icon:"◻", t:"service", subs:["Accounting & bookkeeping","Tax preparation","Legal consulting","Business consulting","HR consulting","Notary services","Grant writing","Business plan writing","Payroll services"] },
-  { id:"travel", label:"Travel & Stays", icon:"✈", t:"experience", subs:["Discounted flights (travel agent)","Hotel deals","Vacation planning","House sitting","Airbnb co-hosting","Local tour guide","Travel photography","Group travel coordination"] },
-  { id:"org", label:"Organization & Lifestyle", icon:"▣", t:"service", subs:["Home organizing & decluttering","Digital business organizing","Closet organization","Moving & packing help","Laundry & folding service","Personal shopping","Wardrobe styling","Errand running"] },
-  { id:"health", label:"Health & Medical", icon:"✚", t:"service", subs:["Dental services (licensed)","Nutrition coaching","Mental health coaching","Physical therapy (licensed)","Herbal medicine consulting","Acupuncture (licensed)","Reiki & energy healing","Doula services"] },
-  { id:"community", label:"Community Squads", icon:"⚇", t:"squad", subs:["Friend group rotation (gutters, repairs)","Neighborhood watch network","Community garden share","Tool & equipment lending","Group grocery co-op","Moving squad rotation","Emergency home repair crew","Senior help brigade","Community childcare circle","Skill swap circles"] },
-];
+const CATS = ALL_CATS;
 const CAT_LABELS = CATS.map(c => c.label);
 
 const TYPE_META = {
