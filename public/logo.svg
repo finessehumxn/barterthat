@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 48" width="252" height="48" role="img" aria-label="BarterThat">
-  <rect x="2" y="4" width="40" height="40" rx="12" fill="#EF5D47"/>
-  <text x="22" y="33" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="23" font-weight="800" fill="#FFE3D1" letter-spacing="-0.5">Bt</text>
-  <text x="53" y="33" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-1.2">
-    <tspan fill="#FFE3D1">Barter</tspan><tspan fill="#EF5D47">That</tspan>
-  </text>
-  <circle cx="244" cy="15" r="4" fill="#E8B14A"/>
-</svg>
