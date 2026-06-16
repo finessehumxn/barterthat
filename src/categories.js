@@ -1340,6 +1340,46 @@ export const EXTRA_CATS = [
       "Tabletop & D&D game mastering","Board game teaching session",
     ]
   },
+  {
+    id: "media_production",
+    label: "Media, Content & Production",
+    icon: "▶",
+    both: true,
+    subs: [
+      "Voiceover — commercial","Voiceover — narration / audiobook","Voiceover — character & animation",
+      "Voiceover — IVR / phone systems","Voiceover — explainer video","Voiceover — e-learning",
+      "UGC video — product review","UGC video — unboxing","UGC video — testimonial",
+      "UGC video — TikTok / Reels style","UGC photo content","UGC content bundle (creator)",
+      "Music video — concept & treatment","Music video — full production","Music video — performance shoot",
+      "Music video editing","Lyric video creation","Visualizer creation",
+      "Video editing — short form","Video editing — long form / YouTube","Color grading",
+      "Motion graphics & titles","2D animation","3D animation & VFX",
+      "Podcast production & editing","Podcast launch consulting","Audio mixing & mastering",
+      "Jingle & sonic logo","Original score / soundtrack","Beat production",
+      "Photography — product","Photography — portrait / headshot","Photography — event",
+      "Photo retouching & editing","Drone / aerial footage","Green screen / virtual set shoot",
+      "Scriptwriting — video / ad","Storyboarding","Live stream production",
+      "Documentary / short film","Commercial / brand film","Recording studio session",
+    ]
+  },
+  {
+    id: "audiences_gigs",
+    label: "Paid Audiences, Extras & Live Gigs",
+    icon: "✺",
+    both: false,
+    subs: [
+      "Paid studio audience member","Seat filler — awards / shows","TV / film background extra",
+      "Crowd hype & energy crew","Concert / event crowd filler","Live audience laugh / reaction",
+      "Brand ambassador — event","Promotional model","Trade show booth staffing",
+      "Street team & flyering","Sampling & product demo","Mascot / costume character",
+      "Hype man / MC for events","Flash mob participant","Protest / rally attendance (lawful)",
+      "Grand opening crowd","Line stander / queue holder","Wedding guest / plus-one (social)",
+      "Birthday & party crowd","Karaoke / open-mic support","Audience for livestream / podcast",
+      "Focus group participant","Survey & research participant","Mystery shopper",
+      "Event check-in & ushering","Coat check & guest services","Backstage & runner support",
+      "Festival & event volunteer crew","Stadium / arena fan section","Background voices / crowd audio",
+    ]
+  },
 ];
 
 export const ALL_CATS = [...CATS, ...EXTRA_CATS];
