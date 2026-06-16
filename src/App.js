@@ -189,7 +189,7 @@ const ACT_TEMPLATES = [
   n => ({ ic:"✦", c:"var(--g)", txt:`${n} just posted a new listing nearby` }),
   n => ({ ic:"⇄", c:"var(--am)", txt:`${n} proposed a swap moments ago` }),
   n => ({ ic:"✓", c:"var(--g)", txt:`${n} completed a verified swap` }),
-  n => ({ ic:"⬡", c:"var(--pu)", txt:`${n} earned BT Credits on a deal` }),
+  n => ({ ic:"⬡", c:"var(--pu)", txt:`${n} earned Barter Tokens on a deal` }),
   n => ({ ic:"🔄", c:"var(--bl)", txt:`AI matched ${n} into a circular trade` }),
 ];
 
@@ -298,7 +298,7 @@ function Splash({ onEnter }) {
           <button onClick={() => onEnter("pitch")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--pu)", fontSize: 12, fontWeight: 600, letterSpacing: ".03em" }}>◆ investors — see the pitch →</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, maxWidth: 560, margin: "0 auto 26px" }}>
-          {[["◆ AI Swap Matchmaker", "finds 3 & 4-way trade loops"], ["⬡ BT Credits", "bank value, spend anywhere"], ["📍 Hyperlocal & live", "see swaps happening now"], ["🔒 Escrow + BT Score", "verified, protected deals"]].map(([t, s]) => (
+          {[["◆ AI Swap Matchmaker", "finds 3 & 4-way trade loops"], ["⬡ Barter Tokens", "bank value, spend anywhere"], ["📍 Hyperlocal & live", "see swaps happening now"], ["🔒 Escrow + BT Score", "verified, protected deals"]].map(([t, s]) => (
             <div key={t} style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "12px 14px", textAlign: "left" }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{t}</div>
               <div style={{ fontSize: 11, color: "var(--t3)" }}>{s}</div>
@@ -352,7 +352,7 @@ const PITCH = {
   // — business model —
   revenue: [
     ["Top-up take rate", "5% on cash & credit balancing a swap — our core, scales with GMV."],
-    ["BT Credits float", "Interest on held balances + breakage on unspent credits."],
+    ["Barter Tokens float", "Interest on held balances + breakage on unspent credits."],
     ["BarterThat+ subscription", "Priority matchmaking, unlimited proposals, analytics — $12/mo."],
     ["B2B & Ventures tier", "Verification, smart contracts, escrow on high-value deals — premium take."],
     ["Promoted listings", "Featured placement & boosted match priority for sellers."],
@@ -365,7 +365,7 @@ const PITCH = {
     ["15%", "Trust, ops & compliance"],
     ["10%", "G&A"],
   ],
-  milestones: "Milestones: 25 cities · 5M verified traders · BT Credits ledger live · $1B GMV run-rate · Series A in 18 months.",
+  milestones: "Milestones: 25 cities · 5M verified traders · Barter Tokens ledger live · $1B GMV run-rate · Series A in 18 months.",
   // — contact —
   contactEmail: "founders@barterthat.com",
   company: "BarterThat, Inc.",
@@ -513,7 +513,7 @@ function InvestorPitch({ onBack, onEnter }) {
         {/* SOLUTION */}
         <PitchSection tag="02 · the solution" title="An AI matching engine that turns 'no match' into a chain of swaps everyone wins.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 10 }}>
-            {[["◆", "AI Swap Matchmaker", "Proprietary graph engine finds direct, 3-way & 4-way circular trades in real time. No competitor does multi-party.", "var(--pu)"], ["⬡", "BT Credits", "A barter currency that balances any deal — creating liquidity, a float, and powerful retention lock-in.", "var(--am)"], ["🔒", "Trust layer", "Platform-verified profiles, BT Score, escrow & smart contracts make cashless trade safe enough to scale.", "var(--bl)"], ["⚇", "Everything-exchange", "22 categories: services, goods, rentals, digital, ventures, survival, mutual aid. One graph, infinite matches.", "var(--g)"]].map(([ic, h, b, c]) => (
+            {[["◆", "AI Swap Matchmaker", "Proprietary graph engine finds direct, 3-way & 4-way circular trades in real time. No competitor does multi-party.", "var(--pu)"], ["⬡", "Barter Tokens", "A barter currency that balances any deal — creating liquidity, a float, and powerful retention lock-in.", "var(--am)"], ["🔒", "Trust layer", "Platform-verified profiles, BT Score, escrow & smart contracts make cashless trade safe enough to scale.", "var(--bl)"], ["⚇", "Everything-exchange", "22 categories: services, goods, rentals, digital, ventures, survival, mutual aid. One graph, infinite matches.", "var(--g)"]].map(([ic, h, b, c]) => (
               <div key={h} className="card">
                 <div style={{ fontSize: 20, color: c, marginBottom: 7 }}>{ic}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5 }}>{h}</div>
@@ -571,7 +571,7 @@ function InvestorPitch({ onBack, onEnter }) {
           <div className="card" style={{ lineHeight: 1.7, fontSize: 13, color: "var(--t2)" }}>
             <p style={{ marginBottom: 10 }}><strong style={{ color: "var(--tx)" }}>Combinatorial network effects.</strong> Each new trader doesn't add one match — they unlock thousands of new multi-party loops. Liquidity compounds non-linearly.</p>
             <p style={{ marginBottom: 10 }}><strong style={{ color: "var(--tx)" }}>Data moat.</strong> Proprietary supply/demand and verified-reputation data train a matching engine no new entrant can replicate cold.</p>
-            <p><strong style={{ color: "var(--tx)" }}>Currency lock-in.</strong> BT Credits keep value inside the ecosystem — switching costs rise the more you trade.</p>
+            <p><strong style={{ color: "var(--tx)" }}>Currency lock-in.</strong> Barter Tokens keep value inside the ecosystem — switching costs rise the more you trade.</p>
           </div>
         </PitchSection>
 
@@ -764,7 +764,7 @@ function Signup({ onDone }) {
             </select>
             <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>B2B swaps match within 1 bracket — both parties have something to lose</div>
           </div>}
-          <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 BT Credits</strong> in your account to get you trading.</div>
+          <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 Barter Tokens</strong> in your account to get you trading.</div>
         </div>}
 
         {step === 1 && <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
@@ -791,7 +791,7 @@ function Signup({ onDone }) {
           </div>
           <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "var(--t2)", cursor: "pointer" }}>
             <input type="checkbox" checked={form.acceptTopup} onChange={e => setForm(f => ({ ...f, acceptTopup: e.target.checked }))} style={{ accentColor: "var(--g)", width: 15, height: 15 }} />
-            accept BT Credits / cash top-up to balance value
+            accept Barter Tokens / cash top-up to balance value
           </label>
           <div style={{ borderTop: "1px solid var(--bd)", paddingTop: 13 }}>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 3 }}>community badges <span style={{ color: "var(--t3)" }}>— optional, self-identify to help your community find & support you</span></label>
@@ -863,7 +863,7 @@ function Signup({ onDone }) {
           <div style={{ fontSize: 44, marginBottom: 14, color: "var(--g)" }}>✦</div>
           <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 10, color: "var(--g)" }}>you're live.</div>
           <p style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.7, marginBottom: 16 }}>Listing active. Platforms linked. AI Matchmaker is already scanning for your swaps.</p>
-          <div className="credit" style={{ marginBottom: 16 }}>⬡ 50 BT Credits added</div>
+          <div className="credit" style={{ marginBottom: 16 }}>⬡ 50 Barter Tokens added</div>
           {isB2B && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "11px 14px", marginBottom: 16, fontSize: 12, color: "var(--pu)" }}>B2B verified — matched with licensed businesses in your tax bracket</div>}
           <div style={{ display: "flex", flexDirection: "column", gap: 7, textAlign: "left" }}>
             {["✓ listing live in marketplace", "✓ platform proof verified", "✓ AI matchmaking active", "✓ escrow protection on"].map(t => (
@@ -1320,7 +1320,7 @@ function Detail({ l, user, onBack, onPropose }) {
       {l.rate > 0 && <>
         <div style={{ background: "rgba(239,93,71,0.07)", border: "1px solid rgba(239,93,71,0.2)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--g)", marginBottom: 5 }}>⇄ value match zone</div>
-          <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Fair swap: any service or item valued <strong style={{ color: "var(--tx)" }}>${Math.round(l.rate * .9)}–${Math.round(l.rate * 1.1)}</strong>. Balance the rest with BT Credits.</div>
+          <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Fair swap: any service or item valued <strong style={{ color: "var(--tx)" }}>${Math.round(l.rate * .9)}–${Math.round(l.rate * 1.1)}</strong>. Balance the rest with Barter Tokens.</div>
         </div>
         <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--am)", marginBottom: 9 }}>◎ top-up calculator</div>
@@ -1331,7 +1331,7 @@ function Detail({ l, user, onBack, onPropose }) {
             <div style={{ color: "var(--t3)" }}>=</div>
             <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>you'd add</div><div style={{ fontSize: 19, fontWeight: 800, color: diff === 0 ? "var(--g)" : "var(--am)" }}>{diff === 0 ? "no gap!" : "$" + diff}</div></div>
           </div>
-          {diff > 0 && <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 7 }}>pay with ⬡ BT Credits or cash · held in escrow · auto-released after both confirm</div>}
+          {diff > 0 && <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 7 }}>pay with ⬡ Barter Tokens or cash · held in escrow · auto-released after both confirm</div>}
         </div>
       </>}
 
@@ -1453,7 +1453,7 @@ function Trades({ trades, onAccept, onComplete }) {
           </div>
         )}
         {t.status === "completed" && (
-          <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · BT Credits awarded</div>
+          <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · Barter Tokens awarded</div>
         )}
         {t.status !== "completed" && (
           <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
@@ -1520,7 +1520,7 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
       <div className="card" style={{ marginBottom: 10, background: "radial-gradient(circle at 90% 0%, rgba(232,177,74,0.12), var(--s2) 60%)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 2 }}>BT Credits balance</div>
+            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 2 }}>Barter Tokens balance</div>
             <div style={{ fontFamily: "var(--fd)", fontSize: 30, fontWeight: 800, color: "var(--am)" }}>⬡ {user.credits ?? 0}</div>
           </div>
           <button className="btn bg bsm" onClick={() => onNav("browse")}>spend →</button>
@@ -1634,7 +1634,7 @@ function Post({ user, onPost }) {
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "var(--t2)", cursor: "pointer", marginBottom: 20, padding: "10px 13px", background: "var(--s3)", borderRadius: "var(--rs)" }}>
         <input type="checkbox" checked={form.acceptTopup} onChange={e => setForm(f => ({ ...f, acceptTopup: e.target.checked }))} style={{ accentColor: "var(--g)", width: 15, height: 15 }} />
-        accept BT Credits / cash top-up to balance value
+        accept Barter Tokens / cash top-up to balance value
       </label>
       <button className="btn bp" style={{ width: "100%" }} disabled={!form.title.trim() || !form.cat} onClick={go}>publish listing ✦</button>
     </div>
@@ -1728,7 +1728,7 @@ export default function App() {
     const t = trades.find(x => x.id === id);
     const earned = Math.max(10, Math.round((t?.value || t?.mv || 100) / 10));
     if (user) persist({ ...user, credits: (user.credits || 0) + earned, swaps: (user.swaps || 0) + 1 });
-    flash(`⬡ +${earned} BT Credits earned`);
+    flash(`⬡ +${earned} Barter Tokens earned`);
   };
 
   const handleLogout = () => { storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
