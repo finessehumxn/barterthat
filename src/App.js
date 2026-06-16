@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
 
 const G = () => (
@@ -282,6 +282,50 @@ function OwnedBadge({ id }) {
 }
 function SpecTag({ s }) {
   return <span style={{ fontSize: 10, color: "var(--t2)", padding: "2px 8px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", margin: "2px 3px 2px 0", display: "inline-block" }}>{s}</span>;
+}
+
+// ── VOICE INPUT ──────────────────────────────────────────────────────────────
+// Tap to talk — turns speech into text so people can just say what they need.
+// Uses the browser's built-in Web Speech API (no key). Hides itself if the
+// browser doesn't support it, so nothing ever breaks.
+const SPEECH_OK = typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+function VoiceButton({ onText, onInterim, label, size = 40 }) {
+  const [listening, setListening] = useState(false);
+  const recRef = useRef(null);
+  if (!SPEECH_OK) return null;
+
+  const toggle = () => {
+    if (listening) { try { recRef.current && recRef.current.stop(); } catch (e) {} return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    let finalText = "";
+    rec.onresult = e => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t; else interim += t;
+      }
+      if (interim && onInterim) onInterim(interim);
+      if (finalText && onText) onText(finalText.trim());
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recRef.current = rec;
+    try { rec.start(); setListening(true); } catch (e) { setListening(false); }
+  };
+
+  return (
+    <button type="button" onClick={toggle} title="Tap and speak — say what you're looking for"
+      aria-label="Speak" aria-pressed={listening}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, height: size, padding: label ? "0 14px" : 0, width: label ? "auto" : size,
+        borderRadius: 100, border: "1px solid " + (listening ? "var(--g)" : "var(--bd)"),
+        background: listening ? "var(--g)" : "var(--s3)", color: listening ? "#fff" : "var(--t2)",
+        cursor: "pointer", fontSize: 14, fontWeight: 700 }}>
+      <span style={{ fontSize: 16, animation: listening ? "ping 1.2s infinite" : "none" }}>{listening ? "●" : "🎤"}</span>
+      {label && <span style={{ fontSize: 13 }}>{listening ? "listening…" : label}</span>}
+    </button>
+  );
 }
 
 // ── SAFETY ───────────────────────────────────────────────────────────────────
@@ -1020,7 +1064,10 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
   return (
     <div style={{ paddingBottom: 90 }}>
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--bd)", padding: "10px 14px 8px" }}>
-        <input className="ifield" value={q} onChange={e => setQ(e.target.value)} placeholder="search anything — service, item, skill, city..." style={{ marginBottom: 8 }} />
+        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+          <input className="ifield" value={q} onChange={e => setQ(e.target.value)} placeholder={SPEECH_OK ? "search or tap 🎤 to say what you need..." : "search — service, item, skill, city..."} style={{ flex: 1 }} />
+          <VoiceButton onInterim={setQ} onText={setQ} />
+        </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <div style={{ display: "flex", gap: 4, background: "var(--s3)", borderRadius: "var(--rp)", padding: 3 }}>
             {[["list", "◫"], ["map", "📍"], ["live", "◉"]].map(([v, ic]) => (
@@ -1928,8 +1975,16 @@ function Post({ user, onPost }) {
           {selCat.subs.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>}
-      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>title</label><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe in one line" /></div>
-      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details</label><textarea className="ifield" rows={4} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? condition? what would you take in trade?" style={{ resize: "none" }} /></div>
+      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>title{SPEECH_OK ? " — or say it 🎤" : ""}</label>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe in one line" style={{ flex: 1 }} />
+          <VoiceButton onText={t => setForm(f => ({ ...f, title: t }))} />
+        </div>
+      </div>
+      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details{SPEECH_OK ? " — type or just talk" : ""}</label>
+        <textarea className="ifield" rows={4} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? condition? what would you take in trade?" style={{ resize: "none", marginBottom: 8 }} />
+        <VoiceButton label="Speak the details" onText={t => setForm(f => ({ ...f, desc: (f.desc ? f.desc + " " : "") + t }))} />
+      </div>
       <div style={{ marginBottom: 14 }}>
         <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>value — <strong style={{ color: "var(--g)" }}>{form.rate === 0 ? "free / community swap" : "$" + form.rate + (form.type === "service" ? "/hr" : "")}</strong></label>
         <input type="range" min={0} max={250} step={5} value={form.rate} onChange={e => setForm(f => ({ ...f, rate: +e.target.value }))} style={{ width: "100%", accentColor: "var(--g)" }} />
