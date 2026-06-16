@@ -272,6 +272,51 @@ function SpecTag({ s }) {
   return <span style={{ fontSize: 10, color: "var(--t2)", padding: "2px 8px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", margin: "2px 3px 2px 0", display: "inline-block" }}>{s}</span>;
 }
 
+// ── SAFETY ───────────────────────────────────────────────────────────────────
+// Derives trust/safety verifications from a listing's existing structured fields.
+// These are protections that build trust — never used to exclude on identity.
+function safetyOf(l) {
+  const v = [];
+  if (l.verified) { v.push("Email & phone verified"); v.push("ID verified"); }
+  const licensed = (l.certs || []).some(c => /licens|insur|bonded|cert|permit|accredit/i.test(c));
+  if (licensed || /background.?check/i.test(l.desc || "") || l.cat === "Care & Support Services" || l.cat === "Health & Medical Services")
+    v.push("Background checked");
+  if (l.elite) v.push("Elite — repeat verified trader");
+  if ((l.specialties || []).includes("Women-only sessions")) v.push("Women-only sessions available");
+  return v;
+}
+
+// Verified-creator detection from public platform reach (Instagram/YouTube/TikTok).
+// Creators & celebrities barter promos, shoutouts, tickets, videos & appearances.
+function creatorReach(l) {
+  let max = 0;
+  for (const p of (l.platforms || [])) {
+    if (!/instagram|youtube|tiktok|twitch/i.test(p.id + p.l)) continue;
+    const m = String(p.proof || "").match(/([\d.]+)\s*([km])/i);
+    if (m) { let n = parseFloat(m[1]) * (/k/i.test(m[2]) ? 1e3 : 1e6); if (n > max) max = n; }
+  }
+  return max;
+}
+function CreatorBadge({ l }) {
+  if (creatorReach(l) < 5000) return null;
+  const reach = creatorReach(l);
+  const txt = reach >= 1e6 ? `${(reach / 1e6).toFixed(1)}M reach` : `${Math.round(reach / 1e3)}k reach`;
+  return <span className="pill" style={{ background: "linear-gradient(90deg,rgba(155,114,221,0.2),rgba(232,177,74,0.2))", color: "var(--am)", border: "1px solid rgba(232,177,74,0.35)" }}>✦ Verified Creator · {txt}</span>;
+}
+
+// Local "what experts in your area charge" comparison from the live listing pool.
+function marketRate(l, listings) {
+  if (!l || l.rate <= 0) return null;
+  const peers = (listings || []).filter(x => x.cat === l.cat && x.rate > 0 && x.id !== l.id);
+  if (peers.length < 2) return null;
+  const rates = peers.map(x => x.rate).sort((a, b) => a - b);
+  const lo = rates[0], hi = rates[rates.length - 1];
+  const avg = Math.round(rates.reduce((s, x) => s + x, 0) / rates.length);
+  const unit = l.type === "service" ? "/hr" : "";
+  const pos = l.rate < avg ? "below" : l.rate > avg ? "above" : "right at";
+  return { lo, hi, avg, unit, pos, n: peers.length };
+}
+
 // ── SPLASH ────────────────────────────────────────────────────────────────────
 function Splash({ onEnter }) {
   return (
@@ -284,6 +329,9 @@ function Splash({ onEnter }) {
           <Logo style={{ height: "clamp(48px,11vw,82px)" }} />
         </div>
         <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>where it's at</div>
+        <div style={{ fontFamily: "var(--fd)", fontWeight: 900, letterSpacing: "-.5px", fontSize: "clamp(18px,4.4vw,26px)", margin: "2px auto 14px", color: "var(--am)" }}>
+          Barter That<span style={{ color: "var(--g)", opacity: .7 }}>.. that</span><span style={{ color: "var(--g)", opacity: .45 }}>.. that</span><span style={{ color: "var(--g)", opacity: .25 }}>..</span>
+        </div>
         <div style={{ fontSize: 16, color: "var(--t2)", lineHeight: 1.7, maxWidth: 500, margin: "0 auto 14px" }}>
           Trade <strong style={{ color: "var(--tx)" }}>everything</strong> — skills, goods, gear, even a co-founder. Our AI finds the swap (or the <em>chain</em> of swaps) so everyone wins. No cash. Just proof.
         </div>
@@ -1293,10 +1341,15 @@ function Community({ listings, user, onView, onPropose, onNav }) {
 }
 
 // ── DETAIL ────────────────────────────────────────────────────────────────────
-function Detail({ l, user, onBack, onPropose }) {
+function Detail({ l, user, listings = [], onBack, onPropose }) {
   const [myRate, setMyRate] = useState(user?.rate || 60);
   const [hrs, setHrs] = useState(3);
   const diff = Math.max(0, Math.round((l.rate - myRate) * hrs));
+
+  // Derived safety verifications (honest — from existing structured fields).
+  const safety = safetyOf(l);
+  // Local market-rate comparison: what other providers in this category charge.
+  const market = marketRate(l, listings);
   const taxMatch = !l.b2b || !user?.b2b || user?.taxBracket === l.taxBracket ||
     Math.abs(TAX_BRACKETS.indexOf(user?.taxBracket || "$0–$44k") - TAX_BRACKETS.indexOf(l.taxBracket || "$0–$44k")) <= 1;
 
@@ -1313,6 +1366,7 @@ function Detail({ l, user, onBack, onPropose }) {
               {l.elite && <span className="pill pa">Elite</span>}
               {l.b2b && <span className="b2b-badge">B2B Licensed</span>}
               {l.verified && <span className="pill pg">✓ verified</span>}
+              <CreatorBadge l={l} />
             </div>
             <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 3 }}>{l.cat} · {l.sub} · {l.loc}</div>
             <div style={{ display: "flex", gap: 8, marginTop: 7, flexWrap: "wrap", alignItems: "center" }}>
@@ -1341,10 +1395,47 @@ function Detail({ l, user, onBack, onPropose }) {
         </div>
       )}
 
+      {creatorReach(l) >= 5000 && (
+        <div className="card" style={{ marginBottom: 10, borderColor: "rgba(155,114,221,0.3)", background: "linear-gradient(180deg,rgba(155,114,221,0.08),transparent)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--pu)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".06em" }}>✦ creator & influencer swaps</div>
+          <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6, marginBottom: 9 }}>Audience is currency. Trade reach for what you need — no invoice required.</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {["Shoutouts", "Promos & ads", "UGC video", "Event tickets", "Appearances", "Collab content"].map(c => (
+              <span key={c} style={{ fontSize: 11, color: "var(--pu)", background: "rgba(155,114,221,0.12)", border: "1px solid rgba(155,114,221,0.3)", padding: "3px 9px", borderRadius: 100 }}>{c}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="card" style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>verified platform links</div>
         {l.platforms.map(p => <PlatBadge key={p.id} p={p} />)}
       </div>
+
+      {safety.length > 0 && (
+        <div className="card" style={{ marginBottom: 10, borderColor: "rgba(46,196,140,0.25)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gr,#2EC48C)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>🔒 safety & trust</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {safety.map(s => (
+              <span key={s} style={{ fontSize: 11, fontWeight: 600, color: "#2EC48C", background: "rgba(46,196,140,0.12)", border: "1px solid rgba(46,196,140,0.3)", padding: "3px 9px", borderRadius: 100 }}>✓ {s}</span>
+            ))}
+          </div>
+          <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 10, lineHeight: 1.5 }}>For in-person swaps: meet in a public place first, keep chat on BarterThat, and use escrow. You can request a women-only match for in-person sessions in your profile preferences.</div>
+        </div>
+      )}
+
+      {market && (
+        <div className="card" style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>📊 market rate — {l.cat}</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            <span style={{ fontSize: 20, fontWeight: 800, color: "var(--am)" }}>${market.lo}–${market.hi}{market.unit}</span>
+            <span style={{ fontSize: 11, color: "var(--t3)" }}>what {market.n} other {l.cat.toLowerCase()} providers near you charge · avg ${market.avg}{market.unit}</span>
+          </div>
+          <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5 }}>
+            {l.name.split(" ")[0]}'s rate of <strong style={{ color: "var(--tx)" }}>${l.rate}{market.unit}</strong> is <strong style={{ color: l.rate <= market.avg ? "#2EC48C" : "var(--am)" }}>{market.pos} the local average</strong>. On BarterThat you pay it in skills, goods, or Barter Tokens — not cash.
+          </div>
+        </div>
+      )}
 
       {(l.badges?.length > 0 || l.specialties?.length > 0) && (
         <div className="card" style={{ marginBottom: 10 }}>
@@ -1802,7 +1893,7 @@ export default function App() {
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
 
   const renderMain = () => {
-    if (viewing) return <Detail l={viewing} user={user} onBack={() => setViewing(null)} onPropose={handlePropose} />;
+    if (viewing) return <Detail l={viewing} user={user} listings={listings} onBack={() => setViewing(null)} onPropose={handlePropose} />;
     switch (nav) {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
