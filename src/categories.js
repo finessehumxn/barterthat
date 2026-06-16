@@ -1380,6 +1380,91 @@ export const EXTRA_CATS = [
       "Festival & event volunteer crew","Stadium / arena fan section","Background voices / crowd audio",
     ]
   },
+  {
+    id: "travel_planning",
+    label: "Travel Planning & Companion Services",
+    icon: "✈",
+    both: true,
+    subs: [
+      "Trip planning & itinerary","Travel concierge","Points & miles hacking",
+      "Cheap flight finding","Hotel & stay booking help","Road trip route planning",
+      "Group / family trip coordination","Bachelorette / bachelor trip planning","Honeymoon planning",
+      "International travel prep","Visa & passport application help","Travel insurance consulting",
+      "Solo travel coaching","Budget backpacking coaching","Digital nomad setup coaching",
+      "Travel companion (social)","Senior travel companion","Airport meet & assist",
+      "Local tour guiding","City day-trip guiding","Cultural & food tour guiding",
+      "Home swap / house swap coordination","Pet-friendly travel planning","Accessible travel planning",
+      "Packing & logistics help","Language phrasebook coaching","Travel photography on-trip",
+      "Cruise planning","Theme park strategy planning","Travel blog / content help",
+    ]
+  },
+  {
+    id: "house_sitting",
+    label: "House Sitting & Property Watch",
+    icon: "⌂",
+    both: false,
+    subs: [
+      "House sitting — overnight","House sitting — extended / vacation","Daily home check-in (away)",
+      "Mail & package collection","Plant & garden watering","Pool & hot tub watch",
+      "Trash / recycling bin rotation","Snow & driveway watch","Lights & curtains rotation (security)",
+      "Vacant property check","Short-term caretaking","Estate / second-home watch",
+      "RV & boat watch","Storm / weather prep & check","Contractor let-in & supervise",
+      "Delivery acceptance & signing","Appliance & HVAC monitoring","Leak & water check",
+      "New-build / renovation watch","Open house sitting","Senior parent home check-ins",
+      "Pet care add-on while sitting","Overnight security presence","Holiday home prep & close-up",
+    ]
+  },
+  {
+    id: "rides_moving",
+    label: "Rides, Moving & Delivery",
+    icon: "⇄",
+    both: false,
+    subs: [
+      "Airport rides","Carpool & commute share","Long-distance driving",
+      "Errand & shopping runs","Grocery delivery","Pharmacy & prescription pickup",
+      "Senior & medical appointment rides","Kids / school carpool","Pet transport",
+      "Moving help — loading / unloading","Full move — local","Furniture & large-item delivery",
+      "Truck / van + driver","Courier & same-day delivery","Document & legal courier",
+      "Furniture pickup (marketplace buys)","Donation & junk hauling","Dump & disposal runs",
+      "Storage unit move help","Apartment / dorm move","Piano & specialty moving",
+      "Vehicle transport / drive-away","Bike & scooter delivery","Event & catering delivery",
+      "Costco / bulk haul","Trailer towing","Last-mile delivery partner",
+    ]
+  },
+  {
+    id: "auctions_trades",
+    label: "Auctions, Bidding & Marketplace Trades",
+    icon: "⚷",
+    both: true,
+    subs: [
+      "Live swap auction hosting","Silent / charity auction help","Estate sale running",
+      "Storage unit auction sourcing","Bid-to-swap listings","Consignment selling",
+      "Reseller / flipping partner","Bulk lot & pallet trades","Authentication & verification",
+      "Appraisal — collectibles","Appraisal — jewelry & watches","Appraisal — art",
+      "Sneaker & streetwear authentication","Trading card grading help","Coin & currency trading",
+      "Memorabilia & autograph trades","Vintage & antique sourcing","Garage / yard sale setup",
+      "eBay / marketplace listing help","Big-ticket escrow brokering","Trade-up challenge partner",
+      "Barter negotiation coaching","Lot photography & cataloging","Auction logistics & shipping",
+    ]
+  },
+  {
+    id: "pro_network",
+    label: "Pro Network — Refer, Subcontract & Partner",
+    icon: "⌘",
+    both: true,
+    subs: [
+      "Overflow work — take my extra clients","Client referral / handoff","Finder's & referral fee deals",
+      "White-label subcontracting","Subcontract a project","Co-bid on a large project",
+      "Partner to complete a client project","Build a project team / pod","Fill a skill gap on my project",
+      "Revenue / profit share partnership","Joint venture partner","Agency-to-agency partnership",
+      "Cover me while away (client coverage)","Backup / on-call pro","Capacity sharing network",
+      "Cross-refer complementary services","Bundle services with a partner","Co-author a proposal / pitch",
+      "Shared workspace / studio partner","Equipment & resource sharing","Split a bulk supplier order",
+      "Mentor / shadow on real jobs","Apprentice on a live project","Trade leads & introductions",
+      "Vendor / supplier introductions","Contractor crew sharing","Niche specialist on retainer",
+      "Second opinion / peer review","QA & proofing partner","Launch / event collaboration",
+    ]
+  },
 ];
 
 export const ALL_CATS = [...CATS, ...EXTRA_CATS];
