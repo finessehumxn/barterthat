@@ -328,6 +328,100 @@ function VoiceButton({ onText, onInterim, label, size = 40 }) {
   );
 }
 
+// ── MEDIA UPLOAD ─────────────────────────────────────────────────────────────
+// Add photos & videos to a listing. Photos are downscaled so they fit in local
+// storage; large videos preview for the session. Returns [{kind,url}].
+function downscaleImage(file, max = 900, quality = 0.72) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+      else if (h > max) { w = Math.round(w * max / h); h = max; }
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      try { resolve(c.toDataURL("image/jpeg", quality)); } catch (e) { resolve(null); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+function MediaUpload({ media = [], onChange, max = 6 }) {
+  const [busy, setBusy] = useState(false);
+  const add = async files => {
+    setBusy(true);
+    const next = [...media];
+    for (const file of Array.from(files)) {
+      if (next.length >= max) break;
+      if (file.type.startsWith("image/")) {
+        const url = await downscaleImage(file);
+        if (url) next.push({ kind: "image", url });
+      } else if (file.type.startsWith("video/")) {
+        if (file.size < 4 * 1024 * 1024) {
+          const url = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(file); });
+          if (url) next.push({ kind: "video", url });
+        } else {
+          next.push({ kind: "video", url: URL.createObjectURL(file), transient: true });
+        }
+      }
+    }
+    setBusy(false);
+    onChange(next);
+  };
+  return (
+    <div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {media.map((m, i) => (
+          <div key={i} style={{ position: "relative", width: 72, height: 72, borderRadius: 10, overflow: "hidden", border: "1px solid var(--bd)", background: "var(--s3)" }}>
+            {m.kind === "image"
+              ? <img src={m.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🎬</div>}
+            <button type="button" onClick={() => onChange(media.filter((_, n) => n !== i))} style={{ position: "absolute", top: 2, right: 2, width: 18, height: 18, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.6)", color: "#fff", cursor: "pointer", fontSize: 11, lineHeight: 1 }}>✕</button>
+          </div>
+        ))}
+        {media.length < max && (
+          <label style={{ width: 72, height: 72, borderRadius: 10, border: "1px dashed var(--bd2,var(--bd))", background: "var(--s3)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--t2)", fontSize: 11, gap: 3 }}>
+            <span style={{ fontSize: 20 }}>{busy ? "…" : "＋"}</span>
+            <span>photo/video</span>
+            <input type="file" accept="image/*,video/*" multiple style={{ display: "none" }} onChange={e => { add(e.target.files); e.target.value = ""; }} />
+          </label>
+        )}
+      </div>
+      <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 6 }}>Show your work — up to {max} photos/clips. Real photos build trust and get more swaps.</div>
+    </div>
+  );
+}
+function MediaGallery({ media }) {
+  if (!media || !media.length) return null;
+  return (
+    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 10 }}>
+      {media.map((m, i) => (
+        <div key={i} style={{ flexShrink: 0, borderRadius: 12, overflow: "hidden", border: "1px solid var(--bd)" }}>
+          {m.kind === "image"
+            ? <img src={m.url} alt="" style={{ height: 180, maxWidth: 280, objectFit: "cover", display: "block" }} />
+            : <video src={m.url} controls playsInline style={{ height: 180, maxWidth: 280, display: "block", background: "#000" }} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── VIDEO MEET ───────────────────────────────────────────────────────────────
+// One-tap private video room (Jitsi — no account, no key). Both parties open
+// the same link to meet face to face before or during a swap.
+const videoMeetUrl = seed => `https://meet.jit.si/BarterThat-${String(seed).replace(/[^a-zA-Z0-9]/g, "").slice(0, 24) || "room"}-meet`;
+function VideoMeetButton({ seed, label = "📹 Video meet", small = true, style = {} }) {
+  return (
+    <button type="button" className={"btn bpu" + (small ? " bsm" : "")} style={style}
+      onClick={() => window.open(videoMeetUrl(seed), "_blank", "noopener,noreferrer")}>
+      {label}
+    </button>
+  );
+}
+
 // ── SAFETY ───────────────────────────────────────────────────────────────────
 // Derives trust/safety verifications from a listing's existing structured fields.
 // These are protections that build trust — never used to exclude on identity.
@@ -993,8 +1087,10 @@ function Signup({ onDone }) {
 
 // ── LISTING CARD ──────────────────────────────────────────────────────────────
 function ListingCard({ l, user, onView, onSave, onPropose, i = 0 }) {
+  const cover = (l.media || []).find(m => m.kind === "image");
   return (
     <div className="card fu" style={{ animationDelay: `${i * .03}s`, cursor: "pointer" }} onClick={() => onView(l)}>
+      {cover && <div style={{ margin: "-2px -2px 10px", borderRadius: "12px 12px 0 0", overflow: "hidden" }}><img src={cover.url} alt="" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }} /></div>}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <Av ini={l.ini} avc={l.avc} size={40} />
@@ -1485,6 +1581,13 @@ function Detail({ l, user, listings = [], onBack, onPropose }) {
         {l.wants?.length > 0 && <div style={{ fontSize: 11, color: "var(--t3)" }}>open to trade for: <span style={{ color: "var(--t2)" }}>{l.wants.join(" · ")}</span></div>}
       </div>
 
+      {l.media?.length > 0 && <MediaGallery media={l.media} />}
+
+      <div style={{ display: "flex", gap: 7, marginBottom: 10 }}>
+        <button className="btn bp" style={{ flex: 1 }} onClick={() => onPropose(l)}>propose a swap</button>
+        <VideoMeetButton seed={"listing" + l.id} label="📹 video meet" small={false} />
+      </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
         {[{ label: "value", val: l.rate === 0 ? "free" : `$${l.rate}${l.type === "service" ? "/hr" : ""}` }, { label: "type", val: TYPE_META[l.type].l }, { label: "top-up", val: "accepted" }].map(v => (
           <div key={v.label} style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "10px 11px" }}>
@@ -1671,6 +1774,7 @@ function Trades({ trades, onAccept, onComplete }) {
             <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>{t.wu}{t.b2b && <span className="b2b-badge" style={{ fontSize: 9 }}>B2B</span>}</div>
             <div style={{ fontSize: 10, color: "var(--t3)" }}>{t.plat}</div>
           </div>
+          {t.status !== "completed" && <VideoMeetButton seed={"trade" + t.id} label="📹 meet" />}
           <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : "pg"}`}>{t.status}</span>
         </div>
         <div style={{ padding: "8px 14px", background: "var(--s2)", borderBottom: "1px solid var(--bd)", display: "flex", gap: 8, alignItems: "center", fontSize: 11 }}>
@@ -1945,7 +2049,7 @@ function Saved({ listings, user, onView }) {
 
 // ── POST ──────────────────────────────────────────────────────────────────────
 function Post({ user, onPost }) {
-  const [form, setForm] = useState({ type: "service", cat: user?.cat || "", sub: "", title: user?.title || "", desc: user?.desc || "", rate: user?.rate || 75, acceptTopup: true });
+  const [form, setForm] = useState({ type: "service", cat: user?.cat || "", sub: "", title: user?.title || "", desc: user?.desc || "", rate: user?.rate || 75, acceptTopup: true, media: [] });
   const [done, setDone] = useState(false);
   const selCat = CATS.find(c => c.label === form.cat);
   const go = () => { setDone(true); setTimeout(() => onPost(form), 1200); };
@@ -1989,6 +2093,10 @@ function Post({ user, onPost }) {
         <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>value — <strong style={{ color: "var(--g)" }}>{form.rate === 0 ? "free / community swap" : "$" + form.rate + (form.type === "service" ? "/hr" : "")}</strong></label>
         <input type="range" min={0} max={250} step={5} value={form.rate} onChange={e => setForm(f => ({ ...f, rate: +e.target.value }))} style={{ width: "100%", accentColor: "var(--g)" }} />
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--t3)", marginTop: 3 }}><span>$0 (community / aid)</span><span>$250</span></div>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 7 }}>photos & video <span style={{ color: "var(--t3)" }}>— optional, but they sell</span></label>
+        <MediaUpload media={form.media} onChange={m => setForm(f => ({ ...f, media: m }))} />
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "var(--t2)", cursor: "pointer", marginBottom: 20, padding: "10px 13px", background: "var(--s3)", borderRadius: "var(--rs)" }}>
         <input type="checkbox" checked={form.acceptTopup} onChange={e => setForm(f => ({ ...f, acceptTopup: e.target.checked }))} style={{ accentColor: "var(--g)", width: 15, height: 15 }} />
@@ -2094,6 +2202,23 @@ export default function App() {
     setNav("match");
   };
 
+  const handlePost = form => {
+    if (!user) { setScreen("signup"); return; }
+    const catMeta = CATS.find(c => c.label === form.cat);
+    const nl = {
+      id: Date.now() + 1, uid: user.id, type: form.type || catMeta?.t || "service",
+      name: user.name, ini: user.ini, avc: user.avc, cat: form.cat || "Creative Arts & Design",
+      sub: form.sub, title: form.title, desc: form.desc || form.title, rate: form.rate,
+      loc: user.loc || "Remote", remote: true, verified: true, elite: false, b2b: user.b2b,
+      score: user.score || 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: user.wants || [],
+      badges: user.badges || [], specialties: user.specialties || [], platforms: user.platforms || [],
+      certs: user.certs || [], taxBracket: user.taxBracket, media: form.media || [],
+    };
+    setListings(p => [nl, ...p]);
+    setNav("profile");
+    flash("✦ listing posted — AI is matching you");
+  };
+
   const handleSave = id => {
     if (!user) { setScreen("signup"); return; }
     setListings(p => p.map(l => {
@@ -2155,7 +2280,7 @@ export default function App() {
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
       case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
       case "trades": return <Trades trades={trades} onAccept={handleAccept} onComplete={handleComplete} />;
-      case "post": return <Post user={user} onPost={() => setNav("profile")} />;
+      case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} />;
       case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); setNav(n); }} onLogout={handleLogout} onReset={handleReset} />;
