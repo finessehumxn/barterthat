@@ -1267,6 +1267,41 @@ export const EXTRA_CATS = [
       "Frugal living coaching","Minimalist finance coaching",
     ]
   },
+  {
+    id: "cleaning",
+    label: "Cleaning & Housekeeping",
+    icon: "✸",
+    both: false,
+    subs: [
+      "House cleaning — standard","House cleaning — deep clean","Move-in / move-out cleaning",
+      "Recurring weekly cleaning","Recurring biweekly cleaning","Office & commercial cleaning",
+      "Post-construction cleanup","Airbnb / rental turnover cleaning","Window cleaning — interior",
+      "Window cleaning — exterior","Carpet cleaning","Upholstery cleaning","Mattress cleaning",
+      "Tile & grout cleaning","Oven & appliance cleaning","Refrigerator deep clean",
+      "Bathroom deep clean","Kitchen deep clean","Garage cleanout","Basement & attic cleanout",
+      "Hoarding cleanup","Estate & foreclosure cleanout","Disinfecting & sanitizing",
+      "Laundry & folding service","Ironing service","Eco / green cleaning",
+      "Pet-friendly cleaning","Decluttering & organizing add-on",
+    ]
+  },
+  {
+    id: "pets",
+    label: "Pet & Animal Care",
+    icon: "✣",
+    both: true,
+    subs: [
+      "Dog walking — solo","Dog walking — group","Dog running & hiking",
+      "Pet sitting — in your home","Pet sitting — overnight","Pet boarding — home-based",
+      "Cat sitting & litter care","Small animal & bird sitting","Reptile & exotic pet sitting",
+      "Dog grooming — bath & brush","Dog grooming — full groom","Dog grooming — breed cut",
+      "Cat grooming","Nail trim & ear cleaning","Puppy training — basics",
+      "Dog training — obedience","Dog training — behavior issues","Service & support dog training",
+      "Puppy socialization","Pet taxi & transport","Pet waste removal",
+      "Aquarium setup & cleaning","Horse grooming & care","Farm & livestock care",
+      "Backyard chicken & coop care","Homemade pet treats","Raw & fresh pet food prep",
+      "Pet first aid & CPR","Pet photography","Pet memorial & loss support",
+    ]
+  },
 ];
 
 export const ALL_CATS = [...CATS, ...EXTRA_CATS];
