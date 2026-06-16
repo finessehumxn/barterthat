@@ -57,6 +57,12 @@ const G = () => (
     .ring{position:absolute;border-radius:50%;border:1px solid rgba(239,93,71,0.18)}
     .feed{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--bd)}
     .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,0.18);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
+    .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;width:100%}
+    @media (max-width:560px){
+      .cta-row{flex-direction:column;align-items:center}
+      .cta-row .btn{width:100%;max-width:320px}
+      .blg{font-size:14px;padding:12px 20px}
+    }
   `}</style>
 );
 
@@ -284,7 +290,7 @@ function Splash({ onEnter }) {
         <div style={{ fontSize: 14, color: "var(--g)", fontStyle: "italic", maxWidth: 480, margin: "0 auto 32px", fontFamily: "var(--fd)" }}>
           One person is great at one thing. Together, we're unstoppable.
         </div>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 14, flexWrap: "wrap", width: "100%", maxWidth: "100%" }}>
+        <div className="cta-row" style={{ marginBottom: 14 }}>
           <button className="btn bp blg" onClick={() => onEnter("signup")}>get started free</button>
           <button className="btn bg blg" onClick={() => onEnter("browse")}>explore marketplace</button>
         </div>
