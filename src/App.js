@@ -1087,13 +1087,33 @@ function Match({ listings, user, onView, onPropose }) {
   const [wants, setWants] = useState(user?.wants?.length ? user.wants : ["Beauty & Personal Care", "Tech & Digital Services"]);
   const [run, setRun] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ai, setAi] = useState(null);       // { suggestions:[...] } | null
+  const [aiLoading, setAiLoading] = useState(false);
 
   const results = useMemo(() => {
     if (!run) return null;
     return findSwaps({ uid: user?.id || -1, offer, wants }, listings);
   }, [run, offer, wants, listings, user]);
 
-  const find = () => { setLoading(true); setRun(false); setTimeout(() => { setLoading(false); setRun(true); }, 950); };
+  const find = () => {
+    setLoading(true); setRun(false); setAi(null);
+    setTimeout(() => { setLoading(false); setRun(true); }, 950);
+    // Real Claude-powered suggestions (server-side). Silently no-ops if AI is offline.
+    setAiLoading(true);
+    fetch("/api/match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        me: { uid: user?.id || -1, offer, wants },
+        listings: listings.map(l => ({ id: l.id, uid: l.uid, name: l.name, cat: l.cat, wants: l.wants, rate: l.rate, score: l.score, dist: l.dist }))
+      })
+    })
+      .then(r => r.ok ? r.json() : { suggestions: [] })
+      .then(d => setAi(d && Array.isArray(d.suggestions) ? d : { suggestions: [] }))
+      .catch(() => setAi({ suggestions: [] }))
+      .finally(() => setAiLoading(false));
+  };
+  const byId = id => listings.find(l => String(l.id) === String(id));
 
   return (
     <div style={{ padding: "14px 14px 90px" }}>
@@ -1120,6 +1140,36 @@ function Match({ listings, user, onView, onPropose }) {
       </div>
 
       {loading && <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: 26 }}><div className="spin" /><span style={{ fontSize: 13, color: "var(--t2)" }}>analyzing {listings.length} traders for direct & circular matches…</span></div>}
+
+      {run && !loading && (aiLoading || (ai && ai.suggestions.length > 0)) && (
+        <div className="card fu" style={{ marginBottom: 14, borderColor: "rgba(155,114,221,0.35)", background: "linear-gradient(180deg, rgba(155,114,221,0.08), transparent)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: aiLoading ? 0 : 10 }}>
+            <span className="pill pp">◆ Claude AI</span>
+            <span style={{ fontSize: 11, color: "var(--pu)", fontWeight: 700 }}>{aiLoading ? "thinking through your best swaps…" : "picked these for you"}</span>
+          </div>
+          {aiLoading && <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 4px" }}><div className="spin" /><span style={{ fontSize: 12, color: "var(--t2)" }}>reasoning over {listings.length} traders…</span></div>}
+          {!aiLoading && ai && ai.suggestions.map((s, i) => {
+            const l = byId(s.id);
+            return (
+              <div key={"ai" + i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderTop: i ? "1px solid var(--bd)" : "none" }}>
+                {l ? <Av ini={l.ini} avc={l.avc} size={34} /> : <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--pu)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🔄</div>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{s.title}</span>
+                    <span className="pill" style={{ background: s.kind === "loop" ? "rgba(155,114,221,0.18)" : "rgba(46,196,140,0.16)", color: s.kind === "loop" ? "var(--pu)" : "var(--g)", fontSize: 9 }}>{s.kind === "loop" ? "loop" : "direct"}</span>
+                    {typeof s.fit === "number" && <span style={{ fontSize: 10, color: "var(--t3)" }}>· {s.fit}% fit</span>}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: "var(--t2)", marginTop: 3, lineHeight: 1.5 }}>{s.reason}</div>
+                  {l && <div style={{ display: "flex", gap: 7, marginTop: 8 }}>
+                    <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(l)}>view</button>
+                    <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(l)}>{s.kind === "loop" ? "start loop" : "propose"}</button>
+                  </div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {results && !loading && <>
         {results.direct.length === 0 && results.loops.length === 0 && (
