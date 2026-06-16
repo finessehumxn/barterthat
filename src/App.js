@@ -17,7 +17,9 @@ const G = () => (
       --fd:'Inter',sans-serif;--fb:'Inter',sans-serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
+    html,body{overflow-x:hidden;max-width:100vw}
     body{background:var(--bk);color:var(--tx);font-family:var(--fb);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+    img{max-width:100%;height:auto}
     input,select,textarea,button{font-family:var(--fb);font-size:14px;color:var(--tx)}
     input:focus,select:focus,textarea:focus{outline:none}
     ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
@@ -269,7 +271,7 @@ function Splash({ onEnter }) {
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 20px", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "44px 44px", opacity: .5 }} />
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
-      <div className="fu" style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
+      <div className="fu" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 640 }}>
         <div className="pill pp" style={{ marginBottom: 18 }}>◆ AI-matched · circular trades · zero cash</div>
         <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}>
           <Logo style={{ height: "clamp(48px,11vw,82px)" }} />
