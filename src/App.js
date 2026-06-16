@@ -349,6 +349,20 @@ function downscaleImage(file, max = 900, quality = 0.72) {
     img.src = url;
   });
 }
+// Cloud hosting (Cloudinary unsigned upload). Set REACT_APP_CLOUDINARY_CLOUD and
+// REACT_APP_CLOUDINARY_PRESET in Vercel to host media at durable public URLs.
+// When unset, uploads fall back to on-device storage (still works for demo).
+const CLOUD = { name: process.env.REACT_APP_CLOUDINARY_CLOUD, preset: process.env.REACT_APP_CLOUDINARY_PRESET };
+const CLOUD_ON = !!(CLOUD.name && CLOUD.preset);
+async function uploadToCloud(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", CLOUD.preset);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD.name}/auto/upload`, { method: "POST", body: fd });
+  if (!res.ok) throw new Error("upload failed");
+  const d = await res.json();
+  return { kind: d.resource_type === "video" ? "video" : "image", url: d.secure_url };
+}
 function MediaUpload({ media = [], onChange, max = 6 }) {
   const [busy, setBusy] = useState(false);
   const add = async files => {
@@ -356,16 +370,20 @@ function MediaUpload({ media = [], onChange, max = 6 }) {
     const next = [...media];
     for (const file of Array.from(files)) {
       if (next.length >= max) break;
-      if (file.type.startsWith("image/")) {
+      const isImg = file.type.startsWith("image/"), isVid = file.type.startsWith("video/");
+      if (!isImg && !isVid) continue;
+      // Prefer durable cloud hosting when configured.
+      if (CLOUD_ON) {
+        try { next.push(await uploadToCloud(file)); continue; } catch (e) { /* fall back to local */ }
+      }
+      if (isImg) {
         const url = await downscaleImage(file);
         if (url) next.push({ kind: "image", url });
-      } else if (file.type.startsWith("video/")) {
-        if (file.size < 4 * 1024 * 1024) {
-          const url = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(file); });
-          if (url) next.push({ kind: "video", url });
-        } else {
-          next.push({ kind: "video", url: URL.createObjectURL(file), transient: true });
-        }
+      } else if (file.size < 4 * 1024 * 1024) {
+        const url = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(file); });
+        if (url) next.push({ kind: "video", url });
+      } else {
+        next.push({ kind: "video", url: URL.createObjectURL(file), transient: true });
       }
     }
     setBusy(false);
