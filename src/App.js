@@ -1,87 +1,99 @@
-import { useState, useEffect, useMemo } from "react";
-import { ALL_CATS } from "./categories";
+import { useState, useEffect } from "react";
 
 const G = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     :root {
-      --g:#EF5D47;--gd:#D94433;--gl:rgba(239,93,71,0.12);
-      --bk:#0E1825;--s1:#16243F;--s2:#1C2D4F;--s3:#243660;--s4:#2E4275;
-      --tx:#FFE3D1;--t2:#C4B5A8;--t3:#7A6E66;
-      --bd:rgba(255,227,209,0.08);--bd2:rgba(255,227,209,0.16);
-      --am:#E8B14A;--amb:rgba(232,177,74,0.12);
+      /* ══ BarterThat Official Brand Colors — from brand kit ══ */
+      --g:#EF5D47;          /* coral — primary CTA, "That" wordmark */
+      --gd:#D94433;         /* coral dark — hover */
+      --gl:rgba(239,93,71,0.12);
+      --gm:rgba(239,93,71,0.28);
+
+      --navy:#16243F;       /* deep navy — backgrounds, primary text */
+      --green:#2E7D59;      /* forest green — verified, success states */
+      --gold:#E8B14A;       /* warm gold — Elite, verified badge */
+      --cream:#FFE3D1;      /* warm cream — light text on dark */
+
+      /* ── App surfaces ── */
+      --bk:#0D1B2A;
+      --s1:#16243F;
+      --s2:#1E2F4F;
+      --s3:#253860;
+      --s4:#2E4478;
+
+      /* ── Text ── */
+      --tx:#FFE3D1;
+      --t2:#BBA99C;
+      --t3:#6E6259;
+
+      /* ── Borders ── */
+      --bd:rgba(255,227,209,0.07);
+      --bd2:rgba(255,227,209,0.16);
+
+      /* ── Semantic ── */
+      --am:#E8B14A;--amb:rgba(232,177,74,0.14);
       --rd:#EF5D47;--rdb:rgba(239,93,71,0.1);
       --bl:#4A90D9;--blb:rgba(74,144,217,0.12);
       --pu:#9B72DD;--pub:rgba(155,114,221,0.12);
-      --r:12px;--rs:7px;--rp:100px;
+
+      /* ── Shape ── */
+      --r:14px;--rs:8px;--rp:100px;
+
+      /* ── Font: Inter (matches brand kit typography) ── */
       --fd:'Inter',sans-serif;--fb:'Inter',sans-serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bk);color:var(--tx);font-family:var(--fb);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+    .pg{background:rgba(46,125,89,0.18)!important;color:#4CAF80!important}
+    .pa{background:rgba(232,177,74,0.16)!important;color:#E8B14A!important}
+    .pr{background:rgba(239,93,71,0.14)!important;color:#EF5D47!important}
+    .pb{background:rgba(74,144,217,0.15)!important;color:#4A90D9!important}
+    .pd{background:rgba(255,227,209,0.07)!important;color:var(--t2)!important}
+    .pp{background:rgba(155,114,221,0.15)!important;color:#9B72DD!important}
+    .b2b-badge{background:rgba(155,114,221,0.15)!important;color:#B48FEE!important;border:1px solid rgba(155,114,221,0.3)!important}
     input,select,textarea,button{font-family:var(--fb);font-size:14px;color:var(--tx)}
     input:focus,select:focus,textarea:focus{outline:none}
-    ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+    ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-    @keyframes ping{0%{transform:scale(.6);opacity:.8}80%,100%{transform:scale(2.4);opacity:0}}
-    @keyframes flow{0%{background-position:0 0}100%{background-position:40px 0}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
     .fu{animation:fadeUp .35s ease both}
     .fi{animation:fadeIn .25s ease both}
     .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rp);font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
     .bp{background:var(--g);color:#fff}.bp:hover{background:var(--gd);transform:translateY(-1px)}.bp:active{transform:translateY(0)}
     .bg{background:transparent;color:var(--t2);border:1px solid var(--bd)}.bg:hover{border-color:var(--bd2);color:var(--tx)}
-    .bpu{background:var(--pu);color:#fff}.bpu:hover{filter:brightness(1.1);transform:translateY(-1px)}
     .bsm{padding:6px 13px;font-size:12px}.blg{padding:13px 26px;font-size:15px;font-weight:700}
     .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
     .card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;transition:border-color .15s}
     .card:hover{border-color:var(--bd2)}
     .pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:var(--rp);font-size:11px;font-weight:600;white-space:nowrap}
-    .pg{background:var(--gl);color:#EF5D47}.pa{background:var(--amb);color:var(--am)}.pr{background:var(--rdb);color:var(--rd)}.pb{background:var(--blb);color:var(--bl)}.pp{background:var(--pub);color:var(--pu)}.pd{background:var(--s3);color:var(--t2)}
+    .pg{background:var(--gl);color:#0D9A5A}.pa{background:var(--amb);color:var(--am)}.pr{background:var(--rdb);color:var(--rd)}.pb{background:var(--blb);color:var(--bl)}.pp{background:var(--pub);color:var(--pu)}.pd{background:var(--s3);color:var(--t2)}
     .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:800;flex-shrink:0}
     .ifield{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx);padding:10px 13px;transition:border-color .15s}
     .ifield:focus{border-color:var(--g)}.ifield::placeholder{color:var(--t3)}
     select.ifield option{background:var(--s2)}
     .ndot{width:7px;height:7px;border-radius:50%;background:var(--g);animation:pulse 2s infinite;flex-shrink:0}
     .b2b-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--rp);font-size:10px;font-weight:700;background:var(--pub);color:var(--pu);border:1px solid rgba(155,114,221,0.3)}
-    .credit{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--rp);font-size:12px;font-weight:700;background:linear-gradient(90deg,rgba(232,177,74,0.18),rgba(155,114,221,0.18));color:var(--am);border:1px solid rgba(232,177,74,0.3)}
-    .chip{padding:5px 12px;border-radius:var(--rp);font-size:12px;cursor:pointer;border:1px solid var(--bd);background:var(--s3);color:var(--t2);transition:all .15s}
-    .chip.on{border-color:var(--g);background:var(--gl);color:#EF5D47}
-    .arrowline{flex:1;height:2px;min-width:14px;background-image:linear-gradient(90deg,var(--g) 55%,transparent 55%);background-size:9px 2px;animation:flow .6s linear infinite}
-    .maprow{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;animation:drift 5s ease-in-out infinite}
-    .ring{position:absolute;border-radius:50%;border:1px solid rgba(239,93,71,0.18)}
-    .feed{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--bd)}
-    .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,0.18);border-top-color:var(--g);border-radius:50%;animation:spin .7s linear infinite}
   `}</style>
 );
 
-// ── CATEGORIES — "everything is barterable" ──────────────────────────────────
-const CATS = ALL_CATS;
-const CAT_LABELS = CATS.map(c => c.label);
-
-const TYPE_META = {
-  service:{ l:"Service", cls:"pg" }, goods:{ l:"Item", cls:"pb" }, rental:{ l:"Rental", cls:"pa" },
-  digital:{ l:"Digital", cls:"pp" }, venture:{ l:"Venture", cls:"pp" }, aid:{ l:"Mutual Aid", cls:"pg" },
-  experience:{ l:"Experience", cls:"pb" }, squad:{ l:"Squad", cls:"pg" },
-};
-
-// Opt-in, seller self-identified community/heritage badges. Buyers choose to SUPPORT
-// these — they are never used to exclude or screen providers (that would be discrimination).
-const COMMUNITY_BADGES = [
-  { id:"black", l:"Black-owned" }, { id:"latino", l:"Latino/a-owned" }, { id:"aapi", l:"AAPI-owned" },
-  { id:"indigenous", l:"Indigenous-owned" }, { id:"mena", l:"MENA-owned" }, { id:"immigrant", l:"Immigrant-owned" },
-  { id:"woman", l:"Woman-owned" }, { id:"lgbtq", l:"LGBTQ+-owned" }, { id:"veteran", l:"Veteran-owned" },
-  { id:"disability", l:"Disability-owned" }, { id:"faith", l:"Faith-based" },
-];
-const BADGE_LABEL = id => (COMMUNITY_BADGES.find(b => b.id === id) || { l: id }).l;
-
-// Service attributes that describe the OFFER (not the person) — helps people find
-// culturally or accessibility-specific services.
-const SPECIALTIES = [
-  "Halal", "Kosher", "Vegan", "Natural-hair specialist", "Women-only sessions",
-  "Bilingual (Spanish)", "ASL available", "Wheelchair accessible", "Eco-friendly", "Kid-friendly",
+const CATS = [
+  { id:"beauty", label:"Beauty & Wellness", icon:"✦", subs:["Hair braiding & locs","Natural hair styling","Lash extensions","Nail art & manicures","Wig ventilation & making","Esthetician services","Massage therapy","IV hydration therapy","Chiropractic care","Personal training","Yoga & breathwork","Barber services","Makeup artistry","Microblading"] },
+  { id:"food", label:"Food & Farming", icon:"◉", subs:["Meal prepping & delivery","Sourdough bread & baking","Custom cakes & pastries","Food by the pound (beef, chicken, etc)","Farm eggs, milk & dairy","Honey & bee products","Fresh herbs & spice bundles","Fruits & vegetables","Catering & event food","Hot sauce & preserves"] },
+  { id:"home", label:"Home & Trade Services", icon:"⌂", subs:["Interior & exterior painting","Electrical work (licensed)","Plumbing (licensed)","HVAC services","Roofing (licensed)","General handyman","Home remodeling","Patio & deck installation","Gutter cleaning","TV & wall mounting","Flooring installation","Pressure washing","Solar installation (licensed)"] },
+  { id:"garden", label:"Garden & Outdoor", icon:"❧", subs:["Lawn care & mowing","Landscaping & design","Plant care & propagation","Tree trimming & removal","Garden planting","Snow removal","Herb garden setup","Composting & soil prep","Beekeeping setup"] },
+  { id:"creative", label:"Creative & Design", icon:"◈", subs:["Graphic design","Photography","Videography & editing","Logo & brand identity","Social media content","Illustration & art","Music production","Podcast editing","Crochet & fiber arts","Candles & body products","Pottery & ceramics","Custom clothing & sewing"] },
+  { id:"tech", label:"Tech & Digital", icon:"⬡", subs:["Web development","App development","IT support & repair","Network setup","SEO & digital marketing","Data analysis","AI & automation","Computer repair","Phone repair","Smart home setup","Business digitization & organizing"] },
+  { id:"events", label:"Events & Celebrations", icon:"◇", subs:["Wedding planning","Event coordination","Florist & floral design","DJ services","Live music","Party rentals","Photo booth rental","Event decorating","Venue consulting"] },
+  { id:"care", label:"Care & Support", icon:"♡", subs:["Child care & babysitting","Elder care (CNA)","Pet sitting","Pet grooming","Pet food & treats","Dog training","Homework tutoring","Special needs support","Postpartum doula","Senior companionship"] },
+  { id:"lessons", label:"Lessons & Coaching", icon:"◎", subs:["Music lessons (all instruments)","Language tutoring","Academic tutoring","Business coaching","Life coaching","Cooking classes","Art & drawing lessons","Dance lessons","Horseback riding lessons","Martial arts instruction","Financial literacy coaching"] },
+  { id:"auto", label:"Auto & Transportation", icon:"⊕", subs:["Car detailing","Auto maintenance & oil change","Tire rotation & balancing","Car wash","Mobile mechanic","Car audio installation","Parking spot rental","Airport shuttle","RV maintenance"] },
+  { id:"professional", label:"Professional & B2B", icon:"◻", subs:["Accounting & bookkeeping","Tax preparation","Legal consulting","Business consulting","HR consulting","Notary services","Grant writing","Business plan writing","Payroll services"] },
+  { id:"travel", label:"Travel & Stays", icon:"✈", subs:["Discounted flights (travel agent)","Hotel deals","Vacation planning","House sitting","Airbnb co-hosting","Local tour guide","Travel photography","Group travel coordination"] },
+  { id:"org", label:"Organization & Lifestyle", icon:"▣", subs:["Home organizing & decluttering","Digital business organizing","Closet organization","Moving & packing help","Laundry & folding service","Personal shopping","Wardrobe styling","Errand running"] },
+  { id:"health", label:"Health & Medical", icon:"✚", subs:["Dental services (licensed)","Nutrition coaching","Mental health coaching","Physical therapy (licensed)","Herbal medicine consulting","Acupuncture (licensed)","Reiki & energy healing","Doula services"] },
+  { id:"community", label:"Community Squads", icon:"⚇", subs:["Friend group rotation (gutters, repairs)","Neighborhood watch network","Community garden share","Tool & equipment lending","Group grocery co-op","Moving squad rotation","Emergency home repair crew","Senior help brigade","Community childcare circle","Skill swap circles"] },
 ];
 
 const PLATFORMS = [
@@ -92,8 +104,6 @@ const PLATFORMS = [
   {id:"thumbtack",l:"Thumbtack",c:"#009FD9"},{id:"taskrabbit",l:"TaskRabbit",c:"#4B9E3E"},
   {id:"mindbody",l:"Mindbody",c:"#5B2D8E"},{id:"amazon",l:"Amazon Handmade",c:"#FF9900"},
   {id:"angi",l:"Angi",c:"#F26522"},{id:"yelp",l:"Yelp",c:"#D32323"},
-  {id:"ebay",l:"eBay",c:"#E53238"},{id:"poshmark",l:"Poshmark",c:"#C1376C"},
-  {id:"github",l:"GitHub",c:"#8B949E"},{id:"crunchbase",l:"Crunchbase",c:"#0288D1"},
 ];
 
 const B2B_CERTS = [
@@ -105,140 +115,47 @@ const B2B_CERTS = [
 
 const TAX_BRACKETS = ["$0–$44k","$44k–$95k","$95k–$201k","$201k–$383k","$383k+"];
 
-const AVC = ["#3D1A24","#1A3D2B","#1A1A3D","#3D2B1A","#2B1A3D","#1A3A38","#3A1A1A","#1A2E3A"];
+const AVC = ["#16243F","#D94433","#1C3A5C","#A8350E","#243660","#E8B14A","#16243F","#2E4275"];
 const ac = i => AVC[i % AVC.length];
 
-// ── LISTINGS — services + goods + rentals + digital + ventures + survival + aid
 const LISTINGS = [
-  {id:1,uid:10,name:"Nia Kendrick",ini:"NK",avc:ac(0),type:"service",cat:"Beauty & Personal Care",sub:"Hair braiding & locs",title:"Knotless braids, locs & protective styles",desc:"10+ yrs. Home studio (Atlanta) or mobile. All textures, all ages welcome.",rate:85,loc:"Atlanta, GA",remote:false,verified:true,elite:true,b2b:false,score:97,swaps:87,rating:4.9,rev:87,saved:[],wants:["Creative Arts & Design","Food & Culinary Arts","Collectibles, Valuables & Big Trades"],platforms:[{id:"styleseat",l:"StyleSeat",proof:"87 clients · 4.9★",url:"styleseat.com/niakendrick"},{id:"instagram",l:"Instagram",proof:"4.2k followers",url:"instagram.com/niakendrick.hair"},{id:"google",l:"Google Business",proof:"61 reviews · 5.0★",url:"g.co/niasnatural"}],certs:[],taxBracket:"$44k–$95k"},
-  {id:2,uid:11,name:"Marcus Rivera",ini:"MR",avc:ac(1),type:"service",cat:"Home Services & Repair",sub:"Interior & exterior painting",title:"Residential & commercial painting — licensed & insured",desc:"15 yrs, licensed contractor. Free estimate. Coachella Valley & Palm Desert.",rate:95,loc:"Palm Desert, CA",remote:false,verified:true,elite:true,b2b:true,score:94,swaps:61,rating:5.0,rev:61,saved:[],wants:["Creative Arts & Design","Auto, Vehicles & Transportation","Tech & Digital Services"],platforms:[{id:"google",l:"Google Business",proof:"61 reviews · 5.0★",url:"maps.google.com/marcus"},{id:"thumbtack",l:"Thumbtack",proof:"Top Pro",url:"thumbtack.com/marcus"},{id:"angi",l:"Angi",proof:"Super Service Award",url:"angi.com/marcus"}],certs:["Business License","General Liability Insurance","Contractor License","Bonded & Insured"],taxBracket:"$95k–$201k"},
-  {id:3,uid:12,name:"Deja Johnson",ini:"DJ",avc:ac(2),type:"goods",cat:"Food & Culinary Arts",sub:"Sourdough bread & baking",title:"Artisan sourdough, custom cakes & baked goods",desc:"Small-batch, all-natural. Custom orders. Delivery or pickup in Houston.",rate:55,loc:"Houston, TX",remote:false,verified:true,elite:false,b2b:false,score:88,swaps:34,rating:4.8,rev:340,saved:[],wants:["Creative Arts & Design","Beauty & Personal Care","Collectibles, Valuables & Big Trades"],platforms:[{id:"etsy",l:"Etsy",proof:"340 sales · 4.8★",url:"etsy.com/shop/deja"},{id:"instagram",l:"Instagram",proof:"2.1k followers",url:"instagram.com/dejabakes"}],certs:[],taxBracket:"$0–$44k"},
-  {id:4,uid:13,name:"Keanu Williams",ini:"KW",avc:ac(3),type:"service",cat:"Tech & Digital Services",sub:"Web development",title:"Shopify, Next.js & full-stack web apps",desc:"$40k+ Upwork earnings. Mobile-first. Small business specialist. 100% remote.",rate:100,loc:"Remote",remote:true,verified:true,elite:true,b2b:true,score:96,swaps:52,rating:4.9,rev:47,saved:[],wants:["Creative Arts & Design","Professional & Business Services","Professional & Business Services"],platforms:[{id:"upwork",l:"Upwork",proof:"$40k+ earned · 4.9★",url:"upwork.com/keanu"},{id:"linkedin",l:"LinkedIn",proof:"6yrs verified",url:"linkedin.com/in/keanu"}],certs:["Business License","LLC / Corporation Status"],taxBracket:"$95k–$201k"},
-  {id:5,uid:14,name:"Trina Powell",ini:"TP",avc:ac(4),type:"service",cat:"Creative Arts & Design",sub:"Graphic design",title:"Brand identity, flyers & social media kits",desc:"Adobe + Canva Pro. 24hr turnaround. Fiverr Level 2 seller. 5 yrs freelancing.",rate:65,loc:"Los Angeles, CA",remote:true,verified:true,elite:false,b2b:false,score:82,swaps:28,rating:4.7,rev:92,saved:[],wants:["Food & Culinary Arts","Tech & Digital Services","Beauty & Personal Care"],platforms:[{id:"fiverr",l:"Fiverr",proof:"Level 2 · 4.7★",url:"fiverr.com/trinadesigns"},{id:"instagram",l:"Instagram",proof:"1.8k followers",url:"instagram.com/trinadesigns"}],certs:[],taxBracket:"$0–$44k"},
-  {id:6,uid:15,name:"Lena Moore",ini:"LM",avc:ac(5),type:"service",cat:"Beauty & Personal Care",sub:"Yoga & breathwork",title:"Private yoga, breathwork & mobility sessions",desc:"200-hr YTT certified. In-home, studio or virtual. All levels. Chicago area.",rate:75,loc:"Chicago, IL",remote:true,verified:true,elite:false,b2b:false,score:91,swaps:41,rating:4.9,rev:200,saved:[],wants:["Tech & Digital Services","Health & Medical Services","Food & Culinary Arts"],platforms:[{id:"mindbody",l:"Mindbody",proof:"200+ sessions · 4.9★",url:"mindbody.io/lena"},{id:"instagram",l:"Instagram",proof:"3.4k followers",url:"instagram.com/lenayoga"}],certs:[],taxBracket:"$44k–$95k"},
-  {id:7,uid:16,name:"Carmen Osei",ini:"CO",avc:ac(6),type:"service",cat:"Events & Celebrations",sub:"Wedding planning",title:"Full-service wedding & event planning",desc:"100+ events. Licensed business. Day-of coordination to full planning packages.",rate:110,loc:"Atlanta, GA",remote:false,verified:true,elite:true,b2b:true,score:93,swaps:29,rating:5.0,rev:45,saved:[],wants:["Creative Arts & Design","Beauty & Personal Care","Food & Culinary Arts"],platforms:[{id:"google",l:"Google Business",proof:"45 reviews · 5.0★",url:"g.co/carmenevents"},{id:"instagram",l:"Instagram",proof:"8.1k followers",url:"instagram.com/carmenevents"},{id:"yelp",l:"Yelp",proof:"38 reviews · 4.9★",url:"yelp.com/carmen"}],certs:["Business License","General Liability Insurance","LLC / Corporation Status"],taxBracket:"$95k–$201k"},
-  {id:8,uid:17,name:"Rico Farms",ini:"RF",avc:ac(7),type:"goods",cat:"Food & Culinary Arts",sub:"Farm eggs, milk & dairy",title:"Fresh farm eggs, raw honey, seasonal produce",desc:"Pasture-raised. Weekly harvest boxes. Local delivery or swap. Black-owned farm.",rate:40,loc:"Memphis, TN",remote:false,verified:true,elite:false,b2b:true,score:85,swaps:19,rating:4.8,rev:31,saved:[],wants:["Home Services & Repair","Auto, Vehicles & Transportation","Collectibles, Valuables & Big Trades"],platforms:[{id:"etsy",l:"Etsy",proof:"Sells online",url:"etsy.com/ricofarms"},{id:"instagram",l:"Instagram",proof:"5.2k followers",url:"instagram.com/ricofarms"}],certs:["Business License","Health Dept Permit","Food Handler Cert"],taxBracket:"$44k–$95k"},
-  {id:9,uid:18,name:"The Gutter Squad",ini:"GS",avc:ac(0),type:"squad",cat:"Community Squads & Circles",sub:"Friend group rotation (gutters, repairs)",title:"8-person rotation squad — gutters, caulking, repairs",desc:"We rotate homes every other weekend tackling jobs folks can't get to alone. Join or invite your crew.",rate:0,loc:"Dallas, TX",remote:false,verified:true,elite:false,b2b:false,score:89,swaps:44,rating:4.9,rev:44,saved:[],isSquad:true,wants:["Food & Culinary Arts","Care & Support Services"],platforms:[{id:"instagram",l:"Instagram",proof:"Community group · 1.1k",url:"instagram.com/guttersquad"}],certs:[],taxBracket:"$0–$44k"},
-  {id:10,uid:19,name:"Alexis Gray CNA",ini:"AG",avc:ac(1),type:"service",cat:"Care & Support Services",sub:"Elder care (CNA)",title:"Certified nursing assistant — elder care & companionship",desc:"CNA licensed. In-home elder care, post-surgery support, companion visits. Background checked.",rate:35,loc:"Phoenix, AZ",remote:false,verified:true,elite:false,b2b:false,score:90,swaps:22,rating:5.0,rev:22,saved:[],wants:["Beauty & Personal Care","Food & Culinary Arts","Home Services & Repair"],platforms:[{id:"linkedin",l:"LinkedIn",proof:"CNA License verified",url:"linkedin.com/alexisgray"},{id:"google",l:"Google Business",proof:"22 reviews · 5.0★",url:"g.co/alexiscares"}],certs:["Professional License (state)"],taxBracket:"$0–$44k"},
-  {id:11,uid:20,name:"Braid & Books Academy",ini:"BB",avc:ac(2),type:"service",cat:"Lessons, Tutoring & Coaching",sub:"Music lessons (all instruments)",title:"Guitar, piano, voice & music theory lessons",desc:"10+ yrs teaching. Online or in-person. Kids & adults. First lesson free with any swap.",rate:70,loc:"Remote",remote:true,verified:true,elite:false,b2b:false,score:84,swaps:33,rating:4.8,rev:60,saved:[],wants:["Tech & Digital Services","Creative Arts & Design"],platforms:[{id:"youtube",l:"YouTube",proof:"8.2k subscribers",url:"youtube.com/braidbooks"},{id:"instagram",l:"Instagram",proof:"2.3k followers",url:"instagram.com/braidbooks"}],certs:[],taxBracket:"$44k–$95k"},
-  {id:12,uid:21,name:"Swift Auto Detail",ini:"SA",avc:ac(3),type:"service",cat:"Auto, Vehicles & Transportation",sub:"Car detailing",title:"Mobile car detailing — full interior & exterior",desc:"We come to you. Full detail in 3hrs. Licensed mobile business. Dallas metro.",rate:80,loc:"Dallas, TX",remote:false,verified:true,elite:false,b2b:true,score:87,swaps:38,rating:4.9,rev:55,saved:[],wants:["Home Services & Repair","Creative Arts & Design","Tech & Digital Services"],platforms:[{id:"google",l:"Google Business",proof:"55 reviews · 4.9★",url:"g.co/swiftauto"},{id:"yelp",l:"Yelp",proof:"42 reviews",url:"yelp.com/swiftauto"}],certs:["Business License","General Liability Insurance"],taxBracket:"$44k–$95k"},
-  {id:13,uid:22,name:"Tara Brooks",ini:"TB",avc:ac(4),type:"goods",cat:"Collectibles, Valuables & Big Trades",sub:"Furniture & home decor",title:"Mid-century couch + dining set — trade for ?",desc:"Solid wood, great shape. Downsizing. Open to home services, art, or fair-value goods.",rate:60,loc:"Austin, TX",remote:false,verified:true,elite:false,b2b:false,score:81,swaps:12,rating:4.7,rev:18,saved:[],wants:["Home Services & Repair","Creative Arts & Design","Auto, Vehicles & Transportation"],platforms:[{id:"poshmark",l:"Poshmark",proof:"Reseller · 4.8★",url:"poshmark.com/tara"},{id:"ebay",l:"eBay",proof:"120 sales · 99%",url:"ebay.com/usr/tarab"}],certs:[],taxBracket:"$0–$44k"},
-  {id:14,uid:23,name:"Devon Pratt",ini:"DP",avc:ac(5),type:"rental",cat:"Collectibles, Valuables & Big Trades",sub:"Tools & power equipment",title:"Pressure washer, drills & power tools — weekend rental",desc:"Lend my gear, you keep your cash. Deposit via escrow. Pickup in Sacramento.",rate:25,loc:"Sacramento, CA",remote:false,verified:true,elite:false,b2b:false,score:79,swaps:27,rating:4.9,rev:30,saved:[],wants:["Garden & Outdoor Living","Auto, Vehicles & Transportation","Food & Culinary Arts"],platforms:[{id:"taskrabbit",l:"TaskRabbit",proof:"Elite Tasker",url:"taskrabbit.com/devon"},{id:"google",l:"Google Business",proof:"30 reviews · 4.9★",url:"g.co/devontools"}],certs:[],taxBracket:"$0–$44k"},
-  {id:15,uid:24,name:"Imani Cole",ini:"IC",avc:ac(6),type:"digital",cat:"Virtual & Remote Services",sub:"Templates & presets",title:"Pitch deck, Notion systems & brand templates",desc:"Plug-and-play digital products. Instant delivery. Trade for dev, content, or coaching.",rate:50,loc:"Remote",remote:true,verified:true,elite:false,b2b:false,score:86,swaps:41,rating:4.8,rev:210,saved:[],wants:["Tech & Digital Services","Professional & Business Services","Creative Arts & Design"],platforms:[{id:"etsy",l:"Etsy",proof:"210 sales · 4.8★",url:"etsy.com/imanitemplates"},{id:"github",l:"GitHub",proof:"Open-source templates",url:"github.com/imani"}],certs:[],taxBracket:"$44k–$95k"},
-  {id:16,uid:25,name:"Andre Solis",ini:"AS",avc:ac(7),type:"venture",cat:"Professional & Business Services",sub:"Technical co-founder / CTO",title:"Technical co-founder / fractional CTO — equity or swap",desc:"Ex-FAANG eng. I'll build your MVP for equity, or swap engineering for biz/ops/legal help. Let's build.",rate:150,loc:"Remote",remote:true,verified:true,elite:true,b2b:true,score:95,swaps:9,rating:5.0,rev:9,saved:[],wants:["Professional & Business Services","Professional & Business Services","Creative Arts & Design"],platforms:[{id:"linkedin",l:"LinkedIn",proof:"Verified · 10yr eng",url:"linkedin.com/in/andresolis"},{id:"github",l:"GitHub",proof:"3.1k stars",url:"github.com/asolis"},{id:"crunchbase",l:"Crunchbase",proof:"2 prior exits",url:"crunchbase.com/andre"}],certs:["LLC / Corporation Status","Professional License (state)"],taxBracket:"$201k–$383k"},
-  {id:17,uid:26,name:"Maya Reuben",ini:"MY",avc:ac(0),type:"venture",cat:"Professional & Business Services",sub:"Investor pitch coaching",title:"Investor pitch & presentation coaching",desc:"Coached founders into YC & seed rounds. I'll polish your deck & delivery — swap for design, dev, or content.",rate:120,loc:"New York, NY",remote:true,verified:true,elite:true,b2b:true,score:92,swaps:14,rating:5.0,rev:21,saved:[],wants:["Creative Arts & Design","Tech & Digital Services","Virtual & Remote Services"],platforms:[{id:"linkedin",l:"LinkedIn",proof:"Verified · ex-VC",url:"linkedin.com/in/mayareuben"},{id:"crunchbase",l:"Crunchbase",proof:"Advisor · 8 startups",url:"crunchbase.com/maya"}],certs:["Business License","LLC / Corporation Status"],taxBracket:"$201k–$383k"},
-  {id:18,uid:27,name:"Cole Whitfeather",ini:"CW",avc:ac(1),type:"experience",cat:"Lessons, Tutoring & Coaching",sub:"Wilderness survival & bushcraft",title:"2-day wilderness survival & bushcraft intensive",desc:"Fire, shelter, water, foraging. Small groups in the Rockies. Trade for gear, food, or skills.",rate:90,loc:"Denver, CO",remote:false,verified:true,elite:false,b2b:false,score:88,swaps:17,rating:4.9,rev:23,saved:[],wants:["Food & Culinary Arts","Collectibles, Valuables & Big Trades","Health & Medical Services"],platforms:[{id:"youtube",l:"YouTube",proof:"22k subscribers",url:"youtube.com/colewild"},{id:"instagram",l:"Instagram",proof:"9.4k followers",url:"instagram.com/colewild"}],certs:[],taxBracket:"$44k–$95k"},
-  {id:19,uid:28,name:"Renee Adler RN",ini:"RA",avc:ac(2),type:"experience",cat:"Lessons, Tutoring & Coaching",sub:"First aid & CPR training",title:"CPR, first aid & home emergency prep training",desc:"ER nurse. Certify your family or team. In-home or virtual. Swap for wellness, food, or home help.",rate:65,loc:"Seattle, WA",remote:true,verified:true,elite:false,b2b:false,score:90,swaps:26,rating:5.0,rev:33,saved:[],wants:["Beauty & Personal Care","Home Services & Repair","Food & Culinary Arts"],platforms:[{id:"linkedin",l:"LinkedIn",proof:"RN License verified",url:"linkedin.com/reneeadler"}],certs:["Medical License","Professional License (state)"],taxBracket:"$44k–$95k"},
-  {id:20,uid:29,name:"Gloria Hayes",ini:"GH",avc:ac(3),type:"aid",cat:"Community Squads & Circles",sub:"Rides & transportation help",title:"Need rides to dialysis 2×/week — I'll cook for you",desc:"Recovering, no car right now. I'm a great cook & will trade home meals or sewing for a lift. Tulsa southside.",rate:0,loc:"Tulsa, OK",remote:false,verified:true,elite:false,b2b:false,score:83,swaps:6,rating:5.0,rev:6,saved:[],isSquad:false,wants:["Auto, Vehicles & Transportation","Care & Support Services"],platforms:[{id:"google",l:"Google Business",proof:"Community verified",url:"g.co/gloriahayes"}],certs:[],taxBracket:"$0–$44k"},
-  {id:21,uid:30,name:"Northside Movers Circle",ini:"NM",avc:ac(4),type:"aid",cat:"Community Squads & Circles",sub:"Moving & heavy lifting",title:"Moving help circle — borrow our muscle, bring pizza",desc:"Neighbors helping neighbors move. No cash — just pay it forward & feed the crew. Join the circle.",rate:0,loc:"Minneapolis, MN",remote:false,verified:true,elite:false,b2b:false,score:87,swaps:52,rating:4.9,rev:48,saved:[],isSquad:true,wants:["Food & Culinary Arts","Collectibles, Valuables & Big Trades"],platforms:[{id:"instagram",l:"Instagram",proof:"Community circle · 2.4k",url:"instagram.com/northsidecircle"}],certs:[],taxBracket:"$0–$44k"},
-  {id:22,uid:31,name:"Hank & June",ini:"HJ",avc:ac(5),type:"experience",cat:"Travel, Stays & Experiences",sub:"Property / stay nights",title:"2 nights at our Smoky Mountains cabin",desc:"Sleeps 6, hot tub, mountain views. Trade for home reno, photography, or a stay at your place.",rate:140,loc:"Gatlinburg, TN",remote:false,verified:true,elite:true,b2b:false,score:91,swaps:11,rating:5.0,rev:19,saved:[],wants:["Home Services & Repair","Creative Arts & Design","Auto, Vehicles & Transportation"],platforms:[{id:"google",l:"Google Business",proof:"19 reviews · 5.0★",url:"g.co/smokycabin"},{id:"instagram",l:"Instagram",proof:"6.7k followers",url:"instagram.com/smokycabin"}],certs:[],taxBracket:"$95k–$201k"},
-  {id:23,uid:32,name:"Zoe Min",ini:"ZM",avc:ac(6),type:"digital",cat:"Virtual & Remote Services",sub:"Shoutouts & ad swaps",title:"Social growth, UGC & creator shoutout swaps",desc:"140k combined following. UGC content + shoutout swaps for small brands. Trade for product or services.",rate:70,loc:"Remote",remote:true,verified:true,elite:false,b2b:false,score:85,swaps:38,rating:4.8,rev:64,saved:[],wants:["Beauty & Personal Care","Food & Culinary Arts","Creative Arts & Design"],platforms:[{id:"instagram",l:"Instagram",proof:"94k followers",url:"instagram.com/zoemin"},{id:"youtube",l:"YouTube",proof:"46k subscribers",url:"youtube.com/zoemin"}],certs:[],taxBracket:"$44k–$95k"},
-  {id:24,uid:33,name:"Jay Okafor",ini:"JO",avc:ac(7),type:"goods",cat:"Collectibles, Valuables & Big Trades",sub:"Clothing, shoes & sneakers",title:"Deadstock sneaker collection — open to trades",desc:"Verified kicks, DS & VNDS. Trade for tech, gear, or digital products. StockX-authenticated.",rate:75,loc:"Chicago, IL",remote:false,verified:true,elite:false,b2b:false,score:80,swaps:44,rating:4.9,rev:71,saved:[],wants:["Tech & Digital Services","Virtual & Remote Services","Collectibles, Valuables & Big Trades"],platforms:[{id:"ebay",l:"eBay",proof:"300+ sales · 99.8%",url:"ebay.com/usr/jayo"},{id:"poshmark",l:"Poshmark",proof:"Posh Ambassador",url:"poshmark.com/jayo"}],certs:[],taxBracket:"$0–$44k"},
+  {id:1,uid:10,name:"Nia Kendrick",ini:"NK",avc:ac(0),cat:"Beauty & Wellness",sub:"Hair braiding & locs",title:"Knotless braids, locs & protective styles",desc:"10+ yrs. Home studio (Atlanta) or mobile. All textures, all ages welcome.",rate:85,loc:"Atlanta, GA",remote:false,verified:true,elite:true,b2b:false,tscore:97,swaps:87,rating:4.9,rev:87,saved:[],platforms:[{id:"styleseat",l:"StyleSeat",proof:"87 clients · 4.9★",url:"styleseat.com/niakendrick"},{id:"instagram",l:"Instagram",proof:"4.2k followers",url:"instagram.com/niakendrick.hair"},{id:"google",l:"Google Business",proof:"61 reviews · 5.0★",url:"g.co/niasnatural"}],certs:[],taxBracket:"$44k–$95k"},
+  {id:2,uid:11,name:"Marcus Rivera",ini:"MR",avc:ac(1),cat:"Home & Trade Services",sub:"Interior & exterior painting",title:"Residential & commercial painting — licensed & insured",desc:"15 yrs, licensed contractor. Free estimate. Coachella Valley & Palm Desert.",rate:95,loc:"Palm Desert, CA",remote:false,verified:true,elite:true,b2b:true,tscore:94,swaps:61,rating:5.0,rev:61,saved:[],platforms:[{id:"google",l:"Google Business",proof:"61 reviews · 5.0★",url:"maps.google.com/marcus"},{id:"thumbtack",l:"Thumbtack",proof:"Top Pro",url:"thumbtack.com/marcus"},{id:"angi",l:"Angi",proof:"Super Service Award",url:"angi.com/marcus"}],certs:["Business License","General Liability Insurance","Contractor License","Bonded & Insured"],taxBracket:"$95k–$201k"},
+  {id:3,uid:12,name:"Deja Johnson",ini:"DJ",avc:ac(2),cat:"Food & Farming",sub:"Sourdough bread & baking",title:"Artisan sourdough, custom cakes & baked goods",desc:"Small-batch, all-natural. Custom orders. Delivery or pickup in Houston.",rate:55,loc:"Houston, TX",remote:false,verified:true,elite:false,b2b:false,tscore:88,swaps:34,rating:4.8,rev:340,saved:[],platforms:[{id:"etsy",l:"Etsy",proof:"340 sales · 4.8★",url:"etsy.com/shop/deja"},{id:"instagram",l:"Instagram",proof:"2.1k followers",url:"instagram.com/dejabakes"}],certs:[],taxBracket:"$0–$44k"},
+  {id:4,uid:13,name:"Keanu Williams",ini:"KW",avc:ac(3),cat:"Tech & Digital",sub:"Web development",title:"Shopify, Next.js & full-stack web apps",desc:"$40k+ Upwork earnings. Mobile-first. Small business specialist. 100% remote.",rate:100,loc:"Remote",remote:true,verified:true,elite:true,b2b:true,tscore:96,swaps:52,rating:4.9,rev:47,saved:[],platforms:[{id:"upwork",l:"Upwork",proof:"$40k+ earned · 4.9★",url:"upwork.com/keanu"},{id:"linkedin",l:"LinkedIn",proof:"6yrs verified",url:"linkedin.com/in/keanu"}],certs:["Business License","LLC / Corporation Status"],taxBracket:"$95k–$201k"},
+  {id:5,uid:14,name:"Trina Powell",ini:"TP",avc:ac(4),cat:"Creative & Design",sub:"Graphic design",title:"Brand identity, flyers & social media kits",desc:"Adobe + Canva Pro. 24hr turnaround. Fiverr Level 2 seller. 5 yrs freelancing.",rate:65,loc:"Los Angeles, CA",remote:true,verified:true,elite:false,b2b:false,tscore:82,swaps:28,rating:4.7,rev:92,saved:[],platforms:[{id:"fiverr",l:"Fiverr",proof:"Level 2 · 4.7★",url:"fiverr.com/trinadesigns"},{id:"instagram",l:"Instagram",proof:"1.8k followers",url:"instagram.com/trinadesigns"}],certs:[],taxBracket:"$0–$44k"},
+  {id:6,uid:15,name:"Lena Moore",ini:"LM",avc:ac(5),cat:"Beauty & Wellness",sub:"Yoga & breathwork",title:"Private yoga, breathwork & mobility sessions",desc:"200-hr YTT certified. In-home, studio or virtual. All levels. Chicago area.",rate:75,loc:"Chicago, IL",remote:true,verified:true,elite:false,b2b:false,tscore:91,swaps:41,rating:4.9,rev:200,saved:[],platforms:[{id:"mindbody",l:"Mindbody",proof:"200+ sessions · 4.9★",url:"mindbody.io/lena"},{id:"instagram",l:"Instagram",proof:"3.4k followers",url:"instagram.com/lenayoga"}],certs:[],taxBracket:"$44k–$95k"},
+  {id:7,uid:16,name:"Carmen Osei",ini:"CO",avc:ac(6),cat:"Events & Celebrations",sub:"Wedding planning",title:"Full-service wedding & event planning",desc:"100+ events. Licensed business. Day-of coordination to full planning packages.",rate:110,loc:"Atlanta, GA",remote:false,verified:true,elite:true,b2b:true,tscore:93,swaps:29,rating:5.0,rev:45,saved:[],platforms:[{id:"google",l:"Google Business",proof:"45 reviews · 5.0★",url:"g.co/carmenevents"},{id:"instagram",l:"Instagram",proof:"8.1k followers",url:"instagram.com/carmenevents"},{id:"yelp",l:"Yelp",proof:"38 reviews · 4.9★",url:"yelp.com/carmen"}],certs:["Business License","General Liability Insurance","LLC / Corporation Status"],taxBracket:"$95k–$201k"},
+  {id:8,uid:17,name:"Rico Farms",ini:"RF",avc:ac(7),cat:"Food & Farming",sub:"Farm eggs, milk & dairy",title:"Fresh farm eggs, raw honey, seasonal produce",desc:"Pasture-raised. Weekly harvest boxes. Local delivery or swap. Black-owned farm.",rate:40,loc:"Memphis, TN",remote:false,verified:true,elite:false,b2b:true,tscore:85,swaps:19,rating:4.8,rev:31,saved:[],platforms:[{id:"etsy",l:"Etsy",proof:"Sells online",url:"etsy.com/ricofarms"},{id:"instagram",l:"Instagram",proof:"5.2k followers",url:"instagram.com/ricofarms"}],certs:["Business License","Health Dept Permit","Food Handler Cert"],taxBracket:"$44k–$95k"},
+  {id:9,uid:18,name:"The Gutter Squad",ini:"GS",avc:ac(0),cat:"Community Squads",sub:"Friend group rotation (gutters, repairs)",title:"8-person rotation squad — gutters, caulking, repairs",desc:"We rotate homes every other weekend tackling jobs women often can't get to alone. Join or invite your crew.",rate:0,loc:"Dallas, TX",remote:false,verified:true,elite:false,b2b:false,tscore:89,swaps:44,rating:4.9,rev:44,saved:[],platforms:[{id:"instagram",l:"Instagram",proof:"Community group · 1.1k",url:"instagram.com/guttersquad"}],certs:[],taxBracket:"$0–$44k",isSquad:true},
+  {id:10,uid:19,name:"Alexis Gray CNA",ini:"AG",avc:ac(1),cat:"Care & Support",sub:"Elder care (CNA)",title:"Certified nursing assistant — elder care & companionship",desc:"CNA licensed. In-home elder care, post-surgery support, companion visits. Background checked.",rate:35,loc:"Phoenix, AZ",remote:false,verified:true,elite:false,b2b:false,tscore:90,swaps:22,rating:5.0,rev:22,saved:[],platforms:[{id:"linkedin",l:"LinkedIn",proof:"CNA License verified",url:"linkedin.com/alexisgray"},{id:"google",l:"Google Business",proof:"22 reviews · 5.0★",url:"g.co/alexiscares"}],certs:["Professional License (state)"],taxBracket:"$0–$44k"},
+  {id:11,uid:20,name:"Braid & Books Academy",ini:"BB",avc:ac(2),cat:"Lessons & Coaching",sub:"Music lessons (all instruments)",title:"Guitar, piano, voice & music theory lessons",desc:"10+ yrs teaching. Online or in-person. Kids & adults. First lesson free with any swap.",rate:70,loc:"Remote",remote:true,verified:true,elite:false,b2b:false,tscore:84,swaps:33,rating:4.8,rev:60,saved:[],platforms:[{id:"youtube",l:"YouTube",proof:"8.2k subscribers",url:"youtube.com/braidbooks"},{id:"instagram",l:"Instagram",proof:"2.3k followers",url:"instagram.com/braidbooks"}],certs:[],taxBracket:"$44k–$95k"},
+  {id:12,uid:21,name:"Swift Auto Detail",ini:"SA",avc:ac(3),cat:"Auto & Transportation",sub:"Car detailing",title:"Mobile car detailing — full interior & exterior",desc:"We come to you. Full detail in 3hrs. Licensed mobile business. Dallas metro.",rate:80,loc:"Dallas, TX",remote:false,verified:true,elite:false,b2b:true,tscore:87,swaps:38,rating:4.9,rev:55,saved:[],platforms:[{id:"google",l:"Google Business",proof:"55 reviews · 4.9★",url:"g.co/swiftauto"},{id:"yelp",l:"Yelp",proof:"42 reviews",url:"yelp.com/swiftauto"}],certs:["Business License","General Liability Insurance"],taxBracket:"$44k–$95k"},
 ];
-
-// Self-identified community badges + service specialties for the seed listings.
-const SEED_BADGES = {
-  1:  { b:["black","woman"], s:["Natural-hair specialist","Women-only sessions"] },
-  2:  { b:["latino","veteran"], s:["Bilingual (Spanish)","Eco-friendly"] },
-  3:  { b:["black","woman"], s:["Vegan","Kid-friendly"] },
-  4:  { b:["aapi"], s:[] },
-  5:  { b:["woman","lgbtq"], s:[] },
-  6:  { b:["woman"], s:["Women-only sessions"] },
-  7:  { b:["black","woman","immigrant"], s:["Bilingual (Spanish)"] },
-  8:  { b:["black"], s:["Eco-friendly"] },
-  10: { b:["black","woman"], s:["Wheelchair accessible"] },
-  11: { b:["black"], s:["Kid-friendly"] },
-  12: { b:["veteran"], s:["Eco-friendly"] },
-  13: { b:["woman"], s:[] },
-  15: { b:["black","woman"], s:[] },
-  16: { b:["latino","immigrant"], s:[] },
-  17: { b:["woman"], s:[] },
-  18: { b:["indigenous"], s:["Eco-friendly"] },
-  19: { b:["woman"], s:["ASL available","Wheelchair accessible"] },
-  20: { b:["black","woman","disability"], s:["Halal"] },
-  21: { b:["immigrant"], s:[] },
-  22: { b:["veteran"], s:["Kid-friendly"] },
-  23: { b:["aapi","woman"], s:[] },
-  24: { b:["black"], s:[] },
-};
-LISTINGS.forEach(l => { const x = SEED_BADGES[l.id]; l.badges = x?.b || []; l.specialties = x?.s || []; });
 
 const TRADES_SEED = [
   {id:1,wu:"Marcus Rivera",wi:"MR",wc:ac(1),ms:"Brand identity (4hrs)",ts:"Interior painting (4hrs)",mv:400,tv:380,topup:0,tpb:null,status:"pending",plat:"Google Business · 5.0★",time:"2h ago",unread:true,b2b:false,msgs:[{from:"them",txt:"Hey! I saw your listing. 4hrs of interior painting for 4hrs of brand work — let's do it!",time:"2h ago"}]},
-  {id:2,wu:"Deja Johnson",wi:"DJ",wc:ac(2),ms:"Logo kit (2hrs)",ts:"Sourdough loaves × 6",mv:130,tv:90,topup:40,tpb:"them",status:"escrow",plat:"Etsy · 4.8★",time:"5h ago",unread:true,b2b:false,msgs:[{from:"them",txt:"Love your work! My sourdough retails for $90. I'll add a $40 escrow top-up?",time:"5h ago"},{from:"me",txt:"Deal! Let's lock it in.",time:"4h ago"}]},
+  {id:2,wu:"Deja Johnson",wi:"DJ",wc:ac(2),ms:"Logo kit (2hrs)",ts:"Sourdough loaves × 6",mv:130,tv:90,topup:40,tpb:"them",status:"escrow",plat:"Etsy · 4.8★",time:"5h ago",unread:true,b2b:false,msgs:[{from:"them",txt:"Love your work! My sourdough retails for $90 in product value. I'll add a $40 escrow top-up?",time:"5h ago"},{from:"me",txt:"Deal! Let's lock it in.",time:"4h ago"}]},
   {id:3,wu:"Keanu Williams",wi:"KW",wc:ac(3),ms:"UI/UX design (6hrs)",ts:"React dev work (6hrs)",mv:600,tv:600,topup:0,tpb:null,status:"completed",plat:"Upwork · $40k+ earned",time:"3d ago",unread:false,b2b:true,rating:5,msgs:[{from:"them",txt:"Perfect B2B swap. Great working with you.",time:"3d ago"}]},
 ];
 
-const ACTIVITY_SEED = [
-  { ic:"✓", c:"var(--g)", txt:"Marcus & Trina closed a 4hr painting ⇄ branding swap" },
-  { ic:"🔄", c:"var(--am)", txt:"AI Matchmaker found a 3-way loop in Atlanta" },
-  { ic:"⚇", c:"var(--bl)", txt:"Northside Movers Circle is forming — 3 spots left" },
-  { ic:"⬡", c:"var(--pu)", txt:"Andre (CTO) is reviewing 2 co-founder swaps" },
-];
-const ACT_NAMES = ["Nia","Deja","Keanu","Lena","Carmen","Rico","Imani","Devon","Zoe","Jay","Cole","Renee","Tara","Maya"];
-const ACT_TEMPLATES = [
-  n => ({ ic:"✦", c:"var(--g)", txt:`${n} just posted a new listing nearby` }),
-  n => ({ ic:"⇄", c:"var(--am)", txt:`${n} proposed a swap moments ago` }),
-  n => ({ ic:"✓", c:"var(--g)", txt:`${n} completed a verified swap` }),
-  n => ({ ic:"⬡", c:"var(--pu)", txt:`${n} earned That Credits on a deal` }),
-  n => ({ ic:"🔄", c:"var(--bl)", txt:`AI matched ${n} into a circular trade` }),
-];
-
-// ── STORAGE ──────────────────────────────────────────────────────────────────
+// ── STORAGE: localStorage wrapper (works locally + in production) ─────────────
 const storage = {
   get: (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
   set: (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
   remove: (key) => { try { localStorage.removeItem(key); } catch {} },
 };
 
-// ── MATCHMAKER: find direct + circular trades ────────────────────────────────
-// A node "wants" another node's category. A valid loop is a cycle where
-// everyone receives something on their wishlist: you → A → B → you.
-function findSwaps(me, listings) {
-  const wantsOffer = (a, b) => {
-    const aWants = a.id === "you" ? (me.wants || []) : (a.wants || []);
-    const bOffer = b.id === "you" ? (me.offer) : b.cat;
-    return aWants.includes(bOffer);
-  };
-  const you = { id: "you", name: "You", ini: "YOU", avc: "var(--g)", offer: me.offer, wants: me.wants };
-  const pool = listings.filter(l => l.uid !== me.uid && l.rate >= 0);
-  const direct = [], loops3 = [], loops4 = [];
-
-  for (const a of pool) {
-    if (wantsOffer(you, a) && wantsOffer(a, you)) direct.push([you, a]);
-  }
-  for (const a of pool) for (const b of pool) {
-    if (a.id === b.id) continue;
-    if (wantsOffer(you, a) && wantsOffer(a, b) && wantsOffer(b, you)) loops3.push([you, a, b]);
-  }
-  for (const a of pool) for (const b of pool) for (const c of pool) {
-    if (a.id === b.id || b.id === c.id || a.id === c.id) continue;
-    if (wantsOffer(you, a) && wantsOffer(a, b) && wantsOffer(b, c) && wantsOffer(c, you)) loops4.push([you, a, b, c]);
-  }
-  // de-dupe loops by member-set+order signature, cap counts
-  const sig = arr => arr.map(n => n.id).join(">");
-  const uniq = arr => { const seen = new Set(); return arr.filter(l => { const s = sig(l); if (seen.has(s)) return false; seen.add(s); return true; }); };
-  return { direct: direct.slice(0, 8), loops: [...uniq(loops3), ...uniq(loops4)].slice(0, 6) };
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function Av({ ini, avc, size = 38, style = {} }) {
+  return <div className="av" style={{ width: size, height: size, background: avc, fontSize: size * .32, color: "rgba(255,255,255,0.85)", ...style }}>{ini}</div>;
 }
-
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-// Brand logo. Uses the PNG at public/logo.png (swap that file to change it).
-function Logo({ height = 28, style = {}, onClick }) {
-  return <img src="/logo.png" alt="BarterThat" onClick={onClick} style={{ height, width: "auto", display: "block", ...style }} />;
-}
-function Av({ ini, avc, size = 38, style = {}, onClick }) {
-  return <div className="av" onClick={onClick} style={{ width: size, height: size, background: avc, fontSize: size * .32, color: "rgba(255,255,255,0.9)", ...style }}>{ini}</div>;
-}
-function Score({ score }) {
-  const c = score >= 90 ? "#EF5D47" : score >= 75 ? "#E8B14A" : "#EF5D47";
+function TScore({ score }) {
+  const c = score >= 90 ? "#4CAF80" : score >= 75 ? "#E8B14A" : "#EF5D47";
   return <span style={{ fontSize: 11, fontWeight: 700, color: c, background: `${c}18`, padding: "2px 7px", borderRadius: 100 }}>⬡ {score}</span>;
 }
 function Stars({ r }) {
-  return <span style={{ fontSize: 11 }}>{[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= Math.round(r) ? "#E8B14A" : "#333" }}>★</span>)}<span style={{ color: "var(--t2)", marginLeft: 3 }}>{(r||0).toFixed(1)}</span></span>;
-}
-function TypeBadge({ t }) {
-  const m = TYPE_META[t] || TYPE_META.service;
-  return <span className={`pill ${m.cls}`}>{m.l}</span>;
+  return <span style={{ fontSize: 11 }}>{[1,2,3,4,5].map(i => <span key={i} style={{ color: i <= Math.round(r) ? "#E8B14A" : "rgba(255,255,255,0.1)" }}>★</span>)}<span style={{ color: "var(--t2)", marginLeft: 3 }}>{r.toFixed(1)}</span></span>;
 }
 function PlatBadge({ p }) {
   const pl = PLATFORMS.find(x => x.id === p.id) || { c: "#555", l: p.l || "Platform" };
@@ -256,441 +173,35 @@ function PlatBadge({ p }) {
 function CertBadge({ cert }) {
   return <span className="pill pp" style={{ margin: "2px 3px 2px 0" }}>{cert}</span>;
 }
-function OwnedBadge({ id }) {
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: "var(--rp)", background: "linear-gradient(90deg,rgba(239,93,71,0.16),rgba(232,177,74,0.16))", color: "var(--am)", border: "1px solid rgba(232,177,74,0.28)", margin: "2px 3px 2px 0" }}>♥ {BADGE_LABEL(id)}</span>;
-}
-function SpecTag({ s }) {
-  return <span style={{ fontSize: 10, color: "var(--t2)", padding: "2px 8px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", margin: "2px 3px 2px 0", display: "inline-block" }}>{s}</span>;
-}
 
 // ── SPLASH ────────────────────────────────────────────────────────────────────
 function Splash({ onEnter }) {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 20px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "44px 44px", opacity: .5 }} />
-      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
-      <div className="fu" style={{ position: "relative", zIndex: 1, maxWidth: 640 }}>
-        <div className="pill pp" style={{ marginBottom: 18 }}>◆ AI-matched · circular trades · zero cash</div>
-        <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}>
-          <Logo style={{ height: "clamp(48px,11vw,82px)" }} />
+      <div style={{ position: "absolute", top: "35%", left: "50%", transform: "translate(-50%,-50%)", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.18) 0%,transparent 70%)", pointerEvents: "none" }} />
+      <div className="fu" style={{ position: "relative", zIndex: 1, maxWidth: 600 }}>
+        <div style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}>
+          <img src="/logo.png" alt="BarterThat" style={{ height: 90, objectFit: "contain", maxWidth: 320 }}
+            onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="block"; }} />
+          <div style={{ display: "none", fontFamily: "var(--fd)", fontSize: "clamp(48px,10vw,80px)", fontWeight: 800, letterSpacing: "-3px", lineHeight: .95, color: "var(--tx)" }}>
+            Barter<span style={{ color: "var(--g)" }}>That</span>
+          </div>
         </div>
-        <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>where it's at</div>
-        <div style={{ fontSize: 16, color: "var(--t2)", lineHeight: 1.7, maxWidth: 500, margin: "0 auto 14px" }}>
-          Trade <strong style={{ color: "var(--tx)" }}>everything</strong> — skills, goods, gear, even a co-founder. Our AI finds the swap (or the <em>chain</em> of swaps) so everyone wins. No cash. Just proof.
+        <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 6, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>SWAP SKILLS · BUILD COMMUNITY</div>
+        <div style={{ fontSize: 15, color: "var(--t2)", lineHeight: 1.7, maxWidth: 460, margin: "0 auto 36px" }}>
+          Swap verified skills. From braids to bricklaying, sourdough to software. No cash needed — just proof.
         </div>
-        <div style={{ fontSize: 14, color: "var(--g)", fontStyle: "italic", maxWidth: 480, margin: "0 auto 32px", fontFamily: "var(--fd)" }}>
-          One person is great at one thing. Together, we're unstoppable.
-        </div>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 32, flexWrap: "wrap" }}>
           <button className="btn bp blg" onClick={() => onEnter("signup")}>get started free</button>
           <button className="btn bg blg" onClick={() => onEnter("browse")}>explore marketplace</button>
         </div>
-        <div style={{ marginBottom: 28 }}>
-          <button onClick={() => onEnter("pitch")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--pu)", fontSize: 12, fontWeight: 600, letterSpacing: ".03em" }}>◆ investors — see the pitch →</button>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, maxWidth: 560, margin: "0 auto 26px" }}>
-          {[["◆ AI Swap Matchmaker", "finds 3 & 4-way trade loops"], ["⬡ That Credits", "bank value, spend anywhere"], ["📍 Hyperlocal & live", "see swaps happening now"], ["🔒 Escrow + That Score", "verified, protected deals"]].map(([t, s]) => (
-            <div key={t} style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "12px 14px", textAlign: "left" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{t}</div>
-              <div style={{ fontSize: 11, color: "var(--t3)" }}>{s}</div>
-            </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 8, maxWidth: 500, margin: "0 auto 32px" }}>
+          {["2.4M traders", "$380M swapped", "180+ cities", "50+ categories", "B2B licensed", "Community squads"].map(t => (
+            <div key={t} style={{ background: "rgba(22,36,63,0.8)", border: "1px solid rgba(239,93,71,0.3)", borderRadius: "var(--rp)", padding: "7px 14px", fontSize: 12, color: "var(--cream)", fontWeight: 500 }}>{t}</div>
           ))}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 8, maxWidth: 560, margin: "0 auto 28px" }}>
-          {[`${PITCH.traders} traders`, `${PITCH.gmvTotal} swapped`, `${PITCH.cities} cities`, "22 categories", "B2B + ventures", "Mutual aid"].map(t => (
-            <div key={t} style={{ background: "transparent", border: "1px solid var(--bd)", borderRadius: "var(--rp)", padding: "7px 12px", fontSize: 12, color: "var(--t2)" }}>{t}</div>
-          ))}
-        </div>
-        <div style={{ fontSize: 11, color: "var(--t3)" }}>link StyleSeat · Etsy · Fiverr · Upwork · eBay · GitHub · LinkedIn · Crunchbase · and more</div>
-      </div>
-    </div>
-  );
-}
-
-// ── INVESTOR PITCH ────────────────────────────────────────────────────────────
-// ▼▼▼ EDIT YOUR INVESTOR NUMBERS HERE — everything in the pitch reads from this ▼▼▼
-const PITCH = {
-  // — the ask —
-  roundStatus: "◆ Seed round — open",
-  raise: "$3.0M",
-  stage: "Seed",
-  committed: "$1.1M",
-  postMoney: "$18M",
-  // — hero —
-  heroTitlePre: "The cashless economy needs an ",
-  heroTitleHighlight: "operating system.",
-  heroSub: "BarterThat is the AI-matched marketplace where people trade everything — skills, goods, gear, even co-founders — without cash. Our matching engine finds the swap, or the multi-party chain, that makes every deal possible.",
-  // — problem headline —
-  problemTitle: "$2.4 trillion in skills and goods sits idle — because the only tool for trading it is cash people don't have.",
-  // — market sizing —
-  market: {
-    tam: "$1.8T", tamLabel: "TAM — global services + resale + barter spend",
-    sam: "$190B", samLabel: "SAM — P2P swappable value, launch regions",
-    som: "$4.2B", somLabel: "SOM — 3-yr obtainable GMV",
-    note: "Tailwinds: $455B gig economy, $250B+ resale market, AI matching now viable at scale, and a cash-strapped consumer actively seeking alternatives.",
-  },
-  // — traction —
-  tractionTitle: "$380M swapped and compounding — network effects are kicking in.",
-  gmvTotal: "$380M",
-  gmvNote: "Gross swap value (GMV), $M — trailing 8 quarters",
-  gmv: [18, 31, 54, 88, 142, 226, 310, 380],
-  traders: "2.4M",
-  cities: "180+",
-  retention: "68%",
-  retentionLabel: "90-day retention",
-  momGrowth: "41%",
-  momGrowthLabel: "MoM GMV growth",
-  // — business model —
-  revenue: [
-    ["Top-up take rate", "5% on cash & credit balancing a swap — our core, scales with GMV."],
-    ["That Credits float", "Interest on held balances + breakage on unspent credits."],
-    ["BarterThat+ subscription", "Priority matchmaking, unlimited proposals, analytics — $12/mo."],
-    ["B2B & Ventures tier", "Verification, smart contracts, escrow on high-value deals — premium take."],
-    ["Promoted listings", "Featured placement & boosted match priority for sellers."],
-    ["Trust & escrow fees", "Per-deal protection and dispute resolution service."],
-  ],
-  // — the ask: use of funds —
-  useOfFunds: [
-    ["45%", "Engineering & AI matching engine"],
-    ["30%", "Growth — 25-city expansion"],
-    ["15%", "Trust, ops & compliance"],
-    ["10%", "G&A"],
-  ],
-  milestones: "Milestones: 25 cities · 5M verified traders · That Credits ledger live · $1B GMV run-rate · Series A in 18 months.",
-  // — contact —
-  contactEmail: "founders@barterthat.com",
-  company: "BarterThat, Inc.",
-  // — "request the deck" form —
-  // Paste your form endpoint from Formspree / Getform / Basin (e.g. "https://formspree.io/f/abcwxyz").
-  // Until you do, submissions are captured locally under the "bt_leads" localStorage key.
-  formEndpoint: "https://formspree.io/f/your_form_id",
-};
-// ▲▲▲ EDIT YOUR INVESTOR NUMBERS HERE ▲▲▲
-const GMV = PITCH.gmv.map((v, i) => ({ m: ["Q1", "Q2", "Q3", "Q4"][i % 4], v }));
-function PitchStat({ n, l, c }) {
-  return (
-    <div style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "16px 14px", textAlign: "center" }}>
-      <div style={{ fontFamily: "var(--fd)", fontSize: 26, fontWeight: 800, color: c || "var(--g)", lineHeight: 1 }}>{n}</div>
-      <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 6 }}>{l}</div>
-    </div>
-  );
-}
-function PitchSection({ tag, title, children }) {
-  return (
-    <div style={{ marginBottom: 34 }}>
-      <div className="pill pp" style={{ marginBottom: 10 }}>{tag}</div>
-      <div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, letterSpacing: "-.5px", marginBottom: 14, lineHeight: 1.2 }}>{title}</div>
-      {children}
-    </div>
-  );
-}
-// Casual gate for the local admin view. NOTE: client-side only — this value ships
-// in the bundle, so it deters casual access but is not real security.
-const ADMIN_PASS = "barterthat";
-
-function RequestDeckModal({ onClose }) {
-  const [f, setF] = useState({ name: "", email: "", firm: "", check: "", message: "" });
-  const [status, setStatus] = useState("idle"); // idle | sending | done | error
-  const set = (k, v) => setF(p => ({ ...p, [k]: v }));
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email);
-  const valid = f.name.trim() && emailOk;
-
-  const submit = async () => {
-    if (!valid) return;
-    setStatus("sending");
-    const payload = {
-      name: f.name, email: f.email, firm: f.firm, checkSize: f.check, message: f.message,
-      _subject: "BarterThat Seed — investor inquiry", source: "BarterThat pitch page",
-    };
-    const configured = PITCH.formEndpoint && !PITCH.formEndpoint.includes("your_form_id");
-    try {
-      if (configured) {
-        const res = await fetch(PITCH.formEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("submit failed");
-      } else {
-        const leads = storage.get("bt_leads") || [];
-        leads.push({ ...payload, at: new Date().toISOString() });
-        storage.set("bt_leads", leads);
-      }
-      setStatus("done");
-    } catch {
-      setStatus("error");
-    }
-  };
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="fu" style={{ width: "100%", maxWidth: 460, background: "var(--s1)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "22px 20px", maxHeight: "90vh", overflowY: "auto" }}>
-        {status === "done" ? (
-          <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ fontSize: 40, color: "var(--g)", marginBottom: 12 }}>✓</div>
-            <div style={{ fontFamily: "var(--fd)", fontSize: 19, fontWeight: 800, marginBottom: 8 }}>request received.</div>
-            <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.6, marginBottom: 20 }}>Thanks, {f.name.split(" ")[0]}. We'll send the full deck & data room to <strong style={{ color: "var(--tx)" }}>{f.email}</strong> shortly.</div>
-            <button className="btn bp" style={{ width: "100%" }} onClick={onClose}>close</button>
-          </div>
-        ) : (
-          <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <div style={{ fontFamily: "var(--fd)", fontSize: 18, fontWeight: 800 }}>request the deck</div>
-              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 20 }}>×</button>
-            </div>
-            <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 18, lineHeight: 1.6 }}>Tell us a bit about you and we'll share the full investor deck & data room.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>name *</label><input className="ifield" value={f.name} onChange={e => set("name", e.target.value)} placeholder="Jane Investor" /></div>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email *</label><input className="ifield" type="email" value={f.email} onChange={e => set("email", e.target.value)} placeholder="jane@fund.com" style={{ borderColor: f.email && !emailOk ? "var(--rd)" : undefined }} />{f.email && !emailOk && <div style={{ fontSize: 10, color: "var(--rd)", marginTop: 4 }}>enter a valid email</div>}</div>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>firm / role</label><input className="ifield" value={f.firm} onChange={e => set("firm", e.target.value)} placeholder="Acme Ventures · Partner" /></div>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>typical check size</label>
-                <select className="ifield" value={f.check} onChange={e => set("check", e.target.value)}>
-                  <option value="">select (optional)</option>
-                  {["< $50k", "$50k–$250k", "$250k–$1M", "$1M+", "Angel / syndicate"].map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </div>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>message</label><textarea className="ifield" rows={3} value={f.message} onChange={e => set("message", e.target.value)} placeholder="what caught your eye?" style={{ resize: "none" }} /></div>
-            </div>
-            {status === "error" && <div style={{ background: "var(--rdb)", border: "1px solid rgba(239,93,71,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", fontSize: 12, color: "var(--rd)", marginTop: 12 }}>Something went wrong sending that. Try again, or email {PITCH.contactEmail} directly.</div>}
-            <button className="btn bp" style={{ width: "100%", marginTop: 16 }} disabled={!valid || status === "sending"} onClick={submit}>
-              {status === "sending" ? "sending…" : "send request →"}
-            </button>
-            <div style={{ fontSize: 10, color: "var(--t3)", textAlign: "center", marginTop: 10 }}>we'll never share your info · {PITCH.company}</div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function InvestorPitch({ onBack, onEnter }) {
-  const maxV = Math.max(...GMV.map(g => g.v));
-  const [showForm, setShowForm] = useState(false);
-  return (
-    <div style={{ minHeight: "100vh" }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Logo height={26} /><span style={{ fontSize: 11, color: "var(--pu)", fontWeight: 600 }}>· investor brief</span></div>
-        <button className="btn bg bsm" onClick={onBack}>← back</button>
-      </div>
-
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "26px 16px 80px" }}>
-        {/* HERO */}
-        <div className="fu" style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r)", border: "1px solid var(--bd)", padding: "30px 22px", marginBottom: 34, background: "radial-gradient(circle at 85% -10%, rgba(155,114,221,0.18), var(--s2) 60%)" }}>
-          <div className="pill pa" style={{ marginBottom: 14 }}>{PITCH.roundStatus}</div>
-          <div style={{ fontFamily: "var(--fd)", fontSize: "clamp(26px,6vw,40px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.05, marginBottom: 12 }}>
-            {PITCH.heroTitlePre}<span style={{ color: "var(--g)" }}>{PITCH.heroTitleHighlight}</span>
-          </div>
-          <div style={{ fontSize: 15, color: "var(--t2)", lineHeight: 1.7, maxWidth: 560, marginBottom: 18 }}>{PITCH.heroSub}</div>
-          <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-            <div><div style={{ fontSize: 11, color: "var(--t3)" }}>raising</div><div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, color: "var(--g)" }}>{PITCH.raise}</div></div>
-            <div><div style={{ fontSize: 11, color: "var(--t3)" }}>stage</div><div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800 }}>{PITCH.stage}</div></div>
-            <div><div style={{ fontSize: 11, color: "var(--t3)" }}>committed</div><div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, color: "var(--am)" }}>{PITCH.committed}</div></div>
-            <div><div style={{ fontSize: 11, color: "var(--t3)" }}>post-money</div><div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800 }}>{PITCH.postMoney}</div></div>
-          </div>
-        </div>
-
-        {/* PROBLEM */}
-        <PitchSection tag="01 · the problem" title={PITCH.problemTitle}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 10 }}>
-            {[["Cash is the bottleneck", "78% of gig workers and small sellers have unused capacity but can't afford the services they need."], ["Barter doesn't scale", "1:1 trades almost never match. 'I want yours, but you don't want mine' kills 90% of deals."], ["Trust is broken", "Craigslist-era swapping is sketchy, unverified, and unprotected — so it stays tiny and local."]].map(([h, b]) => (
-              <div key={h} className="card">
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--rd)", marginBottom: 5 }}>{h}</div>
-                <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>{b}</div>
-              </div>
-            ))}
-          </div>
-        </PitchSection>
-
-        {/* SOLUTION */}
-        <PitchSection tag="02 · the solution" title="An AI matching engine that turns 'no match' into a chain of swaps everyone wins.">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 10 }}>
-            {[["◆", "AI Swap Matchmaker", "Proprietary graph engine finds direct, 3-way & 4-way circular trades in real time. No competitor does multi-party.", "var(--pu)"], ["⬡", "That Credits", "A barter currency that balances any deal — creating liquidity, a float, and powerful retention lock-in.", "var(--am)"], ["🔒", "Trust layer", "Platform-verified profiles, That Score, escrow & smart contracts make cashless trade safe enough to scale.", "var(--bl)"], ["⚇", "Everything-exchange", "22 categories: services, goods, rentals, digital, ventures, survival, mutual aid. One graph, infinite matches.", "var(--g)"]].map(([ic, h, b, c]) => (
-              <div key={h} className="card">
-                <div style={{ fontSize: 20, color: c, marginBottom: 7 }}>{ic}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5 }}>{h}</div>
-                <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>{b}</div>
-              </div>
-            ))}
-          </div>
-        </PitchSection>
-
-        {/* MARKET */}
-        <PitchSection tag="03 · market" title="A trillion-dollar exchange economy, addressable for the first time.">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 10 }}>
-            <PitchStat n={PITCH.market.tam} l={PITCH.market.tamLabel} c="var(--g)" />
-            <PitchStat n={PITCH.market.sam} l={PITCH.market.samLabel} c="var(--am)" />
-            <PitchStat n={PITCH.market.som} l={PITCH.market.somLabel} c="var(--pu)" />
-          </div>
-          <div style={{ fontSize: 11, color: "var(--t3)" }}>{PITCH.market.note} <span style={{ color: "var(--t2)" }}>Figures illustrative; assumptions in data room.</span></div>
-        </PitchSection>
-
-        {/* TRACTION */}
-        <PitchSection tag="04 · traction" title={PITCH.tractionTitle}>
-          <div className="card" style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 12 }}>{PITCH.gmvNote}</div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 7, height: 130 }}>
-              {GMV.map((g, i) => (
-                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: "100%", height: `${(g.v / maxV) * 100}%`, background: i === GMV.length - 1 ? "var(--g)" : "linear-gradient(180deg,var(--gd),rgba(239,93,71,0.25))", borderRadius: "4px 4px 0 0", minHeight: 4 }} />
-                  <div style={{ fontSize: 8, color: "var(--t3)" }}>{g.v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 9 }}>
-            <PitchStat n={PITCH.traders} l="verified traders" />
-            <PitchStat n={PITCH.cities} l="active cities" />
-            <PitchStat n={PITCH.retention} l={PITCH.retentionLabel} c="var(--am)" />
-            <PitchStat n={PITCH.momGrowth} l={PITCH.momGrowthLabel} c="var(--pu)" />
-          </div>
-        </PitchSection>
-
-        {/* BUSINESS MODEL */}
-        <PitchSection tag="05 · business model" title="Six ways to earn on a transaction the user thinks is 'free.'">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 10 }}>
-            {PITCH.revenue.map(([h, b]) => (
-              <div key={h} className="card">
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--g)", marginBottom: 5 }}>{h}</div>
-                <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>{b}</div>
-              </div>
-            ))}
-          </div>
-        </PitchSection>
-
-        {/* MOAT */}
-        <PitchSection tag="06 · why we win" title="The matching graph gets smarter — and harder to copy — with every member.">
-          <div className="card" style={{ lineHeight: 1.7, fontSize: 13, color: "var(--t2)" }}>
-            <p style={{ marginBottom: 10 }}><strong style={{ color: "var(--tx)" }}>Combinatorial network effects.</strong> Each new trader doesn't add one match — they unlock thousands of new multi-party loops. Liquidity compounds non-linearly.</p>
-            <p style={{ marginBottom: 10 }}><strong style={{ color: "var(--tx)" }}>Data moat.</strong> Proprietary supply/demand and verified-reputation data train a matching engine no new entrant can replicate cold.</p>
-            <p><strong style={{ color: "var(--tx)" }}>Currency lock-in.</strong> That Credits keep value inside the ecosystem — switching costs rise the more you trade.</p>
-          </div>
-        </PitchSection>
-
-        {/* THE ASK */}
-        <PitchSection tag="07 · the ask" title="$3M to go from buzzing marketplace to category-defining platform.">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 9, marginBottom: 14 }}>
-            {PITCH.useOfFunds.map(([p, l]) => (
-              <div key={l} style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "14px" }}>
-                <div style={{ fontFamily: "var(--fd)", fontSize: 24, fontWeight: 800, color: "var(--g)" }}>{p}</div>
-                <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 4 }}>{l}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.6 }}>{PITCH.milestones}</div>
-        </PitchSection>
-
-        {/* CTA */}
-        <div style={{ textAlign: "center", borderTop: "1px solid var(--bd)", paddingTop: 28 }}>
-          <div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Let's build the economy of trust.</div>
-          <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 18 }}>Request the full deck & data room.</div>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 14 }}>
-            <button className="btn bp blg" onClick={() => setShowForm(true)}>request the deck</button>
-            <button className="btn bg blg" onClick={() => onEnter("browse")}>try the product →</button>
-          </div>
-          <div style={{ fontSize: 11, color: "var(--t3)" }}>{PITCH.contactEmail} · {PITCH.company} · <span onClick={() => onEnter("admin")} style={{ cursor: "pointer", textDecoration: "underline" }}>admin</span></div>
-        </div>
-      </div>
-      {showForm && <RequestDeckModal onClose={() => setShowForm(false)} />}
-    </div>
-  );
-}
-
-// ── ADMIN: captured leads (bt_leads) ─────────────────────────────────────────
-function AdminLeads({ onBack }) {
-  const [unlocked, setUnlocked] = useState(() => { try { return sessionStorage.getItem("bt_admin_ok") === "1"; } catch { return false; } });
-  const [pass, setPass] = useState("");
-  const [err, setErr] = useState(false);
-  const [leads, setLeads] = useState(() => storage.get("bt_leads") || []);
-  const [copied, setCopied] = useState(false);
-  const sorted = [...leads].reverse(); // newest first
-
-  const tryUnlock = () => {
-    if (pass === ADMIN_PASS) {
-      try { sessionStorage.setItem("bt_admin_ok", "1"); } catch {}
-      setUnlocked(true); setErr(false);
-    } else { setErr(true); }
-  };
-
-  if (!unlocked) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-        <div className="fu" style={{ width: "100%", maxWidth: 380, textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 14 }}>🔒</div>
-          <div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, marginBottom: 6 }}>admin access</div>
-          <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 20 }}>enter the passphrase to view captured leads</div>
-          <input
-            className="ifield" type="password" autoFocus value={pass}
-            onChange={e => { setPass(e.target.value); setErr(false); }}
-            onKeyDown={e => { if (e.key === "Enter") tryUnlock(); }}
-            placeholder="passphrase"
-            style={{ textAlign: "center", borderColor: err ? "var(--rd)" : undefined, marginBottom: err ? 7 : 14 }}
-          />
-          {err && <div style={{ fontSize: 11, color: "var(--rd)", marginBottom: 14 }}>incorrect passphrase</div>}
-          <button className="btn bp" style={{ width: "100%", marginBottom: 9 }} disabled={!pass} onClick={tryUnlock}>unlock →</button>
-          <button className="btn bg" style={{ width: "100%" }} onClick={onBack}>← back</button>
-        </div>
-      </div>
-    );
-  }
-
-  const exportCsv = () => {
-    const cols = ["at", "name", "email", "firm", "checkSize", "message", "source"];
-    const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const csv = [cols.join(","), ...leads.map(l => cols.map(c => esc(l[c])).join(","))].join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    const a = document.createElement("a");
-    a.href = url; a.download = "barterthat-leads.csv"; a.click();
-    URL.revokeObjectURL(url);
-  };
-  const copyJson = async () => {
-    try { await navigator.clipboard.writeText(JSON.stringify(leads, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {}
-  };
-  const clearAll = () => {
-    if (!window.confirm("Delete all captured leads? This can't be undone.")) return;
-    storage.remove("bt_leads"); setLeads([]);
-  };
-  const fmt = iso => { try { return new Date(iso).toLocaleString(); } catch { return iso; } };
-
-  return (
-    <div style={{ minHeight: "100vh" }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Logo height={26} /><span style={{ fontSize: 11, color: "var(--am)", fontWeight: 600 }}>· admin · leads</span></div>
-        <button className="btn bg bsm" onClick={onBack}>← back</button>
-      </div>
-
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 14px 80px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-          <div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800 }}>{leads.length} captured lead{leads.length !== 1 ? "s" : ""}</div>
-          <div style={{ display: "flex", gap: 7, marginLeft: "auto", flexWrap: "wrap" }}>
-            <button className="btn bg bsm" disabled={!leads.length} onClick={copyJson}>{copied ? "copied ✓" : "copy JSON"}</button>
-            <button className="btn bg bsm" disabled={!leads.length} onClick={exportCsv}>export CSV</button>
-            <button className="btn bg bsm" disabled={!leads.length} style={{ color: leads.length ? "var(--rd)" : undefined }} onClick={clearAll}>clear all</button>
-          </div>
-        </div>
-
-        <div style={{ fontSize: 11, color: "var(--t3)", marginBottom: 16, lineHeight: 1.6 }}>
-          Submissions captured locally from the pitch form (<code style={{ color: "var(--t2)" }}>bt_leads</code>). These live only in this browser. Once you set a real <code style={{ color: "var(--t2)" }}>formEndpoint</code>, submissions also POST to your form service.
-        </div>
-
-        {sorted.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--t3)" }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>✉</div>
-            <div>no leads yet — submit the "request the deck" form to capture one</div>
-          </div>
-        ) : sorted.map((l, i) => (
-          <div key={i} className="card" style={{ marginBottom: 9 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 6 }}>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>{l.name || "—"}</div>
-              <div style={{ fontSize: 10, color: "var(--t3)" }}>{fmt(l.at)}</div>
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: l.message ? 8 : 0 }}>
-              <a href={`mailto:${l.email}`} className="pill pb" style={{ textDecoration: "none" }}>{l.email}</a>
-              {l.firm && <span className="pill pd">{l.firm}</span>}
-              {l.checkSize && <span className="pill pa">{l.checkSize}</span>}
-            </div>
-            {l.message && <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6, background: "var(--s3)", borderRadius: "var(--rs)", padding: "9px 12px" }}>{l.message}</div>}
-          </div>
-        ))}
+        <div style={{ fontSize: 11, color: "var(--t3)" }}>link your StyleSeat · Etsy · Fiverr · Upwork · Google Business · and 9 more platforms</div>
       </div>
     </div>
   );
@@ -701,28 +212,24 @@ function Signup({ onDone }) {
   const [step, setStep] = useState(0);
   const [isB2B, setIsB2B] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", loc: "", cat: "", sub: "", title: "", desc: "", rate: 75, acceptTopup: true, taxBracket: "$0–$44k" });
-  const [wants, setWants] = useState([]);
-  const [badges, setBadges] = useState([]);
-  const [specialties, setSpecialties] = useState([]);
   const [selPlats, setSelPlats] = useState([]);
   const [platUrls, setPlatUrls] = useState({});
   const [selCerts, setSelCerts] = useState([]);
 
-  const steps = isB2B ? ["account", "your offer", "what you want", "platforms", "B2B credentials", "launch"] : ["account", "your offer", "what you want", "platforms", "launch"];
+  const steps = isB2B ? ["account", "your service", "platforms", "B2B credentials", "launch"] : ["account", "your service", "platforms", "launch"];
 
   const ok = () => {
     if (step === 0) return form.name.trim() && form.email.trim() && form.loc.trim();
     if (step === 1) return form.cat && form.title.trim() && form.desc.trim();
-    if (step === 2) return wants.length >= 1;
-    if (step === 3) return selPlats.length >= 1;
-    if (isB2B && step === 4) return selCerts.length >= 2;
+    if (step === 2) return selPlats.length >= 1;
+    if (isB2B && step === 3) return selCerts.length >= 2;
     return true;
   };
 
   const go = () => {
     if (step < steps.length - 1) { setStep(s => s + 1); return; }
     const plats = selPlats.map(id => { const p = PLATFORMS.find(x => x.id === id); return { id, l: p.l, proof: platUrls[id] || "profile linked", url: platUrls[id] || `${p.l.toLowerCase().replace(/\s/g, "")}.com/${form.name.toLowerCase().replace(/\s/g, "")}` }; });
-    onDone({ ...form, wants, badges, specialties, platforms: plats, b2b: isB2B, certs: selCerts });
+    onDone({ ...form, platforms: plats, b2b: isB2B, certs: selCerts });
   };
 
   const selectedCat = CATS.find(c => c.label === form.cat);
@@ -730,8 +237,12 @@ function Signup({ onDone }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <div style={{ width: "100%", maxWidth: 500 }} className="fu">
-        <div style={{ marginBottom: 24, textAlign: "center" }}><Logo height={26} style={{ margin: "0 auto" }} /></div>
-        <div style={{ display: "flex", gap: 5, marginBottom: 24 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <img src="/logo.png" alt="BarterThat" style={{ height: 44, objectFit: "contain", maxWidth: 200 }}
+            onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="inline"; }} />
+          <span style={{ display: "none", fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, letterSpacing: "-1px", color: "var(--tx)" }}>Barter<span style={{ color: "var(--g)" }}>That</span></span>
+        </div>
+        <div style={{ display: "flex", gap: 5, marginBottom: 28 }}>
           {steps.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= step ? "var(--g)" : "var(--s4)", transition: "background .3s" }} />)}
         </div>
         {step === 0 && (
@@ -755,7 +266,6 @@ function Signup({ onDone }) {
             </select>
             <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>B2B swaps match within 1 bracket — both parties have something to lose</div>
           </div>}
-          <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 That Credits</strong> in your account to get you trading.</div>
         </div>}
 
         {step === 1 && <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
@@ -767,52 +277,26 @@ function Signup({ onDone }) {
             </select>
           </div>
           {selectedCat && <div>
-            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>specific offer</label>
+            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>specific service</label>
             <select className="ifield" value={form.sub} onChange={e => setForm(f => ({ ...f, sub: e.target.value }))}>
-              <option value="">select</option>
+              <option value="">select service</option>
               {selectedCat.subs.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>}
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>listing title</label><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe what you offer in one line" /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>listing title</label><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe your service in one line" /></div>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details</label><textarea className="ifield" rows={3} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? hours? requirements?" style={{ resize: "none" }} /></div>
           <div>
-            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your value — <strong style={{ color: "var(--g)" }}>${form.rate}{form.rate > 0 ? "/hr" : ""}</strong> {form.rate === 0 && "(free / community swap)"}</label>
+            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your rate — <strong style={{ color: "var(--g)" }}>${form.rate}/hr</strong> {form.rate === 0 && "(free / community swap)"}</label>
             <input type="range" min={0} max={250} step={5} value={form.rate} onChange={e => setForm(f => ({ ...f, rate: +e.target.value }))} style={{ width: "100%", accentColor: "var(--g)" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--t3)", marginTop: 3 }}><span>$0 (community)</span><span>$250</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--t3)", marginTop: 3 }}><span>$0 (community)</span><span>$250/hr</span></div>
           </div>
           <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "var(--t2)", cursor: "pointer" }}>
             <input type="checkbox" checked={form.acceptTopup} onChange={e => setForm(f => ({ ...f, acceptTopup: e.target.checked }))} style={{ accentColor: "var(--g)", width: 15, height: 15 }} />
-            accept That Credits / cash top-up to balance value
+            accept cash top-up when partner's service is lower value
           </label>
-          <div style={{ borderTop: "1px solid var(--bd)", paddingTop: 13 }}>
-            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 3 }}>community badges <span style={{ color: "var(--t3)" }}>— optional, self-identify to help your community find & support you</span></label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 7 }}>
-              {COMMUNITY_BADGES.map(b => (
-                <button key={b.id} className={`chip ${badges.includes(b.id) ? "on" : ""}`} onClick={() => setBadges(p => p.includes(b.id) ? p.filter(x => x !== b.id) : [...p, b.id])}>{badges.includes(b.id) ? "♥ " : ""}{b.l}</button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 3 }}>service specialties <span style={{ color: "var(--t3)" }}>— optional, describes your offer</span></label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 7 }}>
-              {SPECIALTIES.map(s => (
-                <button key={s} className={`chip ${specialties.includes(s) ? "on" : ""}`} onClick={() => setSpecialties(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])}>{specialties.includes(s) ? "✓ " : ""}{s}</button>
-              ))}
-            </div>
-          </div>
         </div>}
 
         {step === 2 && <div>
-          <p style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>What are you hoping to get? Pick any categories — our <strong style={{ color: "var(--pu)" }}>AI Matchmaker</strong> uses this to find direct swaps <em>and</em> multi-party trade loops for you.</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-            {CAT_LABELS.map(c => (
-              <button key={c} className={`chip ${wants.includes(c) ? "on" : ""}`} onClick={() => setWants(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c])}>{wants.includes(c) ? "✓ " : ""}{c}</button>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 12 }}>{wants.length} selected — the more you add, the more loops we can find</div>
-        </div>}
-
-        {step === 3 && <div>
           <p style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>Select platforms where your work is already reviewed. This is your proof — no strangers, no sketchy.</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
             {PLATFORMS.map(p => (
@@ -827,7 +311,7 @@ function Signup({ onDone }) {
             <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 8 }}>paste your profile URLs:</div>
             {selPlats.map(id => { const p = PLATFORMS.find(x => x.id === id); return (
               <div key={id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-                <div style={{ fontSize: 11, color: "var(--t2)", width: 95, flexShrink: 0 }}>{p.l}</div>
+                <div style={{ fontSize: 11, color: "var(--t2)", width: 85, flexShrink: 0 }}>{p.l}</div>
                 <input className="ifield" placeholder={`${p.l.toLowerCase()}.com/you`} value={platUrls[id] || ""} onChange={e => setPlatUrls(v => ({ ...v, [id]: e.target.value }))} style={{ flex: 1 }} />
               </div>
             ); })}
@@ -835,7 +319,7 @@ function Signup({ onDone }) {
           <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 8 }}>✦ links are community-verified — fake profiles get flagged</div>
         </div>}
 
-        {isB2B && step === 4 && <div>
+        {isB2B && step === 3 && <div>
           <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "11px 14px", marginBottom: 16, fontSize: 12, color: "var(--pu)", lineHeight: 1.6 }}>
             <strong>B2B swaps require minimum 2 credentials</strong> — ensures both parties have real stakes.
           </div>
@@ -853,11 +337,10 @@ function Signup({ onDone }) {
         {step === steps.length - 1 && <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 44, marginBottom: 14, color: "var(--g)" }}>✦</div>
           <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 10, color: "var(--g)" }}>you're live.</div>
-          <p style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.7, marginBottom: 16 }}>Listing active. Platforms linked. AI Matchmaker is already scanning for your swaps.</p>
-          <div className="credit" style={{ marginBottom: 16 }}>⬡ 50 That Credits added</div>
+          <p style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.7, marginBottom: 20 }}>Your listing is active. Platforms linked. That Score starts building now.</p>
           {isB2B && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "11px 14px", marginBottom: 16, fontSize: 12, color: "var(--pu)" }}>B2B verified — matched with licensed businesses in your tax bracket</div>}
           <div style={{ display: "flex", flexDirection: "column", gap: 7, textAlign: "left" }}>
-            {["✓ listing live in marketplace", "✓ platform proof verified", "✓ AI matchmaking active", "✓ escrow protection on"].map(t => (
+            {["✓ listing live in marketplace", "✓ platform proof verified", "✓ swap proposals open", "✓ escrow protection active"].map(t => (
               <div key={t} style={{ fontSize: 12, color: "var(--t2)", padding: "8px 12px", background: "var(--s3)", borderRadius: "var(--rs)" }}>{t}</div>
             ))}
           </div>
@@ -874,123 +357,53 @@ function Signup({ onDone }) {
   );
 }
 
-// ── LISTING CARD ──────────────────────────────────────────────────────────────
-function ListingCard({ l, user, onView, onSave, onPropose, i = 0 }) {
-  return (
-    <div className="card fu" style={{ animationDelay: `${i * .03}s`, cursor: "pointer" }} onClick={() => onView(l)}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <Av ini={l.ini} avc={l.avc} size={40} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-              {l.name}
-              {l.elite && <span className="pill pa">Elite</span>}
-              {l.b2b && <span className="b2b-badge">B2B</span>}
-            </div>
-            <Stars r={l.rating} />
-          </div>
-        </div>
-        <button onClick={e => { e.stopPropagation(); onSave(l.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: user && l.saved?.includes(user.id) ? "var(--g)" : "var(--t3)", transition: "color .15s", flexShrink: 0 }}>♡</button>
-      </div>
-      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 7 }}>
-        <TypeBadge t={l.type} />
-        <span className="pill pd">{l.cat}</span>
-      </div>
-      <div style={{ fontFamily: "var(--fd)", fontSize: 14, fontWeight: 700, marginBottom: 5, lineHeight: 1.3 }}>{l.title}</div>
-      <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 10, lineHeight: 1.5 }}>{l.desc}</div>
-      {(l.badges?.length > 0 || l.specialties?.length > 0) && (
-        <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 9 }}>
-          {l.badges?.map(b => <OwnedBadge key={b} id={b} />)}
-          {l.specialties?.map(s => <SpecTag key={s} s={s} />)}
-        </div>
-      )}
-      {l.wants?.length > 0 && (
-        <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 10 }}>wants: <span style={{ color: "var(--t2)" }}>{l.wants.slice(0, 2).join(", ")}{l.wants.length > 2 ? "…" : ""}</span></div>
-      )}
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
-        {l.platforms.slice(0, 3).map(p => { const pl = PLATFORMS.find(x => x.id === p.id) || { c: "#555" }; return (
-          <span key={p.id} style={{ fontSize: 10, padding: "2px 7px", borderRadius: "var(--rp)", background: `${pl.c}15`, color: pl.c, fontWeight: 600 }}>✓ {p.l}</span>
-        ); })}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div>
-          <span style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800, color: "var(--g)" }}>{l.rate === 0 ? "Free / aid" : "$" + l.rate}</span>
-          <span style={{ fontSize: 11, color: "var(--t3)" }}>{l.rate > 0 ? (l.type === "service" ? "/hr · " : " · ") : " · "}{l.loc}</span>
-        </div>
-        <button className="btn bp bsm" onClick={e => { e.stopPropagation(); onPropose(l); }}>propose swap</button>
-      </div>
-    </div>
-  );
-}
-
-// ── BROWSE (Listings / Map / Live) ──────────────────────────────────────────
+// ── BROWSE ────────────────────────────────────────────────────────────────────
 function Browse({ listings, user, onView, onSave, onPropose }) {
-  const [view, setView] = useState("list");
   const [cat, setCat] = useState("All");
   const [q, setQ] = useState("");
-  const [type, setType] = useState("All");
+  const [remote, setRemote] = useState(false);
+  const [b2b, setB2B] = useState(false);
+  const [squad, setSquad] = useState(false);
   const [maxR, setMaxR] = useState(250);
   const [showCats, setShowCats] = useState(false);
-  const [support, setSupport] = useState([]);
-  const [showSupport, setShowSupport] = useState(false);
 
   const filtered = listings.filter(l => {
     if (user && l.uid === user.id) return false;
     if (cat !== "All" && l.cat !== cat) return false;
-    if (type !== "All" && l.type !== type) return false;
-    if (support.length && !support.some(b => l.badges?.includes(b))) return false;
-    if (q && !l.title.toLowerCase().includes(q.toLowerCase()) && !l.name.toLowerCase().includes(q.toLowerCase()) && !l.sub.toLowerCase().includes(q.toLowerCase()) && !l.cat.toLowerCase().includes(q.toLowerCase())) return false;
+    if (q && !l.title.toLowerCase().includes(q.toLowerCase()) && !l.name.toLowerCase().includes(q.toLowerCase()) && !l.sub.toLowerCase().includes(q.toLowerCase())) return false;
+    if (remote && !l.remote) return false;
+    if (b2b && !l.b2b) return false;
+    if (squad && !l.isSquad) return false;
     if (l.rate > maxR) return false;
     return true;
   });
 
   return (
-    <div style={{ paddingBottom: 90 }}>
+    <div style={{ paddingBottom: 80 }}>
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--bd)", padding: "10px 14px 8px" }}>
-        <input className="ifield" value={q} onChange={e => setQ(e.target.value)} placeholder="search anything — service, item, skill, city..." style={{ marginBottom: 8 }} />
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <div style={{ display: "flex", gap: 4, background: "var(--s3)", borderRadius: "var(--rp)", padding: 3 }}>
-            {[["list", "◫"], ["map", "📍"], ["live", "◉"]].map(([v, ic]) => (
-              <button key={v} onClick={() => setView(v)} style={{ padding: "4px 12px", borderRadius: "var(--rp)", border: "none", background: view === v ? "var(--g)" : "transparent", color: view === v ? "#fff" : "var(--t2)", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>{ic} {v}</button>
-            ))}
-          </div>
+        <input className="ifield" value={q} onChange={e => setQ(e.target.value)} placeholder="search any service, skill, or city..." style={{ marginBottom: 8 }} />
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {[["remote", remote, setRemote], ["B2B licensed", b2b, setB2B], ["community squads", squad, setSquad]].map(([l, v, s]) => (
+            <button key={l} onClick={() => s(x => !x)} style={{ padding: "4px 11px", borderRadius: "var(--rp)", border: `1px solid ${v ? "var(--g)" : "var(--bd)"}`, background: v ? "var(--gl)" : "transparent", color: v ? "#0D9A5A" : "var(--t2)", fontSize: 11, cursor: "pointer", transition: "all .15s" }}>{v ? "✓ " : ""}{l}</button>
+          ))}
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
             <span style={{ fontSize: 10, color: "var(--t3)", whiteSpace: "nowrap" }}>max ${maxR}</span>
-            <input type="range" min={0} max={250} step={5} value={maxR} onChange={e => setMaxR(+e.target.value)} style={{ width: 64, accentColor: "var(--g)" }} />
+            <input type="range" min={0} max={250} step={5} value={maxR} onChange={e => setMaxR(+e.target.value)} style={{ width: 70, accentColor: "var(--g)" }} />
           </div>
-        </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-          {["All", ...Object.keys(TYPE_META)].map(tk => (
-            <button key={tk} onClick={() => setType(tk)} style={{ padding: "3px 10px", borderRadius: "var(--rp)", border: `1px solid ${type === tk ? "var(--g)" : "var(--bd)"}`, background: type === tk ? "var(--gl)" : "transparent", color: type === tk ? "#EF5D47" : "var(--t2)", fontSize: 11, cursor: "pointer" }}>{tk === "All" ? "all types" : TYPE_META[tk].l}</button>
-          ))}
         </div>
       </div>
 
       <div style={{ padding: "10px 14px 0" }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-          <button onClick={() => setShowCats(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", background: showCats ? "var(--s3)" : "transparent", color: "var(--t2)", cursor: "pointer", fontSize: 12 }}>
-            {showCats ? "▲" : "▼"} browse all {CATS.length} categories
-          </button>
-          <button onClick={() => setShowSupport(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: `1px solid ${support.length ? "rgba(232,177,74,0.4)" : "var(--bd)"}`, background: support.length ? "var(--amb)" : (showSupport ? "var(--s3)" : "transparent"), color: support.length ? "var(--am)" : "var(--t2)", cursor: "pointer", fontSize: 12 }}>
-            ♥ support community-owned{support.length ? ` · ${support.length}` : ""}
-          </button>
-        </div>
-        {showSupport && (
-          <div style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "12px 13px", marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 9, lineHeight: 1.5 }}>Discover & support businesses that self-identify with these communities. Sellers opt in — this celebrates them, it never excludes anyone.</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {COMMUNITY_BADGES.map(b => (
-                <button key={b.id} className={`chip ${support.includes(b.id) ? "on" : ""}`} onClick={() => setSupport(p => p.includes(b.id) ? p.filter(x => x !== b.id) : [...p, b.id])}>{support.includes(b.id) ? "♥ " : ""}{b.l}</button>
-              ))}
-            </div>
-            {support.length > 0 && <button onClick={() => setSupport([])} style={{ marginTop: 10, fontSize: 11, color: "var(--t3)", background: "none", border: "none", cursor: "pointer" }}>✕ clear</button>}
-          </div>
-        )}
+        <button onClick={() => setShowCats(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", background: showCats ? "var(--s3)" : "transparent", color: "var(--t2)", cursor: "pointer", fontSize: 12, marginBottom: 8 }}>
+          {showCats ? "▲" : "▼"} browse all {CATS.length} categories
+        </button>
         {showCats && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(165px,1fr))", gap: 6, marginBottom: 12 }}>
-            <button onClick={() => { setCat("All"); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === "All" ? "var(--g)" : "var(--bd)"}`, background: cat === "All" ? "var(--gl)" : "var(--s3)", color: cat === "All" ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>◈ All categories</button>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(155px,1fr))", gap: 6, marginBottom: 12 }}>
+            <button onClick={() => { setCat("All"); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === "All" ? "var(--g)" : "var(--bd)"}`, background: cat === "All" ? "var(--gl)" : "var(--s3)", color: cat === "All" ? "#0D9A5A" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>◈ All categories</button>
             {CATS.map(c => (
-              <button key={c.id} onClick={() => { setCat(c.label); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === c.label ? "var(--g)" : "var(--bd)"}`, background: cat === c.label ? "var(--gl)" : "var(--s3)", color: cat === c.label ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>{c.icon} {c.label}</button>
+              <button key={c.id} onClick={() => { setCat(c.label); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === c.label ? "var(--g)" : "var(--bd)"}`, background: cat === c.label ? "var(--gl)" : "var(--s3)", color: cat === c.label ? "#0D9A5A" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>
+                {c.icon} {c.label}
+              </button>
             ))}
           </div>
         )}
@@ -1002,233 +415,59 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
         )}
       </div>
 
-      {view === "list" && <>
-        <div style={{ padding: "0 14px", fontSize: 11, color: "var(--t3)", marginBottom: 10 }}>{filtered.length} result{filtered.length !== 1 ? "s" : ""} found</div>
-        <div style={{ padding: "0 14px", display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(275px,1fr))", gap: 10 }}>
-          {filtered.map((l, i) => <ListingCard key={l.id} l={l} user={user} onView={onView} onSave={onSave} onPropose={onPropose} i={i} />)}
-        </div>
-        {filtered.length === 0 && <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--t3)" }}><div style={{ fontSize: 28, marginBottom: 10 }}>◎</div><div>no listings match — try different filters</div></div>}
-      </>}
+      <div style={{ padding: "0 14px", fontSize: 11, color: "var(--t3)", marginBottom: 10 }}>{filtered.length} service{filtered.length !== 1 ? "s" : ""} found</div>
 
-      {view === "map" && <MapView listings={filtered} onView={onView} />}
-      {view === "live" && <LiveFeed listings={filtered} onView={onView} />}
-    </div>
-  );
-}
-
-// ── MAP VIEW (stylized hyperlocal radar) ─────────────────────────────────────
-function MapView({ listings, onView }) {
-  const pts = listings.slice(0, 16);
-  const pos = (id) => { const a = (id * 2654435761) % 1000 / 1000, b = (id * 40503) % 1000 / 1000; return { left: 8 + a * 80, top: 10 + b * 74 }; };
-  return (
-    <div style={{ padding: "8px 14px" }}>
-      <div style={{ position: "relative", height: 380, borderRadius: "var(--r)", border: "1px solid var(--bd)", overflow: "hidden", background: "radial-gradient(circle at 50% 50%, rgba(239,93,71,0.08), var(--s1) 70%)" }}>
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "38px 38px", opacity: .4 }} />
-        {[120, 230, 340].map((s, i) => <div key={i} className="ring" style={{ width: s, height: s, left: `calc(50% - ${s/2}px)`, top: `calc(50% - ${s/2}px)` }} />)}
-        <div style={{ position: "absolute", left: "calc(50% - 7px)", top: "calc(50% - 7px)", width: 14, height: 14, borderRadius: "50%", background: "var(--g)", boxShadow: "0 0 0 4px rgba(239,93,71,0.2)" }}>
-          <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "var(--g)", animation: "ping 2s infinite" }} />
-        </div>
-        {pts.map(l => { const p = pos(l.id); return (
-          <div key={l.id} className="maprow" style={{ left: `${p.left}%`, top: `${p.top}%`, animationDelay: `${(l.id % 5) * .4}s` }} onClick={() => onView(l)}>
-            <Av ini={l.ini} avc={l.avc} size={30} style={{ border: "2px solid var(--bk)" }} />
-            <span style={{ fontSize: 9, background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--rp)", padding: "1px 6px", whiteSpace: "nowrap", color: "var(--t2)" }}>{l.rate === 0 ? "free" : "$" + l.rate}</span>
-          </div>
-        ); })}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 12, color: "var(--t2)" }}>
-        <span className="ndot" /> {pts.length} traders within range · tap a pin to view
-      </div>
-    </div>
-  );
-}
-
-// ── LIVE FEED ─────────────────────────────────────────────────────────────────
-function LiveFeed({ listings, onView }) {
-  const [events, setEvents] = useState(ACTIVITY_SEED.map((e, i) => ({ ...e, id: "s" + i, t: "just now" })));
-  useEffect(() => {
-    const iv = setInterval(() => {
-      const n = ACT_NAMES[Math.floor(Math.random() * ACT_NAMES.length)];
-      const ev = ACT_TEMPLATES[Math.floor(Math.random() * ACT_TEMPLATES.length)](n);
-      setEvents(p => [{ ...ev, id: Date.now(), t: "just now" }, ...p.map(x => ({ ...x, t: x.t === "just now" ? "moments ago" : x.t }))].slice(0, 22));
-    }, 2600);
-    return () => clearInterval(iv);
-  }, []);
-  return (
-    <div style={{ padding: "10px 14px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <span className="ndot" /><span style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--fd)" }}>happening now</span>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--t3)" }}>live · auto-updating</span>
-      </div>
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        {events.map(e => (
-          <div key={e.id} className="feed fi">
-            <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--s3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: e.c, flexShrink: 0 }}>{e.ic}</div>
-            <div style={{ flex: 1, fontSize: 12, color: "var(--tx)" }}>{e.txt}</div>
-            <div style={{ fontSize: 10, color: "var(--t3)", flexShrink: 0 }}>{e.t}</div>
+      <div style={{ padding: "0 14px", display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(275px,1fr))", gap: 10 }}>
+        {filtered.map((l, i) => (
+          <div key={l.id} className="card fu" style={{ animationDelay: `${i * .04}s`, cursor: "pointer" }} onClick={() => onView(l)}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <Av ini={l.ini} avc={l.avc} size={40} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                    {l.name}
+                    {l.elite && <span className="pill pa">Elite</span>}
+                    {l.b2b && <span className="b2b-badge">B2B</span>}
+                    {l.isSquad && <span className="pill pg">Squad</span>}
+                  </div>
+                  <Stars r={l.rating} />
+                </div>
+              </div>
+              <button onClick={e => { e.stopPropagation(); onSave(l.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: user && l.saved?.includes(user.id) ? "var(--g)" : "var(--t3)", transition: "color .15s", flexShrink: 0 }}>♡</button>
+            </div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 7 }}>
+              <span className="pill pd">{l.cat}</span>
+              {l.sub && <span style={{ fontSize: 10, color: "var(--t3)", padding: "2px 8px", background: "transparent", border: "1px solid var(--bd)", borderRadius: "var(--rp)" }}>{l.sub}</span>}
+            </div>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 14, fontWeight: 700, marginBottom: 5, lineHeight: 1.3 }}>{l.title}</div>
+            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 10, lineHeight: 1.5 }}>{l.desc}</div>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
+              {l.platforms.slice(0, 3).map(p => { const pl = PLATFORMS.find(x => x.id === p.id) || { c: "#555" }; return (
+                <span key={p.id} style={{ fontSize: 10, padding: "2px 7px", borderRadius: "var(--rp)", background: `${pl.c}15`, color: pl.c, fontWeight: 600 }}>✓ {p.l}</span>
+              ); })}
+            </div>
+            {l.b2b && l.certs?.length > 0 && (
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
+                {l.certs.slice(0, 2).map(c => <span key={c} className="pill pp" style={{ fontSize: 9 }}>{c}</span>)}
+                {l.certs.length > 2 && <span className="pill pp" style={{ fontSize: 9 }}>+{l.certs.length - 2} more</span>}
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <span style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800, color: "var(--g)" }}>{l.rate === 0 ? "Free swap" : "$" + l.rate}</span>
+                <span style={{ fontSize: 11, color: "var(--t3)" }}>{l.rate > 0 ? "/hr · " : " · "}{l.loc}</span>
+              </div>
+              <button className="btn bp bsm" onClick={e => { e.stopPropagation(); onPropose(l); }}>propose swap</button>
+            </div>
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-// ── MATCH (AI Swap Matchmaker + circular trades) ─────────────────────────────
-function Match({ listings, user, onView, onPropose }) {
-  const [offer, setOffer] = useState(user?.cat || "Creative Arts & Design");
-  const [wants, setWants] = useState(user?.wants?.length ? user.wants : ["Beauty & Personal Care", "Tech & Digital Services"]);
-  const [run, setRun] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const results = useMemo(() => {
-    if (!run) return null;
-    return findSwaps({ uid: user?.id || -1, offer, wants }, listings);
-  }, [run, offer, wants, listings, user]);
-
-  const find = () => { setLoading(true); setRun(false); setTimeout(() => { setLoading(false); setRun(true); }, 950); };
-
-  return (
-    <div style={{ padding: "14px 14px 90px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-        <span className="pill pp">◆ AI</span>
-        <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800 }}>Swap Matchmaker</div>
-      </div>
-      <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 16, lineHeight: 1.6 }}>No direct match? We find the <strong style={{ color: "var(--pu)" }}>chain</strong>. You → them → someone else → back to you. Everyone gets what they want.</div>
-
-      <div className="card" style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>I offer</label>
-        <select className="ifield" value={offer} onChange={e => { setOffer(e.target.value); setRun(false); }} style={{ marginBottom: 12 }}>
-          {CAT_LABELS.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 7 }}>I want (pick any)</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {CAT_LABELS.map(c => (
-            <button key={c} className={`chip ${wants.includes(c) ? "on" : ""}`} onClick={() => { setWants(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]); setRun(false); }}>{wants.includes(c) ? "✓ " : ""}{c}</button>
-          ))}
-        </div>
-        <button className="btn bpu" style={{ width: "100%", marginTop: 14 }} disabled={!wants.length || loading} onClick={find}>
-          {loading ? "scanning the network…" : "◆ find my swaps"}
-        </button>
-      </div>
-
-      {loading && <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: 26 }}><div className="spin" /><span style={{ fontSize: 13, color: "var(--t2)" }}>analyzing {listings.length} traders for direct & circular matches…</span></div>}
-
-      {results && !loading && <>
-        {results.direct.length === 0 && results.loops.length === 0 && (
-          <div style={{ textAlign: "center", padding: "44px 24px", color: "var(--t3)" }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>🔍</div>
-            <div style={{ marginBottom: 6 }}>No matches yet for that combo.</div>
-            <div style={{ fontSize: 12 }}>Add more "I want" categories — loops need flexibility.</div>
-          </div>
-        )}
-
-        {results.direct.length > 0 && <>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--g)", marginBottom: 10, textTransform: "uppercase", letterSpacing: ".06em" }}>⇄ direct swaps ({results.direct.length})</div>
-          {results.direct.map(([, b]) => (
-            <div key={"d" + b.id} className="card fu" style={{ marginBottom: 9 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Av ini={b.ini} avc={b.avc} size={38} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{b.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--t2)" }}>{b.cat} · you both want each other's offer</div>
-                </div>
-                <Score score={b.score} />
-              </div>
-              <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
-                <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(b)}>view</button>
-                <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onPropose(b)}>propose</button>
-              </div>
-            </div>
-          ))}
-        </>}
-
-        {results.loops.length > 0 && <>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--pu)", margin: "16px 0 10px", textTransform: "uppercase", letterSpacing: ".06em" }}>🔄 circular trade loops ({results.loops.length})</div>
-          {results.loops.map((loop, li) => (
-            <div key={"l" + li} className="card fu" style={{ marginBottom: 10, borderColor: "rgba(155,114,221,0.3)", animationDelay: `${li * .06}s` }}>
-              <div style={{ fontSize: 11, color: "var(--pu)", marginBottom: 10, fontWeight: 700 }}>{loop.length}-way loop — nobody pays, everybody wins</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", paddingBottom: 4 }}>
-                {loop.map((n, ni) => (
-                  <div key={ni} style={{ display: "contents" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 56 }}>
-                      <Av ini={n.ini} avc={n.id === "you" ? "var(--g)" : n.avc} size={38} />
-                      <span style={{ fontSize: 9, color: "var(--t2)", textAlign: "center", maxWidth: 60, lineHeight: 1.2 }}>{n.id === "you" ? "You" : n.name.split(" ")[0]}</span>
-                    </div>
-                    <div className="arrowline" />
-                  </div>
-                ))}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 56 }}>
-                  <Av ini={loop[0].ini} avc="var(--g)" size={38} style={{ opacity: .5 }} />
-                  <span style={{ fontSize: 9, color: "var(--t3)" }}>back to You</span>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 7, marginTop: 12 }}>
-                <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(loop[1].id === "you" ? loop[2] : loop[1])}>view chain</button>
-                <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(loop[1])}>start loop</button>
-              </div>
-            </div>
-          ))}
-        </>}
-      </>}
-
-      {!results && !loading && (
-        <div style={{ textAlign: "center", padding: "30px 24px", color: "var(--t3)" }}>
-          <div style={{ fontSize: 30, marginBottom: 10 }}>◆</div>
-          <div style={{ fontSize: 12 }}>Set what you offer & want, then let the AI find your swaps.</div>
+      {filtered.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--t3)" }}>
+          <div style={{ fontSize: 28, marginBottom: 10 }}>◎</div>
+          <div>no listings match — try different filters</div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── COMMUNITY (mission + squads + mutual aid + ventures) ─────────────────────
-function Community({ listings, user, onView, onPropose, onNav }) {
-  const squads = listings.filter(l => l.type === "squad");
-  const aid = listings.filter(l => l.type === "aid");
-  const ventures = listings.filter(l => l.type === "venture");
-  const Section = ({ title, sub, items, color }) => items.length > 0 && (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontFamily: "var(--fd)", fontSize: 16, fontWeight: 800, marginBottom: 2 }}>{title}</div>
-      <div style={{ fontSize: 11, color: "var(--t3)", marginBottom: 10 }}>{sub}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(255px,1fr))", gap: 9 }}>
-        {items.map(l => (
-          <div key={l.id} className="card" style={{ cursor: "pointer", borderLeft: `3px solid ${color}` }} onClick={() => onView(l)}>
-            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
-              <Av ini={l.ini} avc={l.avc} size={34} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{l.name}</div>
-                <div style={{ fontSize: 10, color: "var(--t3)" }}>{l.loc}</div>
-              </div>
-              <TypeBadge t={l.type} />
-            </div>
-            <div style={{ fontFamily: "var(--fd)", fontSize: 13, fontWeight: 700, marginBottom: 4, lineHeight: 1.3 }}>{l.title}</div>
-            <div style={{ fontSize: 11, color: "var(--t2)", lineHeight: 1.5, marginBottom: 10 }}>{l.desc}</div>
-            <button className="btn bp bsm" style={{ width: "100%" }} onClick={e => { e.stopPropagation(); onPropose(l); }}>{l.type === "aid" ? "offer help / swap" : l.type === "venture" ? "reach out" : "join squad"}</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div style={{ padding: "14px 14px 90px" }}>
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r)", border: "1px solid var(--bd)", padding: "22px 18px", marginBottom: 20, background: "radial-gradient(circle at 80% 0%, rgba(155,114,221,0.14), var(--s2) 60%)" }}>
-        <div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, letterSpacing: "-.5px", lineHeight: 1.2, marginBottom: 10 }}>We were built to need each other.</div>
-        <div style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.7, maxWidth: 520 }}>
-          One person is good at one thing. But someone else can make you <em style={{ color: "var(--tx)" }}>better</em> — because they're good at another. BarterThat isn't just a marketplace. It's a reminder that no one builds a life alone. Trade your gift. Receive someone else's. That's the whole point.
-        </div>
-        <div style={{ display: "flex", gap: 9, marginTop: 16, flexWrap: "wrap" }}>
-          <button className="btn bpu bsm" onClick={() => onNav("match")}>◆ find your match</button>
-          <button className="btn bg bsm" onClick={() => onNav("post")}>start a circle</button>
-        </div>
-      </div>
-
-      <Section title="◆ Professional & Business Services" sub="Find a co-founder, CTO, advisor, or pitch help — trade equity or skills" items={ventures} color="var(--pu)" />
-      <Section title="⚇ Community Squads & Circles" sub="Rotating crews tackling jobs no one should face alone" items={squads} color="var(--g)" />
-      <Section title="♡ Mutual Aid" sub="Neighbors helping neighbors — give what you can, get what you need" items={aid} color="var(--bl)" />
-
-      <div className="card" style={{ background: "var(--blb)", borderColor: "rgba(74,144,217,0.25)" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--bl)", marginBottom: 6 }}>🔒 protected by design</div>
-        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Every member is platform-verified with a That Score. Cash & credit top-ups sit in escrow until both sides confirm. B2B & venture deals generate a smart contract. Community trust, enforced by tech.</div>
-      </div>
     </div>
   );
 }
@@ -1242,7 +481,7 @@ function Detail({ l, user, onBack, onPropose }) {
     Math.abs(TAX_BRACKETS.indexOf(user?.taxBracket || "$0–$44k") - TAX_BRACKETS.indexOf(l.taxBracket || "$0–$44k")) <= 1;
 
   return (
-    <div style={{ padding: "14px 14px 90px" }} className="fi">
+    <div style={{ padding: "14px 14px 80px" }} className="fi">
       <button className="btn bg bsm" onClick={onBack} style={{ marginBottom: 14 }}>← back</button>
       <div className="card" style={{ marginBottom: 10 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 14 }}>
@@ -1250,24 +489,23 @@ function Detail({ l, user, onBack, onPropose }) {
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
               <span style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800 }}>{l.name}</span>
-              <TypeBadge t={l.type} />
               {l.elite && <span className="pill pa">Elite</span>}
               {l.b2b && <span className="b2b-badge">B2B Licensed</span>}
+              {l.isSquad && <span className="pill pg">Community Squad</span>}
               {l.verified && <span className="pill pg">✓ verified</span>}
             </div>
             <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 3 }}>{l.cat} · {l.sub} · {l.loc}</div>
             <div style={{ display: "flex", gap: 8, marginTop: 7, flexWrap: "wrap", alignItems: "center" }}>
-              <Stars r={l.rating} /><Score score={l.score} /><span style={{ fontSize: 11, color: "var(--t3)" }}>{l.swaps} swaps · {l.rev} reviews</span>
+              <Stars r={l.rating} /><TScore score={l.tscore} /><span style={{ fontSize: 11, color: "var(--t3)" }}>{l.swaps} swaps · {l.rev} reviews</span>
             </div>
           </div>
         </div>
         <div style={{ fontFamily: "var(--fd)", fontSize: 16, fontWeight: 700, marginBottom: 5 }}>{l.title}</div>
-        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6, marginBottom: l.wants?.length ? 10 : 0 }}>{l.desc}</div>
-        {l.wants?.length > 0 && <div style={{ fontSize: 11, color: "var(--t3)" }}>open to trade for: <span style={{ color: "var(--t2)" }}>{l.wants.join(" · ")}</span></div>}
+        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>{l.desc}</div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
-        {[{ label: "value", val: l.rate === 0 ? "free" : `$${l.rate}${l.type === "service" ? "/hr" : ""}` }, { label: "type", val: TYPE_META[l.type].l }, { label: "top-up", val: "accepted" }].map(v => (
+        {[{ label: "market rate", val: l.rate === 0 ? "free" : `$${l.rate}/hr` }, { label: "scope", val: "2–4 hrs" }, { label: "top-up", val: "accepted" }].map(v => (
           <div key={v.label} style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "10px 11px" }}>
             <div style={{ fontSize: 9, color: "var(--t3)", marginBottom: 3 }}>{v.label}</div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>{v.val}</div>
@@ -1276,7 +514,7 @@ function Detail({ l, user, onBack, onPropose }) {
       </div>
 
       {l.b2b && (
-        <div style={{ background: taxMatch ? "rgba(239,93,71,0.08)" : "var(--rdb)", border: `1px solid ${taxMatch ? "rgba(239,93,71,0.25)" : "rgba(239,93,71,0.3)"}`, borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 10, fontSize: 12 }}>
+        <div style={{ background: taxMatch ? "rgba(22,165,103,0.08)" : "var(--rdb)", border: `1px solid ${taxMatch ? "rgba(22,165,103,0.25)" : "rgba(224,72,72,0.3)"}`, borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 10, fontSize: 12 }}>
           <div style={{ fontWeight: 700, color: taxMatch ? "var(--g)" : "var(--rd)", marginBottom: 4 }}>{taxMatch ? "✓ B2B bracket eligible" : "⚠ B2B bracket mismatch"}</div>
           <div style={{ color: "var(--t2)", lineHeight: 1.5 }}>{l.name.split(" ")[0]} is in bracket <strong>{l.taxBracket || "$44k–$95k"}</strong>. {taxMatch ? "You're within range for a protected B2B swap." : "B2B swaps are limited to within 1 bracket for mutual protection."}</div>
         </div>
@@ -1287,19 +525,6 @@ function Detail({ l, user, onBack, onPropose }) {
         {l.platforms.map(p => <PlatBadge key={p.id} p={p} />)}
       </div>
 
-      {(l.badges?.length > 0 || l.specialties?.length > 0) && (
-        <div className="card" style={{ marginBottom: 10 }}>
-          {l.badges?.length > 0 && <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>community ♥ self-identified</div>
-            <div style={{ display: "flex", flexWrap: "wrap", marginBottom: l.specialties?.length > 0 ? 12 : 0 }}>{l.badges.map(b => <OwnedBadge key={b} id={b} />)}</div>
-          </>}
-          {l.specialties?.length > 0 && <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>service specialties</div>
-            <div style={{ display: "flex", flexWrap: "wrap" }}>{l.specialties.map(s => <SpecTag key={s} s={s} />)}</div>
-          </>}
-        </div>
-      )}
-
       {l.b2b && l.certs?.length > 0 && (
         <div className="card" style={{ marginBottom: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>business credentials</div>
@@ -1309,30 +534,30 @@ function Detail({ l, user, onBack, onPropose }) {
       )}
 
       {l.rate > 0 && <>
-        <div style={{ background: "rgba(239,93,71,0.07)", border: "1px solid rgba(239,93,71,0.2)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
+        <div style={{ background: "rgba(22,165,103,0.07)", border: "1px solid rgba(22,165,103,0.2)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--g)", marginBottom: 5 }}>⇄ value match zone</div>
-          <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Fair swap: any service or item valued <strong style={{ color: "var(--tx)" }}>${Math.round(l.rate * .9)}–${Math.round(l.rate * 1.1)}</strong>. Balance the rest with That Credits.</div>
+          <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Fair swap: any service valued <strong style={{ color: "var(--tx)" }}>${Math.round(l.rate * .9)}–${Math.round(l.rate * 1.1)}/hr</strong> for equal hours.</div>
         </div>
-        <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
+        <div style={{ background: "var(--amb)", border: "1px solid rgba(233,169,42,0.25)", borderRadius: "var(--rs)", padding: "12px 14px", marginBottom: 9 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--am)", marginBottom: 9 }}>◎ top-up calculator</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>your value</div><input type="number" value={myRate} min={10} step={5} onChange={e => setMyRate(+e.target.value)} className="ifield" style={{ width: 75, textAlign: "center", padding: "7px 8px" }} /></div>
+            <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>your rate</div><input type="number" value={myRate} min={10} step={5} onChange={e => setMyRate(+e.target.value)} className="ifield" style={{ width: 75, textAlign: "center", padding: "7px 8px" }} /></div>
             <div style={{ color: "var(--t3)" }}>×</div>
-            <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>units/hrs</div><input type="number" value={hrs} min={1} max={20} onChange={e => setHrs(+e.target.value)} className="ifield" style={{ width: 60, textAlign: "center", padding: "7px 8px" }} /></div>
+            <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>hours</div><input type="number" value={hrs} min={1} max={20} onChange={e => setHrs(+e.target.value)} className="ifield" style={{ width: 60, textAlign: "center", padding: "7px 8px" }} /></div>
             <div style={{ color: "var(--t3)" }}>=</div>
-            <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>you'd add</div><div style={{ fontSize: 19, fontWeight: 800, color: diff === 0 ? "var(--g)" : "var(--am)" }}>{diff === 0 ? "no gap!" : "$" + diff}</div></div>
+            <div><div style={{ fontSize: 10, color: "var(--t2)", marginBottom: 3 }}>you'd pay</div><div style={{ fontSize: 19, fontWeight: 800, color: diff === 0 ? "var(--g)" : "var(--am)" }}>{diff === 0 ? "no gap!" : "$" + diff}</div></div>
           </div>
-          {diff > 0 && <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 7 }}>pay with ⬡ That Credits or cash · held in escrow · auto-released after both confirm</div>}
+          {diff > 0 && <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 7 }}>held in escrow · auto-released after both parties confirm</div>}
         </div>
       </>}
 
-      <div style={{ background: "var(--blb)", border: "1px solid rgba(74,144,217,0.2)", borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 16 }}>
+      <div style={{ background: "var(--blb)", border: "1px solid rgba(79,148,212,0.2)", borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--bl)", marginBottom: 4 }}>🔒 escrow protection</div>
-        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5 }}>Top-ups held by BarterThat until both confirm delivery. 72-hr dispute window.{l.b2b || l.type === "venture" ? " This deal includes a smart contract." : ""}</div>
+        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5 }}>Cash top-ups held by BarterThat until both confirm delivery. 72-hr dispute window.{l.b2b ? " B2B swaps include smart contract." : ""}</div>
       </div>
 
       <button className="btn bp" style={{ width: "100%" }} disabled={l.b2b && !taxMatch} onClick={() => onPropose(l)}>
-        {l.b2b && !taxMatch ? "bracket mismatch — cannot swap" : (l.type === "aid" ? "offer help to " : "propose swap to ") + l.name.split(" ")[0] + " →"}
+        {l.b2b && !taxMatch ? "bracket mismatch — cannot swap" : "propose swap to " + l.name.split(" ")[0] + " →"}
       </button>
     </div>
   );
@@ -1350,7 +575,10 @@ function ProposeModal({ l, user, onClose, onSend }) {
   const tv = Math.round(l.rate * thH);
   const diff = tv - mv;
 
-  const send = () => { setSent(true); setTimeout(() => { onSend({ l, svc, myH, thH, msg }); onClose(); }, 1100); };
+  const send = () => {
+    setSent(true);
+    setTimeout(() => { onSend({ l, svc, myH, thH, msg }); onClose(); }, 1100);
+  };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }} onClick={onClose}>
@@ -1371,25 +599,25 @@ function ProposeModal({ l, user, onClose, onSend }) {
               <div style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 3 }}>you offer</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "var(--g)" }}>${mv}</div>
-                <div style={{ fontSize: 10, color: "var(--t2)" }}>{myH} × ${user?.rate || 75}</div>
+                <div style={{ fontSize: 10, color: "var(--t2)" }}>{myH}hr × ${user?.rate || 75}</div>
               </div>
               <div style={{ fontSize: 18, color: "var(--t3)" }}>⇄</div>
               <div style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 3 }}>they offer</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "var(--g)" }}>${tv}</div>
-                <div style={{ fontSize: 10, color: "var(--t2)" }}>{thH} × ${l.rate}</div>
+                <div style={{ fontSize: 10, color: "var(--t2)" }}>{thH}hr × ${l.rate}</div>
               </div>
             </div>
-            {diff !== 0 && <div style={{ padding: "8px 12px", background: diff > 0 ? "var(--gl)" : "var(--amb)", borderRadius: "var(--rs)", marginBottom: 12, fontSize: 12, color: diff > 0 ? "#EF5D47" : "var(--am)" }}>
-              {diff > 0 ? `${l.name.split(" ")[0]} adds a $${Math.abs(diff)} top-up to you` : `you add a $${Math.abs(diff)} top-up — pay with ⬡ credits or cash, held in escrow`}
+            {diff !== 0 && <div style={{ padding: "8px 12px", background: diff > 0 ? "var(--gl)" : "var(--amb)", borderRadius: "var(--rs)", marginBottom: 12, fontSize: 12, color: diff > 0 ? "#0D9A5A" : "var(--am)" }}>
+              {diff > 0 ? `${l.name.split(" ")[0]} pays you a $${Math.abs(diff)} top-up` : `you pay a $${Math.abs(diff)} top-up — held in escrow`}
             </div>}
-            <div style={{ marginBottom: 10 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your offer</label><input className="ifield" value={svc} onChange={e => setSvc(e.target.value)} placeholder="what will you provide?" /></div>
+            <div style={{ marginBottom: 10 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your service</label><input className="ifield" value={svc} onChange={e => setSvc(e.target.value)} placeholder="what will you provide?" /></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginBottom: 10 }}>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your units/hrs</label><input type="number" className="ifield" value={myH} min={1} max={20} onChange={e => setMyH(+e.target.value)} /></div>
-              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>their units/hrs</label><input type="number" className="ifield" value={thH} min={1} max={20} onChange={e => setThH(+e.target.value)} /></div>
+              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your hours</label><input type="number" className="ifield" value={myH} min={1} max={20} onChange={e => setMyH(+e.target.value)} /></div>
+              <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>their hours</label><input type="number" className="ifield" value={thH} min={1} max={20} onChange={e => setThH(+e.target.value)} /></div>
             </div>
             <div style={{ marginBottom: 18 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>message (optional)</label><textarea className="ifield" rows={3} value={msg} onChange={e => setMsg(e.target.value)} placeholder="introduce yourself..." style={{ resize: "none" }} /></div>
-            {(l.b2b || l.type === "venture") && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", marginBottom: 14, fontSize: 11, color: "var(--pu)" }}>{l.type === "venture" ? "Venture deal" : "B2B swap"} — smart contract generated on acceptance</div>}
+            {l.b2b && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", marginBottom: 14, fontSize: 11, color: "var(--pu)" }}>B2B swap — smart contract generated on acceptance</div>}
             <button className="btn bp" style={{ width: "100%" }} disabled={!svc.trim()} onClick={send}>send proposal →</button>
           </>
         )}
@@ -1399,15 +627,14 @@ function ProposeModal({ l, user, onClose, onSend }) {
 }
 
 // ── TRADES ────────────────────────────────────────────────────────────────────
-function Trades({ trades, onAccept, onComplete }) {
+function Trades({ trades, user }) {
   const [active, setActive] = useState(null);
   const [newMsg, setNewMsg] = useState("");
 
-  if (active != null) {
+  if (active) {
     const t = trades.find(x => x.id === active);
-    if (!t) { setActive(null); return null; }
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 116px)" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 110px)" }}>
         <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--bd)", display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={() => setActive(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 17 }}>←</button>
           <Av ini={t.wi} avc={t.wc} size={32} />
@@ -1425,39 +652,35 @@ function Trades({ trades, onAccept, onComplete }) {
           {t.msgs.map((m, i) => (
             <div key={i} style={{ display: "flex", justifyContent: m.from === "me" ? "flex-end" : "flex-start", marginBottom: 10 }}>
               <div style={{ maxWidth: "76%", padding: "9px 13px", borderRadius: "var(--r)", background: m.from === "me" ? "var(--g)" : "var(--s3)", color: m.from === "me" ? "#fff" : "var(--tx)", fontSize: 12, lineHeight: 1.5 }}>
-                {m.txt}<div style={{ fontSize: 9, opacity: .55, marginTop: 3, textAlign: m.from === "me" ? "right" : "left" }}>{m.time}</div>
+                {m.txt}
+                <div style={{ fontSize: 9, opacity: .55, marginTop: 3, textAlign: m.from === "me" ? "right" : "left" }}>{m.time}</div>
               </div>
             </div>
           ))}
         </div>
         {t.status === "pending" && (
           <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
-            <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onAccept(t.id)}>accept ✓</button>
+            <button className="btn bp bsm" style={{ flex: 1 }}>accept ✓</button>
             <button className="btn bg bsm">counter</button>
             <button className="btn bg bsm" style={{ color: "var(--rd)" }}>decline</button>
           </div>
         )}
         {t.status === "escrow" && (
           <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)" }}>
-            <div style={{ fontSize: 11, color: "var(--bl)", marginBottom: 7 }}>🔒 {t.topup > 0 ? `$${t.topup} in escrow — ` : ""}confirm completion to close & earn credits</div>
-            <button className="btn bp bsm" style={{ width: "100%" }} onClick={() => onComplete(t.id)}>confirm completed ✓</button>
+            <div style={{ fontSize: 11, color: "var(--bl)", marginBottom: 7 }}>🔒 ${t.topup} in escrow — confirm completion to release funds</div>
+            <button className="btn bp bsm" style={{ width: "100%" }}>confirm completed ✓</button>
           </div>
         )}
-        {t.status === "completed" && (
-          <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · That Credits awarded</div>
-        )}
-        {t.status !== "completed" && (
-          <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
-            <input className="ifield" style={{ flex: 1 }} value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="message..." />
-            <button className="btn bp bsm" disabled={!newMsg.trim()}>send</button>
-          </div>
-        )}
+        <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
+          <input className="ifield" style={{ flex: 1 }} value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="message..." />
+          <button className="btn bp bsm" disabled={!newMsg.trim()}>send</button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "14px 14px 90px" }}>
+    <div style={{ padding: "14px 14px 80px" }}>
       <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 14 }}>my trades</div>
       {trades.length === 0 && <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--t3)" }}><div style={{ fontSize: 28, marginBottom: 10 }}>⇄</div>no trades yet — go propose a swap!</div>}
       {trades.map(t => (
@@ -1466,7 +689,9 @@ function Trades({ trades, onAccept, onComplete }) {
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
               <Av ini={t.wi} avc={t.wc} size={34} />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>{t.wu}{t.unread && <div className="ndot" />}{t.b2b && <span className="b2b-badge" style={{ fontSize: 9 }}>B2B</span>}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                  {t.wu}{t.unread && <div className="ndot" />}{t.b2b && <span className="b2b-badge" style={{ fontSize: 9 }}>B2B</span>}
+                </div>
                 <div style={{ fontSize: 10, color: "var(--t3)" }}>{t.plat}</div>
               </div>
             </div>
@@ -1488,12 +713,12 @@ function Trades({ trades, onAccept, onComplete }) {
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
-function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
+function Profile({ user, listings, trades }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
   return (
-    <div style={{ padding: "14px 14px 90px" }}>
+    <div style={{ padding: "14px 14px 80px" }}>
       <div className="card" style={{ marginBottom: 10 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <Av ini={user.ini} avc={user.avc} size={56} />
@@ -1502,61 +727,34 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
             <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 2 }}>{user.cat || "Community member"} · {user.loc}</div>
             {user.b2b && <div style={{ marginTop: 6 }}><span className="b2b-badge">B2B · {user.taxBracket}</span></div>}
             <div style={{ display: "flex", gap: 7, marginTop: 8, flexWrap: "wrap" }}>
-              <Score score={user.score || 72} /><span className="pill pg">✓ verified</span><span className="pill pd">{done} swaps</span>
+              <TScore score={user.tscore || 72} /><span className="pill pg">✓ verified</span><span className="pill pd">{done} swaps</span>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="card" style={{ marginBottom: 10, background: "radial-gradient(circle at 90% 0%, rgba(232,177,74,0.12), var(--s2) 60%)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 2 }}>That Credits balance</div>
-            <div style={{ fontFamily: "var(--fd)", fontSize: 30, fontWeight: 800, color: "var(--am)" }}>⬡ {user.credits ?? 0}</div>
-          </div>
-          <button className="btn bg bsm" onClick={() => onNav("browse")}>spend →</button>
-        </div>
-        <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 8, lineHeight: 1.5 }}>Bank value when your swap is worth more — spend it on any listing, anytime. Earn more by completing trades.</div>
-      </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
-        {[{ n: `$${user.rate || 0}`, l: "your value" }, { n: done, l: "swaps done" }, { n: user.platforms?.length || 0, l: "platforms" }].map(s => (
+        {[{ n: `$${user.rate || 0}/hr`, l: "your rate" }, { n: done, l: "swaps done" }, { n: user.platforms?.length || 0, l: "platforms" }].map(s => (
           <div key={s.l} style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "11px 9px", textAlign: "center" }}>
             <div style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800, color: "var(--g)" }}>{s.n}</div>
             <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 2 }}>{s.l}</div>
           </div>
         ))}
       </div>
-
-      {user.wants?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>what I'm looking for</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{user.wants.map(w => <span key={w} className="pill pd">{w}</span>)}</div>
-        <button className="btn bpu bsm" style={{ marginTop: 11 }} onClick={() => onNav("match")}>◆ find my matches</button>
-      </div>}
-
       {mine && <div className="card" style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>my listing</div>
         <div style={{ fontFamily: "var(--fd)", fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{mine.title}</div>
         <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5, marginBottom: 10 }}>{mine.desc}</div>
-        <span style={{ color: "var(--g)", fontWeight: 700, fontFamily: "var(--fd)" }}>${mine.rate}{mine.type === "service" ? "/hr" : ""} · {mine.loc}</span>
+        <span style={{ color: "var(--g)", fontWeight: 700, fontFamily: "var(--fd)" }}>${mine.rate}/hr · {mine.loc}</span>
       </div>}
-
       {user.platforms?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>verified platforms</div>
         {user.platforms.map(p => <PlatBadge key={p.id} p={p} />)}
       </div>}
-
-      {user.b2b && user.certs?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
+      {user.b2b && user.certs?.length > 0 && <div className="card">
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>business credentials</div>
         <div style={{ display: "flex", flexWrap: "wrap" }}>{user.certs.map(c => <CertBadge key={c} cert={c} />)}</div>
         <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 9 }}>Tax bracket: <strong style={{ color: "var(--tx)" }}>{user.taxBracket}</strong></div>
       </div>}
-
-      <div style={{ display: "flex", gap: 8 }}>
-        <button className="btn bg" style={{ flex: 1 }} onClick={onLogout}>log out</button>
-        <button className="btn bg" style={{ flex: 1, color: "var(--rd)" }} onClick={onReset}>reset demo data</button>
-      </div>
-      <div style={{ fontSize: 10, color: "var(--t3)", textAlign: "center", marginTop: 8 }}>reset clears your account, listings & trades back to the original sample data</div>
     </div>
   );
 }
@@ -1565,7 +763,7 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
 function Saved({ listings, user, onView }) {
   const sv = listings.filter(l => user && l.saved?.includes(user.id));
   return (
-    <div style={{ padding: "14px 14px 90px" }}>
+    <div style={{ padding: "14px 14px 80px" }}>
       <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 14 }}>saved</div>
       {sv.length === 0 ? <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--t3)" }}><div style={{ fontSize: 26, marginBottom: 9 }}>♡</div>save listings by tapping ♡</div> :
         sv.map(l => (
@@ -1573,10 +771,10 @@ function Saved({ listings, user, onView }) {
             <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 7 }}>
               <Av ini={l.ini} avc={l.avc} size={34} />
               <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 600 }}>{l.name}</div><Stars r={l.rating} /></div>
-              <div style={{ fontFamily: "var(--fd)", fontSize: 15, fontWeight: 800, color: "var(--g)" }}>{l.rate === 0 ? "Free" : "$" + l.rate}</div>
+              <div style={{ fontFamily: "var(--fd)", fontSize: 15, fontWeight: 800, color: "var(--g)" }}>{l.rate === 0 ? "Free" : "$" + l.rate + "/hr"}</div>
             </div>
             <div style={{ fontFamily: "var(--fd)", fontSize: 13, fontWeight: 700, marginBottom: 3 }}>{l.title}</div>
-            <div style={{ display: "flex", gap: 5 }}><TypeBadge t={l.type} /><span className="pill pd">{l.cat}</span></div>
+            <div style={{ display: "flex", gap: 5 }}><span className="pill pd">{l.cat}</span>{l.b2b && <span className="b2b-badge">B2B</span>}</div>
           </div>
         ))
       }
@@ -1586,46 +784,39 @@ function Saved({ listings, user, onView }) {
 
 // ── POST ──────────────────────────────────────────────────────────────────────
 function Post({ user, onPost }) {
-  const [form, setForm] = useState({ type: "service", cat: user?.cat || "", sub: "", title: user?.title || "", desc: user?.desc || "", rate: user?.rate || 75, acceptTopup: true });
+  const [form, setForm] = useState({ cat: user?.cat || "", sub: "", title: user?.title || "", desc: user?.desc || "", rate: user?.rate || 75, acceptTopup: true });
   const [done, setDone] = useState(false);
   const selCat = CATS.find(c => c.label === form.cat);
   const go = () => { setDone(true); setTimeout(() => onPost(form), 1200); };
 
-  if (done) return <div style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24 }}><div><div style={{ fontSize: 40, color: "var(--g)", marginBottom: 12 }}>✓</div><div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 7 }}>listing live!</div><div style={{ fontSize: 13, color: "var(--t2)" }}>AI is already matching you</div></div></div>;
+  if (done) return <div style={{ minHeight: "calc(100vh - 120px)", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24 }}><div><div style={{ fontSize: 40, color: "var(--g)", marginBottom: 12 }}>✓</div><div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 7 }}>listing live!</div><div style={{ fontSize: 13, color: "var(--t2)" }}>your service is in the marketplace</div></div></div>;
 
   return (
     <div style={{ padding: "14px 14px 100px" }}>
-      <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 4 }}>post anything</div>
-      <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 18 }}>a service, an item, a rental, a venture — if it has value, it's barterable</div>
-      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 6 }}>what kind of listing?</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {Object.keys(TYPE_META).filter(k => k !== "squad").map(k => (
-            <button key={k} className={`chip ${form.type === k ? "on" : ""}`} onClick={() => setForm(f => ({ ...f, type: k }))}>{form.type === k ? "✓ " : ""}{TYPE_META[k].l}</button>
-          ))}
-        </div>
-      </div>
+      <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 4 }}>post your service</div>
+      <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 20 }}>tell the community what you offer</div>
       <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>category</label>
         <select className="ifield" value={form.cat} onChange={e => setForm(f => ({ ...f, cat: e.target.value, sub: "" }))}>
           <option value="">select category</option>
           {CATS.map(c => <option key={c.id} value={c.label}>{c.icon} {c.label}</option>)}
         </select>
       </div>
-      {selCat && <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>specific</label>
+      {selCat && <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>specific service</label>
         <select className="ifield" value={form.sub} onChange={e => setForm(f => ({ ...f, sub: e.target.value }))}>
-          <option value="">select</option>
+          <option value="">select service</option>
           {selCat.subs.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>}
       <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>title</label><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe in one line" /></div>
-      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details</label><textarea className="ifield" rows={4} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? condition? what would you take in trade?" style={{ resize: "none" }} /></div>
+      <div style={{ marginBottom: 12 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details</label><textarea className="ifield" rows={4} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? hours? location?" style={{ resize: "none" }} /></div>
       <div style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>value — <strong style={{ color: "var(--g)" }}>{form.rate === 0 ? "free / community swap" : "$" + form.rate + (form.type === "service" ? "/hr" : "")}</strong></label>
+        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>rate — <strong style={{ color: "var(--g)" }}>{form.rate === 0 ? "free / community swap" : "$" + form.rate + "/hr"}</strong></label>
         <input type="range" min={0} max={250} step={5} value={form.rate} onChange={e => setForm(f => ({ ...f, rate: +e.target.value }))} style={{ width: "100%", accentColor: "var(--g)" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--t3)", marginTop: 3 }}><span>$0 (community / aid)</span><span>$250</span></div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--t3)", marginTop: 3 }}><span>$0 (community / squad)</span><span>$250/hr</span></div>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 12, color: "var(--t2)", cursor: "pointer", marginBottom: 20, padding: "10px 13px", background: "var(--s3)", borderRadius: "var(--rs)" }}>
         <input type="checkbox" checked={form.acceptTopup} onChange={e => setForm(f => ({ ...f, acceptTopup: e.target.checked }))} style={{ accentColor: "var(--g)", width: 15, height: 15 }} />
-        accept That Credits / cash top-up to balance value
+        accept cash top-up if partner's service is lower value
       </label>
       <button className="btn bp" style={{ width: "100%" }} disabled={!form.title.trim() || !form.cat} onClick={go}>publish listing ✦</button>
     </div>
@@ -1633,16 +824,19 @@ function Post({ user, onPost }) {
 }
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
-function Nav({ scr, onNav }) {
-  const items = [{ id: "browse", ic: "◫", l: "explore" }, { id: "match", ic: "◆", l: "match" }, { id: "post", ic: "✦", l: "post", prime: true }, { id: "community", ic: "⚇", l: "community" }, { id: "profile", ic: "◎", l: "profile" }];
+function Nav({ scr, onNav, unread }) {
+  const items = [{ id: "browse", ic: "◫", l: "explore" }, { id: "trades", ic: "⇄", l: "trades", badge: unread }, { id: "post", ic: "✦", l: "post", prime: true }, { id: "saved", ic: "♡", l: "saved" }, { id: "profile", ic: "◎", l: "profile" }];
   return (
-    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(8,8,8,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", padding: "8px 0 18px", zIndex: 50 }}>
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(14,24,37,0.97)", backdropFilter: "blur(16px)", borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", padding: "8px 0 18px", zIndex: 50 }}>
       {items.map(item => (
         <button key={item.id} onClick={() => onNav(item.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", color: scr === item.id ? "var(--g)" : "var(--t3)", transition: "color .15s" }}>
           {item.prime ? (
             <div style={{ width: 42, height: 42, borderRadius: "50%", background: "var(--g)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#fff", marginTop: -10 }}>{item.ic}</div>
           ) : (
-            <span style={{ fontSize: 19 }}>{item.ic}</span>
+            <div style={{ position: "relative" }}>
+              <span style={{ fontSize: 19 }}>{item.ic}</span>
+              {item.badge > 0 && <div style={{ position: "absolute", top: -4, right: -6, width: 14, height: 14, borderRadius: "50%", background: "var(--g)", fontSize: 9, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{item.badge}</div>}
+            </div>
           )}
           <span style={{ fontSize: 9, letterSpacing: ".04em" }}>{item.l}</span>
         </button>
@@ -1656,46 +850,38 @@ export default function App() {
   const [screen, setScreen] = useState("splash");
   const [nav, setNav] = useState("browse");
   const [user, setUser] = useState(null);
-  const [listings, setListings] = useState(() => storage.get("bt_listings") || LISTINGS);
-  const [trades, setTrades] = useState(() => storage.get("bt_trades") || TRADES_SEED);
+  const [listings, setListings] = useState(LISTINGS);
+  const [trades, setTrades] = useState(TRADES_SEED);
   const [viewing, setViewing] = useState(null);
   const [proposeTo, setProposeTo] = useState(null);
-  const [toast, setToast] = useState(null);
 
+  // Load saved user from localStorage on mount
   useEffect(() => {
     const saved = storage.get("bt_user");
     if (saved) { setUser(saved); setScreen("main"); }
   }, []);
-
-  // Persist marketplace state so listings & trades survive a refresh
-  useEffect(() => { storage.set("bt_listings", listings); }, [listings]);
-  useEffect(() => { storage.set("bt_trades", trades); }, [trades]);
-
-  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2600); };
-  const persist = (u) => { setUser(u); storage.set("bt_user", u); };
 
   const handleSignup = form => {
     const u = {
       id: Date.now(), name: form.name, email: form.email, loc: form.loc,
       ini: form.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       avc: ac(Math.floor(Math.random() * 8)),
-      cat: form.cat, sub: form.sub, title: form.title, desc: form.desc, wants: form.wants || [],
-      badges: form.badges || [], specialties: form.specialties || [],
+      cat: form.cat, sub: form.sub, title: form.title, desc: form.desc,
       rate: form.rate, platforms: form.platforms, b2b: form.b2b,
-      certs: form.certs, taxBracket: form.taxBracket, score: 72, swaps: 0, rating: 0, credits: 50,
+      certs: form.certs, taxBracket: form.taxBracket, tscore: 72, swaps: 0, rating: 0
     };
-    const catMeta = CATS.find(c => c.label === form.cat);
     if (form.title) {
-      const nl = { id: Date.now() + 1, uid: u.id, type: catMeta?.t || "service", name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc, remote: true, verified: form.platforms.length >= 1, elite: false, b2b: form.b2b, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket };
-      setListings(p => [nl, ...p]);
+      const nl = { id: Date.now() + 1, uid: u.id, name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc, remote: true, verified: form.platforms.length >= 1, elite: false, b2b: form.b2b, tscore: 72, swaps: 0, rating: 0, rev: 0, saved: [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket, isSquad: false };
+      setListings(p => [...p, nl]);
     }
-    persist(u);
+    setUser(u);
+    storage.set("bt_user", u);  // save to localStorage
     setScreen("main");
-    setNav("match");
+    setNav("browse");
   };
 
   const handleSave = id => {
-    if (!user) { setScreen("signup"); return; }
+    if (!user) return;
     setListings(p => p.map(l => {
       if (l.id !== id) return l;
       const has = l.saved?.includes(user.id);
@@ -1707,76 +893,42 @@ export default function App() {
 
   const handleSend = ({ l, svc, myH, thH, msg }) => {
     const mv = (user.rate || 75) * myH, tv = l.rate * thH, diff = tv - mv;
-    setTrades(p => [{ id: Date.now(), wu: l.name, wi: l.ini, wc: l.avc, ms: `${svc} (${myH})`, ts: `${l.title} (${thH})`, mv, tv, topup: Math.abs(diff), tpb: diff > 0 ? "them" : diff < 0 ? "me" : null, status: "pending", plat: (l.platforms[0]?.l || "") + " · " + (l.platforms[0]?.proof || "verified"), time: "just now", unread: false, b2b: l.b2b, value: Math.max(mv, tv), msgs: msg ? [{ from: "me", txt: msg, time: "just now" }] : [] }, ...p]);
+    setTrades(p => [{ id: Date.now(), wu: l.name, wi: l.ini, wc: l.avc, ms: `${svc} (${myH}hr)`, ts: `${l.title} (${thH}hr)`, mv, tv, topup: Math.abs(diff), tpb: diff > 0 ? "them" : diff < 0 ? "me" : null, status: "pending", plat: l.platforms[0]?.l + " · " + l.platforms[0]?.proof, time: "just now", unread: false, b2b: l.b2b, msgs: msg ? [{ from: "me", txt: msg, time: "just now" }] : [] }, ...p]);
     setProposeTo(null);
-    setNav("trades"); setViewing(null);
+    setNav("trades");
   };
 
-  const handleAccept = id => setTrades(p => p.map(t => t.id === id ? { ...t, status: "escrow", unread: false, msgs: [...t.msgs, { from: "them", txt: "Accepted! Funds in escrow — let's make it happen.", time: "just now" }] } : t));
+  const unread = trades.filter(t => t.unread).length;
 
-  const handleComplete = id => {
-    setTrades(p => p.map(t => t.id === id ? { ...t, status: "completed", unread: false } : t));
-    const t = trades.find(x => x.id === id);
-    const earned = Math.max(10, Math.round((t?.value || t?.mv || 100) / 10));
-    if (user) persist({ ...user, credits: (user.credits || 0) + earned, swaps: (user.swaps || 0) + 1 });
-    flash(`⬡ +${earned} That Credits earned`);
-  };
-
-  const handleLogout = () => { storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
-
-  const handleReset = () => {
-    ["bt_user", "bt_listings", "bt_trades"].forEach(k => storage.remove(k));
-    setUser(null);
-    setListings(LISTINGS);
-    setTrades(TRADES_SEED);
-    setViewing(null);
-    setProposeTo(null);
-    setScreen("splash");
-    setNav("browse");
-    flash("demo data reset to sample");
-  };
-
-  const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
-  if (screen === "splash") return <><G /><Splash onEnter={enter} /></>;
+  if (screen === "splash") return <><G /><Splash onEnter={d => { if (d === "signup") setScreen("signup"); else { setScreen("main"); setNav("browse"); } }} /></>;
   if (screen === "signup") return <><G /><Signup onDone={handleSignup} /></>;
-  if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen("splash")} onEnter={enter} /></>;
-  if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
 
   const renderMain = () => {
     if (viewing) return <Detail l={viewing} user={user} onBack={() => setViewing(null)} onPropose={handlePropose} />;
     switch (nav) {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
-      case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
-      case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "trades": return <Trades trades={trades} onAccept={handleAccept} onComplete={handleComplete} />;
+      case "trades": return <Trades trades={trades} user={user} />;
       case "post": return <Post user={user} onPost={() => setNav("profile")} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); setNav(n); }} onLogout={handleLogout} onReset={handleReset} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} />;
       default: return null;
     }
   };
 
-  const unread = trades.filter(t => t.unread).length;
-
   return (
     <>
       <G />
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => { setViewing(null); setNav("browse"); }}><Logo height={28} /></div>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(14,24,37,0.97)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--bd)", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <img src="/logo.png" alt="BarterThat" style={{ height: 36, objectFit: "contain", maxWidth: 160 }} onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="flex"; }} />
+        <div style={{ display: "none", fontFamily: "var(--fd)", fontSize: 19, fontWeight: 800, letterSpacing: "-1px", color: "var(--tx)" }}>Barter<span style={{ color: "var(--g)" }}>That</span></div>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          {user && <span className="credit" style={{ cursor: "pointer" }} onClick={() => { setViewing(null); setNav("profile"); }}>⬡ {user.credits ?? 0}</span>}
-          <button onClick={() => { setViewing(null); setNav("trades"); }} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", color: nav === "trades" ? "var(--g)" : "var(--t2)", fontSize: 18 }}>
-            ⇄{unread > 0 && <span style={{ position: "absolute", top: -3, right: -6, width: 14, height: 14, borderRadius: "50%", background: "var(--g)", fontSize: 9, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{unread}</span>}
-          </button>
-          <button onClick={() => { setViewing(null); setNav("saved"); }} style={{ background: "none", border: "none", cursor: "pointer", color: nav === "saved" ? "var(--g)" : "var(--t2)", fontSize: 16 }}>♡</button>
           {!user && <button className="btn bp bsm" onClick={() => setScreen("signup")}>join free</button>}
-          {user && <Av ini={user.ini} avc={user.avc} size={30} style={{ cursor: "pointer" }} onClick={() => { setViewing(null); setNav("profile"); }} />}
+          {user && <Av ini={user.ini} avc={user.avc} size={30} style={{ cursor: "pointer" }} onClick={() => setNav("profile")} />}
         </div>
       </div>
       {renderMain()}
-      <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} />
+      <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} unread={unread} />
       {proposeTo && <ProposeModal l={proposeTo} user={user} onClose={() => setProposeTo(null)} onSend={handleSend} />}
-      {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(232,177,74,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
     </>
   );
 }
