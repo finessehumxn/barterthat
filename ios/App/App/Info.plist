@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>BarterThat uses the microphone so you can speak to search and describe what you need instead of typing.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>BarterThat uses the camera so you can add photos and videos of what you're offering to your listings.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>BarterThat needs access to your photos so you can add pictures and videos to your listings.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>BarterThat may save media you create for your listings.</string>
     <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
