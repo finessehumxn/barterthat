@@ -324,7 +324,7 @@ function Splash({ onEnter }) {
       <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "44px 44px", opacity: .5 }} />
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div className="fu" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 640 }}>
-        <div className="pill pp" style={{ marginBottom: 18 }}>◆ AI-matched · circular trades · zero cash</div>
+        <div className="pill pp" style={{ marginBottom: 18 }}>swap skills · build community · where it's at</div>
         <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}>
           <Logo style={{ height: "clamp(48px,11vw,82px)" }} />
         </div>
