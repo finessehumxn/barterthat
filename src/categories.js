@@ -1469,3 +1469,19 @@ export const EXTRA_CATS = [
 
 export const ALL_CATS = [...CATS, ...EXTRA_CATS];
 export const GRAND_TOTAL = ALL_CATS.reduce((a, c) => a + c.subs.length, 0);
+
+// Friendly super-groups so the 39 categories don't feel like a wall.
+// Each group bundles related category ids; the UI shows groups first, then drills in.
+export const CAT_GROUPS = [
+  { label: "Beauty & Wellness", icon: "💅", ids: ["beauty", "wellness", "fitness", "medical"] },
+  { label: "Home & Property", icon: "🏠", ids: ["home", "garden", "construction", "cleaning", "house_sitting", "real_estate"] },
+  { label: "Food, Farm & Pets", icon: "🍳", ids: ["food", "farming", "pets"] },
+  { label: "Creative, Tech & Media", icon: "🎨", ids: ["creative", "tech", "media", "media_production", "gaming_esports", "crypto_web3", "making"] },
+  { label: "Learning & Care", icon: "🎓", ids: ["lessons", "care", "companionship", "certifications", "community"] },
+  { label: "Business & Money", icon: "💼", ids: ["professional", "finance_personal", "legal_docs", "pro_network"] },
+  { label: "Travel, Rides & Trades", icon: "🚗", ids: ["auto", "rides_moving", "travel", "travel_planning", "collectibles", "auctions_trades", "org"] },
+  { label: "Events & Gigs", icon: "🎉", ids: ["events", "audiences_gigs", "virtual"] },
+];
+
+// The everyday categories most people want — shown as one-tap chips up front.
+export const POPULAR_CAT_IDS = ["beauty", "food", "home", "tech", "creative", "lessons", "cleaning", "pets"];

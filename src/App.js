@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { ALL_CATS } from "./categories";
+import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
 
 const G = () => (
   <style>{`
@@ -69,6 +69,8 @@ const G = () => (
 // ── CATEGORIES — "everything is barterable" ──────────────────────────────────
 const CATS = ALL_CATS;
 const CAT_LABELS = CATS.map(c => c.label);
+const CAT_BY_ID = id => CATS.find(c => c.id === id);
+const POPULAR_CATS = POPULAR_CAT_IDS.map(CAT_BY_ID).filter(Boolean);
 
 const TYPE_META = {
   service:{ l:"Service", cls:"pg" }, goods:{ l:"Item", cls:"pb" }, rental:{ l:"Rental", cls:"pa" },
@@ -1034,9 +1036,19 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
       </div>
 
       <div style={{ padding: "10px 14px 0" }}>
+        {cat === "All" && !q && (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "var(--t3)", marginBottom: 7 }}>popular — tap to jump in</div>
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, WebkitOverflowScrolling: "touch" }}>
+              {POPULAR_CATS.map(c => (
+                <button key={c.id} onClick={() => setCat(c.label)} style={{ flexShrink: 0, padding: "8px 13px", borderRadius: 100, border: "1px solid var(--bd)", background: "var(--s3)", color: "var(--tx)", cursor: "pointer", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>{c.icon} {(c.label.split(/[,&]/)[0].trim().split(" ")[0]) || c.label}</button>
+              ))}
+            </div>
+          </div>
+        )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
           <button onClick={() => setShowCats(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: "1px solid var(--bd)", background: showCats ? "var(--s3)" : "transparent", color: "var(--t2)", cursor: "pointer", fontSize: 12 }}>
-            {showCats ? "▲" : "▼"} browse all {CATS.length} categories
+            {showCats ? "▲ hide" : "▼ browse all"} {CATS.length} categories
           </button>
           <button onClick={() => setShowSupport(x => !x)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: "var(--rp)", border: `1px solid ${support.length ? "rgba(232,177,74,0.4)" : "var(--bd)"}`, background: support.length ? "var(--amb)" : (showSupport ? "var(--s3)" : "transparent"), color: support.length ? "var(--am)" : "var(--t2)", cursor: "pointer", fontSize: 12 }}>
             ♥ support community-owned{support.length ? ` · ${support.length}` : ""}
@@ -1054,10 +1066,17 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
           </div>
         )}
         {showCats && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(165px,1fr))", gap: 6, marginBottom: 12 }}>
-            <button onClick={() => { setCat("All"); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === "All" ? "var(--g)" : "var(--bd)"}`, background: cat === "All" ? "var(--gl)" : "var(--s3)", color: cat === "All" ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>◈ All categories</button>
-            {CATS.map(c => (
-              <button key={c.id} onClick={() => { setCat(c.label); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === c.label ? "var(--g)" : "var(--bd)"}`, background: cat === c.label ? "var(--gl)" : "var(--s3)", color: cat === c.label ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>{c.icon} {c.label}</button>
+          <div style={{ marginBottom: 12 }}>
+            <button onClick={() => { setCat("All"); setShowCats(false); }} style={{ padding: "8px 12px", marginBottom: 12, borderRadius: "var(--rs)", border: `1px solid ${cat === "All" ? "var(--g)" : "var(--bd)"}`, background: cat === "All" ? "var(--gl)" : "var(--s3)", color: cat === "All" ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left", width: "100%" }}>◈ Show everything</button>
+            {CAT_GROUPS.map(grp => (
+              <div key={grp.label} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".05em" }}>{grp.icon} {grp.label}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(165px,1fr))", gap: 6 }}>
+                  {grp.ids.map(CAT_BY_ID).filter(Boolean).map(c => (
+                    <button key={c.id} onClick={() => { setCat(c.label); setShowCats(false); }} style={{ padding: "8px 12px", borderRadius: "var(--rs)", border: `1px solid ${cat === c.label ? "var(--g)" : "var(--bd)"}`, background: cat === c.label ? "var(--gl)" : "var(--s3)", color: cat === c.label ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12, textAlign: "left" }}>{c.icon} {c.label}</button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
