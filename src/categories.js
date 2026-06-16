@@ -1302,6 +1302,44 @@ export const EXTRA_CATS = [
       "Pet first aid & CPR","Pet photography","Pet memorial & loss support",
     ]
   },
+  {
+    id: "crypto_web3",
+    label: "Crypto, Web3 & Digital Assets",
+    icon: "₿",
+    both: true,
+    subs: [
+      "Crypto basics 101 coaching","Bitcoin explained — beginner session","Ethereum & altcoins overview",
+      "Self-custody wallet setup (hardware)","Hot wallet setup & security","Seed phrase & backup best practices",
+      "Buying your first crypto — walkthrough","Reading charts & market basics","Dollar-cost-averaging strategy coaching",
+      "Crypto scam & phishing safety","Cold storage setup","Multi-sig wallet setup",
+      "NFT creation & minting help","NFT art design","NFT collection launch consulting",
+      "Smart contract development","Solidity code review","Token / coin launch consulting",
+      "DeFi staking & yield walkthrough","Liquidity pool basics coaching","DAO setup consulting",
+      "Web3 site / dApp development","Wallet-connect integration","Crypto tax reporting help",
+      "Crypto bookkeeping","Mining rig setup consulting","Node setup & running",
+      "Blockchain explained for business","Accept-crypto setup for your shop","Stablecoin & payments consulting",
+      "Whitepaper writing & review","Crypto portfolio review (educational)",
+    ]
+  },
+  {
+    id: "gaming_esports",
+    label: "Gaming & Esports",
+    icon: "◉",
+    both: true,
+    subs: [
+      "Game coaching — FPS (Valorant, CS, Apex)","Game coaching — MOBA (LoL, Dota)","Game coaching — fighting games",
+      "Game coaching — Fortnite / battle royale","Rank-up & ranked coaching","Aim training & routines",
+      "Speedrun coaching","Retro & classic game coaching","Chess & strategy coaching",
+      "Co-op / duo partner sessions","Tournament prep coaching","Esports team scrim partner",
+      "Twitch / YouTube channel setup","Stream overlay & alerts design","OBS & streaming setup",
+      "Stream graphics & emotes","Discord server setup & moderation","Discord bot setup",
+      "Gaming PC build consulting","PC build — hands-on help","Console setup & optimization",
+      "Game capture & highlight editing","Montage & clip editing","Voiceover & caster commentary",
+      "Indie game development","Game art & sprite design","3D game asset modeling",
+      "Game music & SFX","Game testing & QA","Game design feedback session",
+      "Tabletop & D&D game mastering","Board game teaching session",
+    ]
+  },
 ];
 
 export const ALL_CATS = [...CATS, ...EXTRA_CATS];
