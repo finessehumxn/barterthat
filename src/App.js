@@ -358,7 +358,7 @@ function Splash({ onEnter }) {
           <button onClick={() => onEnter("pitch")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--pu)", fontSize: 12, fontWeight: 600, letterSpacing: ".03em" }}>◆ investors — see the pitch →</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8, maxWidth: 560, margin: "0 auto 26px" }}>
-          {[["◆ AI Swap Matchmaker", "finds 3 & 4-way trade loops"], ["⬡ Barter Tokens", "bank value, spend anywhere"], ["📍 Hyperlocal & live", "see swaps happening now"], ["🔒 Escrow + BT Score", "verified, protected deals"]].map(([t, s]) => (
+          {[["◆ Find my swaps", "we connect the dots so everyone wins"], ["⬡ Barter Tokens", "free store credit to even out trades"], ["📍 Near you & live", "see trades happening right now"], ["🔒 Safe & verified", "protected deals, real people"]].map(([t, s]) => (
             <div key={t} style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "12px 14px", textAlign: "left" }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{t}</div>
               <div style={{ fontSize: 11, color: "var(--t3)" }}>{s}</div>
@@ -780,18 +780,20 @@ function Signup({ onDone }) {
   const steps = isB2B ? ["account", "your offer", "what you want", "platforms", "B2B credentials", "launch"] : ["account", "your offer", "what you want", "platforms", "launch"];
 
   const ok = () => {
-    if (step === 0) return form.name.trim() && form.email.trim() && form.loc.trim();
-    if (step === 1) return form.cat && form.title.trim() && form.desc.trim();
-    if (step === 2) return wants.length >= 1;
-    if (step === 3) return selPlats.length >= 1;
+    if (step === 0) return form.name.trim();                 // just your name to start
+    if (step === 1) return form.cat && form.title.trim();    // category + a one-line title
     if (isB2B && step === 4) return selCerts.length >= 2;
-    return true;
+    return true;                                             // wants & platforms are optional
   };
 
   const go = () => {
     if (step < steps.length - 1) { setStep(s => s + 1); return; }
     const plats = selPlats.map(id => { const p = PLATFORMS.find(x => x.id === id); return { id, l: p.l, proof: platUrls[id] || "profile linked", url: platUrls[id] || `${p.l.toLowerCase().replace(/\s/g, "")}.com/${form.name.toLowerCase().replace(/\s/g, "")}` }; });
-    onDone({ ...form, wants, badges, specialties, platforms: plats, b2b: isB2B, certs: selCerts });
+    // Smart defaults so a fast signup still works — people fill the rest later.
+    const finalLoc = form.loc.trim() || "Remote";
+    const finalWants = wants.length ? wants : ["Beauty & Personal Care", "Food & Culinary Arts", "Tech & Digital Services", "Home Services & Repair"];
+    const finalDesc = form.desc.trim() || form.title.trim();
+    onDone({ ...form, loc: finalLoc, desc: finalDesc, wants: finalWants, badges, specialties, platforms: plats, b2b: isB2B, certs: selCerts });
   };
 
   const selectedCat = CATS.find(c => c.label === form.cat);
@@ -815,8 +817,8 @@ function Signup({ onDone }) {
 
         {step === 0 && <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>{isB2B ? "business name" : "full name"}</label><input className="ifield" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isB2B ? "e.g. Swift Auto Detail" : "e.g. Nia Kendrick"} /></div>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email</label><input className="ifield" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@email.com" /></div>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>location</label><input className="ifield" value={form.loc} onChange={e => setForm(f => ({ ...f, loc: e.target.value }))} placeholder="city, state or 'Remote'" /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email <span style={{ color: "var(--t3)" }}>— optional</span></label><input className="ifield" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@email.com" /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>location <span style={{ color: "var(--t3)" }}>— optional, defaults to Remote</span></label><input className="ifield" value={form.loc} onChange={e => setForm(f => ({ ...f, loc: e.target.value }))} placeholder="city, state or 'Remote'" /></div>
           {isB2B && <div>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>tax bracket</label>
             <select className="ifield" value={form.taxBracket} onChange={e => setForm(f => ({ ...f, taxBracket: e.target.value }))}>
@@ -843,7 +845,7 @@ function Signup({ onDone }) {
             </select>
           </div>}
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>listing title</label><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe what you offer in one line" /></div>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details</label><textarea className="ifield" rows={3} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? hours? requirements?" style={{ resize: "none" }} /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details <span style={{ color: "var(--t3)" }}>— optional, add later</span></label><textarea className="ifield" rows={3} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? hours? requirements?" style={{ resize: "none" }} /></div>
           <div>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your value — <strong style={{ color: "var(--g)" }}>${form.rate}{form.rate > 0 ? "/hr" : ""}</strong> {form.rate === 0 && "(free / community swap)"}</label>
             <input type="range" min={0} max={250} step={5} value={form.rate} onChange={e => setForm(f => ({ ...f, rate: +e.target.value }))} style={{ width: "100%", accentColor: "var(--g)" }} />
@@ -872,17 +874,17 @@ function Signup({ onDone }) {
         </div>}
 
         {step === 2 && <div>
-          <p style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>What are you hoping to get? Pick any categories — our <strong style={{ color: "var(--pu)" }}>AI Matchmaker</strong> uses this to find direct swaps <em>and</em> multi-party trade loops for you.</p>
+          <p style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>What are you hoping to get? Tap a few — we use this to find your trades. <strong style={{ color: "var(--t3)" }}>Not sure? Skip it — we'll show you everything.</strong></p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-            {CAT_LABELS.map(c => (
-              <button key={c} className={`chip ${wants.includes(c) ? "on" : ""}`} onClick={() => setWants(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c])}>{wants.includes(c) ? "✓ " : ""}{c}</button>
+            {POPULAR_CATS.map(c => (
+              <button key={c.id} className={`chip ${wants.includes(c.label) ? "on" : ""}`} onClick={() => setWants(p => p.includes(c.label) ? p.filter(x => x !== c.label) : [...p, c.label])}>{wants.includes(c.label) ? "✓ " : ""}{c.icon} {c.label}</button>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 12 }}>{wants.length} selected — the more you add, the more loops we can find</div>
+          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 12 }}>{wants.length ? `${wants.length} picked` : "none picked — that's fine, you can change this anytime"}</div>
         </div>}
 
         {step === 3 && <div>
-          <p style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>Select platforms where your work is already reviewed. This is your proof — no strangers, no sketchy.</p>
+          <p style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>Link any place your work is already reviewed (StyleSeat, Etsy, LinkedIn…). It's your proof, so people trust you faster. <strong style={{ color: "var(--t3)" }}>Totally optional — you can add this later.</strong></p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
             {PLATFORMS.map(p => (
               <button key={p.id} onClick={() => setSelPlats(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])} style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 10px", background: selPlats.includes(p.id) ? `${p.c}15` : "var(--s3)", border: `1px solid ${selPlats.includes(p.id) ? p.c : "var(--bd)"}`, borderRadius: "var(--rs)", cursor: "pointer", color: "var(--tx)", transition: "all .15s", textAlign: "left" }}>
@@ -922,7 +924,7 @@ function Signup({ onDone }) {
         {step === steps.length - 1 && <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 44, marginBottom: 14, color: "var(--g)" }}>✦</div>
           <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 10, color: "var(--g)" }}>you're live.</div>
-          <p style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.7, marginBottom: 16 }}>Listing active. Platforms linked. AI Matchmaker is already scanning for your swaps.</p>
+          <p style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.7, marginBottom: 16 }}>Your listing is up and we're already looking for swaps for you. You can finish your profile anytime.</p>
           <div className="credit" style={{ marginBottom: 16 }}>⬡ 50 Barter Tokens added</div>
           {isB2B && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "11px 14px", marginBottom: 16, fontSize: 12, color: "var(--pu)" }}>B2B verified — matched with licensed businesses in your tax bracket</div>}
           <div style={{ display: "flex", flexDirection: "column", gap: 7, textAlign: "left" }}>
@@ -935,7 +937,9 @@ function Signup({ onDone }) {
         <div style={{ display: "flex", gap: 9, marginTop: 24 }}>
           {step > 0 && <button className="btn bg" onClick={() => setStep(s => s - 1)}>← back</button>}
           <button className="btn bp" style={{ flex: 1 }} disabled={!ok()} onClick={go}>
-            {step === steps.length - 1 ? "enter marketplace →" : "continue →"}
+            {step === steps.length - 1 ? "enter marketplace →"
+              : ((step === 2 && !wants.length) || (step === 3 && !selPlats.length)) ? "skip for now →"
+              : "continue →"}
           </button>
         </div>
       </div>
@@ -1167,12 +1171,14 @@ function Match({ listings, user, onView, onPropose }) {
   const [ai, setAi] = useState(null);       // { suggestions:[...] } | null
   const [aiLoading, setAiLoading] = useState(false);
 
+  const [openGroups, setOpenGroups] = useState(false);
+
   const results = useMemo(() => {
     if (!run) return null;
     return findSwaps({ uid: user?.id || -1, offer, wants }, listings);
   }, [run, offer, wants, listings, user]);
 
-  const find = () => {
+  const find = (w = wants) => {
     setLoading(true); setRun(false); setAi(null);
     setTimeout(() => { setLoading(false); setRun(true); }, 950);
     // Real Claude-powered suggestions (server-side). Silently no-ops if AI is offline.
@@ -1181,7 +1187,7 @@ function Match({ listings, user, onView, onPropose }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        me: { uid: user?.id || -1, offer, wants },
+        me: { uid: user?.id || -1, offer, wants: w },
         listings: listings.map(l => ({ id: l.id, uid: l.uid, name: l.name, cat: l.cat, wants: l.wants, rate: l.rate, score: l.score, dist: l.dist }))
       })
     })
@@ -1190,33 +1196,57 @@ function Match({ listings, user, onView, onPropose }) {
       .catch(() => setAi({ suggestions: [] }))
       .finally(() => setAiLoading(false));
   };
+  const findAnything = () => { const all = CAT_LABELS; setWants(all); find(all); };
   const byId = id => listings.find(l => String(l.id) === String(id));
 
   return (
     <div style={{ padding: "14px 14px 90px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <span className="pill pp">◆ AI</span>
-        <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800 }}>Swap Matchmaker</div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800 }}>Find my swaps</div>
       </div>
-      <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 16, lineHeight: 1.6 }}>No direct match? We find the <strong style={{ color: "var(--pu)" }}>chain</strong>. You → them → someone else → back to you. Everyone gets what they want.</div>
+      <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.6 }}>Can't find a straight trade? We connect the dots — <strong style={{ color: "var(--pu)" }}>you help them, they help someone, that person helps you.</strong> Everybody gets what they need.</div>
+
+      <button className="btn bpu" style={{ width: "100%", marginBottom: 12, padding: "14px" }} disabled={loading} onClick={findAnything}>
+        {loading ? "looking…" : "◆ Find me anything good →"}
+      </button>
+      <div style={{ textAlign: "center", fontSize: 11, color: "var(--t3)", marginBottom: 12 }}>one tap — or pick what you want below</div>
 
       <div className="card" style={{ marginBottom: 14 }}>
-        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>I offer</label>
-        <select className="ifield" value={offer} onChange={e => { setOffer(e.target.value); setRun(false); }} style={{ marginBottom: 12 }}>
+        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>What I can offer</label>
+        <select className="ifield" value={offer} onChange={e => { setOffer(e.target.value); setRun(false); }} style={{ marginBottom: 14 }}>
           {CAT_LABELS.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 7 }}>I want (pick any)</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {CAT_LABELS.map(c => (
-            <button key={c} className={`chip ${wants.includes(c) ? "on" : ""}`} onClick={() => { setWants(p => p.includes(c) ? p.filter(x => x !== c) : [...p, c]); setRun(false); }}>{wants.includes(c) ? "✓ " : ""}{c}</button>
-          ))}
+        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 7 }}>What I'm looking for <span style={{ color: "var(--t3)" }}>{wants.length ? `· ${wants.length} picked` : "· tap any"}</span></label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {CAT_GROUPS.map(grp => {
+            const cats = grp.ids.map(CAT_BY_ID).filter(Boolean);
+            const open = openGroups === grp.label;
+            const picked = cats.filter(c => wants.includes(c.label)).length;
+            return (
+              <div key={grp.label} style={{ border: "1px solid var(--bd)", borderRadius: "var(--rs)", overflow: "hidden" }}>
+                <button onClick={() => setOpenGroups(open ? false : grp.label)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", background: "var(--s3)", border: "none", color: "var(--tx)", cursor: "pointer", fontSize: 12.5, fontWeight: 600, textAlign: "left" }}>
+                  <span>{grp.icon} {grp.label}</span>
+                  {picked > 0 && <span style={{ fontSize: 10, color: "var(--g)" }}>✓ {picked}</span>}
+                  <span style={{ marginLeft: "auto", color: "var(--t3)" }}>{open ? "▲" : "▼"}</span>
+                </button>
+                {open && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 12px" }}>
+                    {cats.map(c => (
+                      <button key={c.id} className={`chip ${wants.includes(c.label) ? "on" : ""}`} onClick={() => { setWants(p => p.includes(c.label) ? p.filter(x => x !== c.label) : [...p, c.label]); setRun(false); }}>{wants.includes(c.label) ? "✓ " : ""}{c.label}</button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-        <button className="btn bpu" style={{ width: "100%", marginTop: 14 }} disabled={!wants.length || loading} onClick={find}>
-          {loading ? "scanning the network…" : "◆ find my swaps"}
+        <button className="btn bpu" style={{ width: "100%", marginTop: 14 }} disabled={!wants.length || loading} onClick={() => find()}>
+          {loading ? "looking…" : "◆ find my swaps"}
         </button>
       </div>
 
-      {loading && <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: 26 }}><div className="spin" /><span style={{ fontSize: 13, color: "var(--t2)" }}>analyzing {listings.length} traders for direct & circular matches…</span></div>}
+      {loading && <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: 26 }}><div className="spin" /><span style={{ fontSize: 13, color: "var(--t2)" }}>checking {listings.length} people for trades that work…</span></div>}
 
       {run && !loading && (aiLoading || (ai && ai.suggestions.length > 0)) && (
         <div className="card fu" style={{ marginBottom: 14, borderColor: "rgba(155,114,221,0.35)", background: "linear-gradient(180deg, rgba(155,114,221,0.08), transparent)" }}>
@@ -1914,9 +1944,35 @@ function Post({ user, onPost }) {
   );
 }
 
+// ── COACH MARKS (first-run, 3 dismissible tips, plain language) ──────────────
+function CoachMarks({ onDone }) {
+  const [i, setI] = useState(0);
+  const tips = [
+    { ic: "👀", t: "Find stuff to trade", b: "Tap “Explore” — pick a popular chip or just search what you need, like “haircut” or “moving help.”" },
+    { ic: "◆", t: "Let us match you", b: "Tap “Find swaps” and hit “Find me anything good.” We'll line up people who want what you've got." },
+    { ic: "🤝", t: "Make the trade", b: "See someone good? Tap “Propose swap.” No cash needed — even out the value with free tokens." },
+  ];
+  const tip = tips[i];
+  const last = i === tips.length - 1;
+  return (
+    <div onClick={onDone} style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(8,12,20,0.82)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div className="fu" onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 360, background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: 18, padding: "26px 22px", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+        <div style={{ fontSize: 44, marginBottom: 12 }}>{tip.ic}</div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{tip.t}</div>
+        <div style={{ fontSize: 13.5, color: "var(--t2)", lineHeight: 1.65, marginBottom: 20 }}>{tip.b}</div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 18 }}>
+          {tips.map((_, n) => <div key={n} style={{ width: n === i ? 20 : 7, height: 7, borderRadius: 100, background: n === i ? "var(--g)" : "var(--s4)", transition: "all .2s" }} />)}
+        </div>
+        <button className="btn bp" style={{ width: "100%" }} onClick={() => last ? onDone() : setI(i + 1)}>{last ? "Got it — let's go" : "Next"}</button>
+        {!last && <button onClick={onDone} style={{ marginTop: 10, background: "none", border: "none", color: "var(--t3)", fontSize: 12, cursor: "pointer" }}>skip tips</button>}
+      </div>
+    </div>
+  );
+}
+
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function Nav({ scr, onNav }) {
-  const items = [{ id: "browse", ic: "◫", l: "explore" }, { id: "match", ic: "◆", l: "match" }, { id: "post", ic: "✦", l: "post", prime: true }, { id: "community", ic: "⚇", l: "community" }, { id: "profile", ic: "◎", l: "profile" }];
+  const items = [{ id: "browse", ic: "◫", l: "explore" }, { id: "match", ic: "◆", l: "find swaps" }, { id: "post", ic: "✦", l: "post", prime: true }, { id: "community", ic: "⚇", l: "community" }, { id: "profile", ic: "◎", l: "profile" }];
   return (
     <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(8,8,8,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", padding: "8px 0 18px", zIndex: 50 }}>
       {items.map(item => (
@@ -1943,11 +1999,18 @@ export default function App() {
   const [viewing, setViewing] = useState(null);
   const [proposeTo, setProposeTo] = useState(null);
   const [toast, setToast] = useState(null);
+  const [coach, setCoach] = useState(false);
 
   useEffect(() => {
     const saved = storage.get("bt_user");
     if (saved) { setUser(saved); setScreen("main"); }
   }, []);
+
+  // Show the 3 quick tips the first time someone reaches the marketplace.
+  useEffect(() => {
+    if (screen === "main" && !storage.get("bt_coach")) setCoach(true);
+  }, [screen]);
+  const dismissCoach = () => { storage.set("bt_coach", 1); setCoach(false); };
 
   // Persist marketplace state so listings & trades survive a refresh
   useEffect(() => { storage.set("bt_listings", listings); }, [listings]);
@@ -2013,7 +2076,7 @@ export default function App() {
   const handleLogout = () => { storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
 
   const handleReset = () => {
-    ["bt_user", "bt_listings", "bt_trades"].forEach(k => storage.remove(k));
+    ["bt_user", "bt_listings", "bt_trades", "bt_coach"].forEach(k => storage.remove(k));
     setUser(null);
     setListings(LISTINGS);
     setTrades(TRADES_SEED);
@@ -2053,7 +2116,7 @@ export default function App() {
       <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => { setViewing(null); setNav("browse"); }}><Logo height={28} /></div>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          {user && <span className="credit" style={{ cursor: "pointer" }} onClick={() => { setViewing(null); setNav("profile"); }}>⬡ {user.credits ?? 0}</span>}
+          {user && <span className="credit" title="Barter Tokens — free store credit you can use to even out any trade. Tap to see your balance & earn more." style={{ cursor: "pointer" }} onClick={() => { setViewing(null); setNav("earn"); }}>⬡ {user.credits ?? 0}</span>}
           <button onClick={() => { setViewing(null); setNav("trades"); }} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", color: nav === "trades" ? "var(--g)" : "var(--t2)", fontSize: 18 }}>
             ⇄{unread > 0 && <span style={{ position: "absolute", top: -3, right: -6, width: 14, height: 14, borderRadius: "50%", background: "var(--g)", fontSize: 9, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{unread}</span>}
           </button>
@@ -2064,6 +2127,7 @@ export default function App() {
       </div>
       {renderMain()}
       <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} />
+      {coach && <CoachMarks onDone={dismissCoach} />}
       {proposeTo && <ProposeModal l={proposeTo} user={user} onClose={() => setProposeTo(null)} onSend={handleSend} />}
       {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(232,177,74,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
     </>
