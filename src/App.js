@@ -1693,9 +1693,12 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
             <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 2 }}>Barter Tokens balance</div>
             <div style={{ fontFamily: "var(--fd)", fontSize: 30, fontWeight: 800, color: "var(--am)" }}>⬡ {user.credits ?? 0}</div>
           </div>
-          <button className="btn bg bsm" onClick={() => onNav("browse")}>spend →</button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <button className="btn bp bsm" onClick={() => onNav("earn")}>⬡ get free tokens</button>
+            <button className="btn bg bsm" onClick={() => onNav("browse")}>spend →</button>
+          </div>
         </div>
-        <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 8, lineHeight: 1.5 }}>Bank value when your swap is worth more — spend it on any listing, anytime. Earn more by completing trades.</div>
+        <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 8, lineHeight: 1.5 }}>Tokens are like store credit — use them to even out any trade. Earn them free for signing up, daily check-ins, referrals and more.</div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
@@ -1736,6 +1739,106 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
         <button className="btn bg" style={{ flex: 1, color: "var(--rd)" }} onClick={onReset}>reset demo data</button>
       </div>
       <div style={{ fontSize: 10, color: "var(--t3)", textAlign: "center", marginTop: 8 }}>reset clears your account, listings & trades back to the original sample data</div>
+    </div>
+  );
+}
+
+// ── EARN TOKENS ────────────────────────────────────────────────────────────
+// Easy ways to stock up on Barter Tokens before your first swap, so new users
+// can start spending right away. Claims are tracked on the user (localStorage).
+function EarnTokens({ user, listings, onEarn, onNav }) {
+  const claims = user.claims || {};
+  const today = new Date().toISOString().slice(0, 10);
+  const [adBusy, setAdBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [survey, setSurvey] = useState({ open: false, useful: "", want: "" });
+
+  const profileComplete = !!(user.cat && user.loc && (user.rate || user.offer || user.title));
+  const hasListing = (listings || []).some(l => l.uid === user.id);
+  const adsToday = claims.adsDate === today ? (claims.adsCount || 0) : 0;
+  const dailyDone = claims.daily === today;
+  const code = "BT-" + String(user.name || "FRIEND").split(" ")[0].toUpperCase().replace(/[^A-Z]/g, "").slice(0, 6);
+
+  const setClaims = patch => ({ claims: { ...claims, ...patch } });
+
+  const watchAd = () => {
+    if (adsToday >= 5 || adBusy) return;
+    setAdBusy(true);
+    setTimeout(() => { setAdBusy(false); onEarn(5, setClaims({ adsDate: today, adsCount: adsToday + 1 })); }, 1600);
+  };
+  const copyCode = () => {
+    try { navigator.clipboard?.writeText(`Join me on BarterThat — trade skills & goods, no cash. Use my code ${code}: https://barterthat.vercel.app`); } catch (e) {}
+    setCopied(true); setTimeout(() => setCopied(false), 1800);
+    if (!claims.shared) onEarn(15, setClaims({ shared: true }));
+  };
+  const submitSurvey = () => {
+    if (!survey.useful) return;
+    try { const f = JSON.parse(localStorage.getItem("bt_feedback") || "[]"); f.push({ ...survey, at: today }); localStorage.setItem("bt_feedback", JSON.stringify(f)); } catch (e) {}
+    setSurvey({ open: false, useful: "", want: "" });
+    onEarn(20, setClaims({ survey: true }));
+  };
+
+  const Row = ({ icon, title, sub, reward, done, doneLabel, cta, onClick, disabled, color = "var(--am)" }) => (
+    <div className="card" style={{ marginBottom: 9, display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ fontSize: 22, width: 30, textAlign: "center", flexShrink: 0 }}>{icon}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>{title} <span style={{ color, fontFamily: "var(--fd)" }}>+{reward}</span></div>
+        <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 2, lineHeight: 1.45 }}>{sub}</div>
+      </div>
+      {done
+        ? <span style={{ fontSize: 11, fontWeight: 700, color: "var(--g)", flexShrink: 0 }}>✓ {doneLabel || "done"}</span>
+        : <button className="btn bp bsm" style={{ flexShrink: 0, opacity: disabled ? .5 : 1 }} disabled={disabled} onClick={onClick}>{cta}</button>}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "14px 14px 90px" }}>
+      <button className="btn bg bsm" onClick={() => onNav("profile")} style={{ marginBottom: 12 }}>← back</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <span className="pill pa">⬡ Earn</span>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800 }}>Get free Barter Tokens</div>
+      </div>
+      <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 16, lineHeight: 1.6 }}>Stock up before your first swap — spend tokens on any listing to balance a deal. Your balance: <strong style={{ color: "var(--am)" }}>⬡ {user.credits ?? 0}</strong></div>
+
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", margin: "4px 0 9px" }}>start here</div>
+      <Row icon="🎁" title="Sign up & complete profile" reward={50} sub={profileComplete ? "Your profile looks complete — claim your welcome tokens." : "Add your category, location & what you offer, then claim."} done={!!claims.signup} doneLabel="claimed" cta="claim" disabled={!profileComplete} onClick={() => onEarn(50, setClaims({ signup: true }))} />
+      <Row icon="✅" title="Confirm your info is accurate" reward={25} sub="Pinky-promise your details are real. Accurate profiles get more trusted swaps." done={!!claims.accurate} doneLabel="confirmed" cta="confirm" onClick={() => { if (window.confirm("Confirm your profile info is accurate and truthful?")) onEarn(25, setClaims({ accurate: true })); }} />
+      <Row icon="🔗" title="Add a verified platform link" reward={15} sub="Link a StyleSeat, Etsy, LinkedIn, etc. to prove your work." done={!!claims.platform} doneLabel="added" cta={user.platforms?.length ? "claim" : "add"} onClick={() => user.platforms?.length ? onEarn(15, setClaims({ platform: true })) : onNav("profile")} />
+
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", margin: "16px 0 9px" }}>every day</div>
+      <Row icon="📅" title="Daily check-in" reward={10} sub="Open the app and check in once a day. Comes back tomorrow." done={dailyDone} doneLabel="today" cta="check in" onClick={() => onEarn(10, setClaims({ daily: today }))} />
+      <Row icon="▶" title={adBusy ? "Watching ad…" : "Watch a quick ad"} reward={5} sub={`Supports the platform. Up to 5/day — ${5 - adsToday} left today.`} done={adsToday >= 5} doneLabel="maxed today" cta={adBusy ? "…" : "watch"} disabled={adBusy} onClick={watchAd} />
+
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", margin: "16px 0 9px" }}>bigger rewards</div>
+      <div className="card" style={{ marginBottom: 9 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 22, width: 30, textAlign: "center" }}>👥</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>Refer friends <span style={{ color: "var(--am)", fontFamily: "var(--fd)" }}>+75 each</span></div>
+            <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 2, lineHeight: 1.45 }}>They get 50 to start, you get 75 when they join. +15 the first time you share.</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
+          <div style={{ flex: 1, background: "var(--s3)", borderRadius: "var(--rs)", padding: "9px 12px", fontFamily: "var(--fd)", fontWeight: 800, letterSpacing: ".05em", color: "var(--am)" }}>{code}</div>
+          <button className="btn bp bsm" onClick={copyCode}>{copied ? "✓ copied" : "share & copy"}</button>
+        </div>
+      </div>
+      <Row icon="💬" title="Take a 2-min feedback survey" reward={20} sub="Tell us what to build next. One-time bonus." done={!!claims.survey} doneLabel="thanks!" cta="start" onClick={() => setSurvey(s => ({ ...s, open: true }))} />
+      {survey.open && !claims.survey && (
+        <div className="card" style={{ marginBottom: 9, borderColor: "rgba(232,177,74,0.3)" }}>
+          <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>How useful is BarterThat so far?</label>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+            {["Love it", "It's ok", "Confusing", "Not yet"].map(o => <button key={o} className={`chip ${survey.useful === o ? "on" : ""}`} onClick={() => setSurvey(s => ({ ...s, useful: o }))}>{survey.useful === o ? "✓ " : ""}{o}</button>)}
+          </div>
+          <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>What should we add or fix?</label>
+          <textarea className="ifield" rows={2} value={survey.want} onChange={e => setSurvey(s => ({ ...s, want: e.target.value }))} placeholder="optional — your idea" style={{ resize: "none", marginBottom: 10 }} />
+          <button className="btn bp bsm" disabled={!survey.useful} onClick={submitSurvey}>submit & earn 20</button>
+        </div>
+      )}
+      <Row icon="✦" title="Post your first listing" reward={30} sub="List a service, item or rental. Auto-credited when it goes live." done={hasListing} doneLabel="posted" cta="post" onClick={() => onNav("post")} />
+      <Row icon="⭐" title="Subscribe to BarterThat+" reward={100} sub="$12/mo: priority matching, unlimited proposals + 30 tokens every month. 100-token signup bonus." done={!!claims.sub} doneLabel="active" cta="subscribe" color="var(--pu)" onClick={() => { if (window.confirm("Start BarterThat+ ($12/mo)? You'll get a 100-token bonus now plus 30/month. (Demo — no charge.)")) onEarn(100, setClaims({ sub: true })); }} />
+
+      <div style={{ fontSize: 10.5, color: "var(--t3)", textAlign: "center", marginTop: 14, lineHeight: 1.5 }}>More ways coming: community challenges, leaving reviews, completing your first 3 swaps, and seasonal bonus drops.</div>
     </div>
   );
 }
@@ -1901,6 +2004,12 @@ export default function App() {
     flash(`⬡ +${earned} Barter Tokens earned`);
   };
 
+  const handleEarn = (amount, patch = {}) => {
+    if (!user) return;
+    persist({ ...user, credits: (user.credits || 0) + amount, ...patch });
+    flash(`⬡ +${amount} tokens added`);
+  };
+
   const handleLogout = () => { storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
 
   const handleReset = () => {
@@ -1930,6 +2039,7 @@ export default function App() {
       case "trades": return <Trades trades={trades} onAccept={handleAccept} onComplete={handleComplete} />;
       case "post": return <Post user={user} onPost={() => setNav("profile")} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
+      case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} />;
       case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); setNav(n); }} onLogout={handleLogout} onReset={handleReset} />;
       default: return null;
     }
