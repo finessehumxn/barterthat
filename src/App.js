@@ -1,5 +1,29 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
+import { AdMob } from "@capacitor-community/admob";
 import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
+
+// ── ADMOB (real rewarded ads → tokens, native apps only) ───────────────────
+const ADMOB = {
+  appId: "ca-app-pub-6152684967386284~8863838009",
+  rewarded: "ca-app-pub-6152684967386284/5440432460",
+};
+const IS_NATIVE = typeof Capacitor !== "undefined" && Capacitor.getPlatform && Capacitor.getPlatform() !== "web";
+let admobReady = false;
+async function initAdMob() {
+  if (!IS_NATIVE || admobReady) return;
+  try { await AdMob.initialize({}); admobReady = true; } catch (e) {}
+}
+// Resolves true only if the user actually earned the reward (watched the ad).
+async function showRewardedAd() {
+  if (!IS_NATIVE) return false;
+  try {
+    await initAdMob();
+    await AdMob.prepareRewardVideoAd({ adId: ADMOB.rewarded });
+    const reward = await AdMob.showRewardVideoAd();
+    return !!reward;
+  } catch (e) { return false; }
+}
 
 const G = () => (
   <style>{`
@@ -1960,10 +1984,18 @@ function EarnTokens({ user, listings, onEarn, onNav }) {
 
   const setClaims = patch => ({ claims: { ...claims, ...patch } });
 
-  const watchAd = () => {
+  const watchAd = async () => {
     if (adsToday >= 5 || adBusy) return;
     setAdBusy(true);
-    setTimeout(() => { setAdBusy(false); onEarn(5, setClaims({ adsDate: today, adsCount: adsToday + 1 })); }, 1600);
+    let earned;
+    if (IS_NATIVE) {
+      earned = await showRewardedAd();            // real AdMob rewarded ad
+    } else {
+      await new Promise(r => setTimeout(r, 1600)); // web preview — no ad network on web
+      earned = true;
+    }
+    setAdBusy(false);
+    if (earned) onEarn(5, setClaims({ adsDate: today, adsCount: adsToday + 1 }));
   };
   const copyCode = () => {
     try { navigator.clipboard?.writeText(`Join me on BarterThat — trade skills & goods, no cash. Use my code ${code}: https://barterthat.vercel.app`); } catch (e) {}
@@ -2185,6 +2217,7 @@ export default function App() {
   useEffect(() => {
     const saved = storage.get("bt_user");
     if (saved) { setUser(saved); setScreen("main"); }
+    initAdMob(); // no-op on web
   }, []);
 
   // Show the 3 quick tips the first time someone reaches the marketplace.
