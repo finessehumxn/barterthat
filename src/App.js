@@ -678,7 +678,7 @@ const PITCH = {
   ],
   milestones: "Milestones: 25 cities · 5M verified traders · Barter Tokens ledger live · $1B GMV run-rate · Series A in 18 months.",
   // — contact —
-  contactEmail: "founders@barterthat.com",
+  contactEmail: "support@barterthat.app",
   company: "BarterThat, Inc.",
   // — "request the deck" form —
   // Paste your form endpoint from Formspree / Getform / Basin (e.g. "https://formspree.io/f/abcwxyz").
