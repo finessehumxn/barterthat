@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { AdMob } from "@capacitor-community/admob";
 import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
+import * as db from "./db";
 
 // ── ADMOB (real rewarded ads → tokens, native apps only) ───────────────────
 const ADMOB = {
@@ -594,9 +595,12 @@ function Splash({ onEnter, onHow }) {
         <div style={{ fontSize: 14, color: "var(--g)", fontStyle: "italic", maxWidth: 480, margin: "0 auto 32px", fontFamily: "var(--fd)" }}>
           One person is great at one thing. Together, we're unstoppable.
         </div>
-        <div className="cta-row" style={{ marginBottom: 12 }}>
+        <div className="cta-row" style={{ marginBottom: 10 }}>
           <button className="btn bp blg" onClick={() => onEnter("signup")}>get started free</button>
           <button className="btn bg blg" onClick={() => onEnter("browse")}>explore marketplace</button>
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <button onClick={() => onEnter("login")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 13, fontWeight: 600 }}>Already a member? <span style={{ color: "var(--g)" }}>Log in</span></button>
         </div>
         <div style={{ marginBottom: 14 }}>
           <button onClick={onHow} style={{ background: "none", border: "1px solid var(--bd)", borderRadius: 100, cursor: "pointer", color: "var(--tx)", fontSize: 13, fontWeight: 700, padding: "9px 18px" }}>▶ How it works — 60-second walkthrough</button>
@@ -1012,6 +1016,31 @@ function AdminLeads({ onBack }) {
   );
 }
 
+// ── LOGIN (returning users) ──────────────────────────────────────────────────
+function Login({ onLogin, onSignup, onBack }) {
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const link = { background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 12, fontWeight: 600 };
+  const go = async () => { setBusy(true); await onLogin(email, pw); setBusy(false); };
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+      <div style={{ width: "100%", maxWidth: 420 }} className="fu">
+        <div style={{ textAlign: "center", marginBottom: 22 }}><Logo height={28} style={{ margin: "0 auto" }} /></div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 24, fontWeight: 800, marginBottom: 6 }}>Welcome back</div>
+        <div style={{ fontSize: 12.5, color: "var(--t2)", marginBottom: 18, lineHeight: 1.55 }}>Log in to pick up where you left off — your listings, Barter Tokens, and trades are saved to your account and follow you on any device.</div>
+        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email</label>
+        <input className="ifield" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" style={{ marginBottom: 12 }} />
+        <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>password</label>
+        <input className="ifield" type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="your password" onKeyDown={e => { if (e.key === "Enter" && email && pw && !busy) go(); }} />
+        <button className="btn bp" style={{ width: "100%", marginTop: 16 }} disabled={busy || !email || !pw} onClick={go}>{busy ? "logging in…" : "log in →"}</button>
+        <div style={{ textAlign: "center", marginTop: 16 }}><button onClick={onSignup} style={link}>New here? <span style={{ color: "var(--g)" }}>Create an account</span></button></div>
+        <div style={{ textAlign: "center", marginTop: 10 }}><button onClick={onBack} style={{ ...link, color: "var(--t3)" }}>← back</button></div>
+      </div>
+    </div>
+  );
+}
+
 // ── SIGNUP ────────────────────────────────────────────────────────────────────
 // Friendly, plain-language guide for each step — what it is + why it helps.
 const STEP_GUIDE = {
@@ -1022,10 +1051,10 @@ const STEP_GUIDE = {
   "B2B credentials": { n: "5th", t: "Verify your license", why: "Licensed pros submit real credentials. This protects everyone in B2B deals and sets you apart from hobbyists." },
   "launch": { n: "🎉", t: "You're all set!", why: "" },
 };
-function Signup({ onDone }) {
+function Signup({ onDone, onLogin }) {
   const [step, setStep] = useState(0);
   const [isB2B, setIsB2B] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", loc: "", cat: "", sub: "", title: "", desc: "", rate: 75, acceptTopup: true, taxBracket: "$0–$44k", invite: "", licenseNo: "", licenseState: "", certifyPro: false });
+  const [form, setForm] = useState({ name: "", email: "", password: "", loc: "", cat: "", sub: "", title: "", desc: "", rate: 75, acceptTopup: true, taxBracket: "$0–$44k", invite: "", licenseNo: "", licenseState: "", certifyPro: false });
   const [wants, setWants] = useState([]);
   const [badges, setBadges] = useState([]);
   const [specialties, setSpecialties] = useState([]);
@@ -1036,7 +1065,7 @@ function Signup({ onDone }) {
   const steps = isB2B ? ["account", "your offer", "what you want", "platforms", "B2B credentials", "launch"] : ["account", "your offer", "what you want", "platforms", "launch"];
 
   const ok = () => {
-    if (step === 0) return form.name.trim();                 // just your name to start
+    if (step === 0) return form.name.trim() && /\S+@\S+\.\S+/.test(form.email) && form.password.length >= 6;
     if (step === 1) return form.cat && form.title.trim();    // category + a one-line title
     if (isB2B && step === 4) return selCerts.length >= 2 && form.licenseNo.trim() && form.licenseState.trim() && form.certifyPro;
     return true;                                             // wants & platforms are optional
@@ -1084,7 +1113,8 @@ function Signup({ onDone }) {
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>{isB2B ? "business name" : "full name"}{SPEECH_OK ? " — type or say it 🎤" : ""}</label>
             <div style={{ display: "flex", gap: 8 }}><input className="ifield" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isB2B ? "e.g. Swift Auto Detail" : "e.g. Nia Kendrick"} style={{ flex: 1 }} /><VoiceButton onText={t => setForm(f => ({ ...f, name: t }))} /></div>
           </div>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email <span style={{ color: "var(--t3)" }}>— optional</span></label><input className="ifield" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@email.com" /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email <span style={{ color: "var(--t3)" }}>— so you can log in on any device</span></label><input className="ifield" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@email.com" /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>password <span style={{ color: "var(--t3)" }}>— at least 6 characters</span></label><input className="ifield" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="choose a password" /></div>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>location <span style={{ color: "var(--t3)" }}>— optional, defaults to Remote</span></label><input className="ifield" value={form.loc} onChange={e => setForm(f => ({ ...f, loc: e.target.value }))} placeholder="city, state or 'Remote'" /></div>
           {isB2B && <div>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>tax bracket</label>
@@ -1101,6 +1131,7 @@ function Signup({ onDone }) {
               : <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>Elite is invite-only. No code? You can still join — request one later.</div>)}
           </div>
           <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 Barter Tokens</strong> in your account to get you trading.</div>
+          <div style={{ textAlign: "center", marginTop: 4 }}><button type="button" onClick={onLogin} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 12, fontWeight: 600 }}>Already have an account? <span style={{ color: "var(--g)" }}>Log in</span></button></div>
         </div>}
 
         {step === 1 && <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
@@ -2370,7 +2401,7 @@ export default function App() {
   const [screen, setScreen] = useState("splash");
   const [nav, setNav] = useState("browse");
   const [user, setUser] = useState(null);
-  const [listings, setListings] = useState(() => storage.get("bt_listings") || LISTINGS);
+  const [listings, setListings] = useState(LISTINGS);
   const [trades, setTrades] = useState(() => storage.get("bt_trades") || TRADES_SEED);
   const [viewing, setViewing] = useState(null);
   const [proposeTo, setProposeTo] = useState(null);
@@ -2379,9 +2410,18 @@ export default function App() {
   const [showHow, setShowHow] = useState(false);
 
   useEffect(() => {
-    const saved = storage.get("bt_user");
-    if (saved) { setUser(saved); setScreen("main"); }
     initAdMob(); // no-op on web
+    (async () => {
+      // Shared marketplace: real listings from everyone, prepended to demo content.
+      const real = await db.loadListings();
+      if (real && real.length) setListings([...real, ...LISTINGS]);
+      // Restore real account session (works across devices).
+      const uid = await db.currentUserId();
+      if (uid) {
+        const prof = await db.loadProfile(uid);
+        if (prof) { setUser(prof); setScreen("main"); }
+      }
+    })();
   }, []);
 
   // Show the 3 quick tips the first time someone reaches the marketplace.
@@ -2395,14 +2435,22 @@ export default function App() {
   useEffect(() => { storage.set("bt_trades", trades); }, [trades]);
 
   const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2600); };
-  const persist = (u) => { setUser(u); storage.set("bt_user", u); };
+  const persist = (u) => { setUser(u); storage.set("bt_user", u); if (u && u.id) db.saveProfile(u.id, u); };
 
-  const handleSignup = form => {
-    const elite = isInvite(form.invite);                 // Elite is invite-only
+  const handleSignup = async form => {
+    // Create a real account so the profile + tokens follow them across devices.
+    const res = await db.signUp(form.email, form.password);
+    if (res.error) {
+      flash(/already|registered|exists/i.test(res.error) ? "That email already has an account — tap “Log in” instead." : res.error);
+      setScreen("login");
+      return;
+    }
+    const uid = res.user?.id;
+    const elite = isInvite(form.invite);
     const license = form.b2b ? { number: form.licenseNo, state: form.licenseState } : null;
-    const verifiedPro = form.b2b ? false : undefined;    // licensed pros start "pending verification"
+    const verifiedPro = form.b2b ? false : undefined;
     const u = {
-      id: Date.now(), name: form.name, email: form.email, loc: form.loc,
+      id: uid, name: form.name, email: form.email, loc: form.loc,
       ini: form.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       avc: ac(Math.floor(Math.random() * 8)),
       cat: form.cat, sub: form.sub, title: form.title, desc: form.desc, wants: form.wants || [],
@@ -2410,31 +2458,43 @@ export default function App() {
       rate: form.rate, platforms: form.platforms, b2b: form.b2b, elite, license, verifiedPro,
       certs: form.certs, taxBracket: form.taxBracket, score: 72, swaps: 0, rating: 0, credits: 50,
     };
-    const catMeta = CATS.find(c => c.label === form.cat);
     if (form.title) {
-      const nl = { id: Date.now() + 1, uid: u.id, type: catMeta?.t || "service", name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc, remote: true, verified: form.platforms.length >= 1, elite, b2b: form.b2b, license, verifiedPro, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket };
-      setListings(p => [nl, ...p]);
+      const catMeta = CATS.find(c => c.label === form.cat);
+      const nl = { uid, type: catMeta?.t || "service", name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc || "Remote", remote: true, verified: form.platforms.length >= 1, elite, b2b: form.b2b, license, verifiedPro, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket };
+      const saved = await db.addListing(uid, nl);
+      setListings(p => [saved || { ...nl, id: Date.now() }, ...p]);
     }
     persist(u);
     setScreen("main");
     setNav("match");
   };
 
-  const handlePost = form => {
+  const handleLogin = async (email, password) => {
+    const res = await db.signIn(email, password);
+    if (res.error) { flash("Couldn't log in — check your email & password."); return false; }
+    const prof = await db.loadProfile(res.user.id);
+    if (prof) persist(prof); else persist({ id: res.user.id, name: email.split("@")[0], email, credits: 50, wants: [] });
+    setScreen("main"); setNav("browse");
+    return true;
+  };
+
+  const handlePost = async form => {
     if (!user) { setScreen("signup"); return; }
     const catMeta = CATS.find(c => c.label === form.cat);
     const nl = {
-      id: Date.now() + 1, uid: user.id, type: form.type || catMeta?.t || "service",
+      uid: user.id, type: form.type || catMeta?.t || "service",
       name: user.name, ini: user.ini, avc: user.avc, cat: form.cat || "Creative Arts & Design",
       sub: form.sub, title: form.title, desc: form.desc || form.title, rate: form.rate,
-      loc: user.loc || "Remote", remote: true, verified: true, elite: false, b2b: user.b2b,
+      loc: user.loc || "Remote", remote: true, verified: true, elite: !!user.elite, b2b: user.b2b,
+      license: user.license, verifiedPro: user.verifiedPro,
       score: user.score || 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: user.wants || [],
       badges: user.badges || [], specialties: user.specialties || [], platforms: user.platforms || [],
       certs: user.certs || [], taxBracket: user.taxBracket, media: form.media || [],
     };
-    setListings(p => [nl, ...p]);
+    const saved = await db.addListing(user.id, nl);
+    setListings(p => [saved || { ...nl, id: Date.now() }, ...p]);
     setNav("profile");
-    flash("✦ listing posted — AI is matching you");
+    flash("✦ listing posted — everyone can see it now");
   };
 
   const handleSave = id => {
@@ -2487,7 +2547,7 @@ export default function App() {
     flash("Reported — our team will review it. Thank you.");
   };
 
-  const handleLogout = () => { storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
+  const handleLogout = () => { db.signOut(); storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
 
   const handleReset = () => {
     ["bt_user", "bt_listings", "bt_trades", "bt_coach"].forEach(k => storage.remove(k));
@@ -2501,9 +2561,10 @@ export default function App() {
     flash("demo data reset to sample");
   };
 
-  const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
+  const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "login") setScreen("login"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
   if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <VideoModal onDone={() => setShowHow(false)} />}</>;
-  if (screen === "signup") return <><G /><Signup onDone={handleSignup} /></>;
+  if (screen === "login") return <><G /><Login onLogin={handleLogin} onSignup={() => setScreen("signup")} onBack={() => setScreen("splash")} /></>;
+  if (screen === "signup") return <><G /><Signup onDone={handleSignup} onLogin={() => setScreen("login")} /></>;
   if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen("splash")} onEnter={enter} /></>;
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
 
