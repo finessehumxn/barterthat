@@ -141,6 +141,12 @@ const B2B_CERTS = [
 
 const TAX_BRACKETS = ["$0–$44k","$44k–$95k","$95k–$201k","$201k–$383k","$383k+"];
 
+// Elite is invite-only — exclusive, by referral/partner code. Add real codes here.
+const INVITE_CODES = ["BT-ELITE", "FOUNDER", "BARTERVIP", "ELITE2026"];
+const isInvite = code => INVITE_CODES.includes(String(code || "").trim().toUpperCase());
+// Licensed-pro verification disclaimer (legal protection for B2B swaps).
+const B2B_DISCLAIMER = "Licensed pros submit their license details for verification. B2B swaps are agreements between independently licensed parties — verify credentials yourself before any deal. BarterThat surfaces submitted info but isn't a party to, or liable for, your agreement.";
+
 const AVC = ["#3D1A24","#1A3D2B","#1A1A3D","#3D2B1A","#2B1A3D","#1A3A38","#3A1A1A","#1A2E3A"];
 const ac = i => AVC[i % AVC.length];
 
@@ -993,7 +999,7 @@ function AdminLeads({ onBack }) {
 function Signup({ onDone }) {
   const [step, setStep] = useState(0);
   const [isB2B, setIsB2B] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", loc: "", cat: "", sub: "", title: "", desc: "", rate: 75, acceptTopup: true, taxBracket: "$0–$44k" });
+  const [form, setForm] = useState({ name: "", email: "", loc: "", cat: "", sub: "", title: "", desc: "", rate: 75, acceptTopup: true, taxBracket: "$0–$44k", invite: "", licenseNo: "", licenseState: "", certifyPro: false });
   const [wants, setWants] = useState([]);
   const [badges, setBadges] = useState([]);
   const [specialties, setSpecialties] = useState([]);
@@ -1006,7 +1012,7 @@ function Signup({ onDone }) {
   const ok = () => {
     if (step === 0) return form.name.trim();                 // just your name to start
     if (step === 1) return form.cat && form.title.trim();    // category + a one-line title
-    if (isB2B && step === 4) return selCerts.length >= 2;
+    if (isB2B && step === 4) return selCerts.length >= 2 && form.licenseNo.trim() && form.licenseState.trim() && form.certifyPro;
     return true;                                             // wants & platforms are optional
   };
 
@@ -1050,6 +1056,13 @@ function Signup({ onDone }) {
             </select>
             <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>B2B swaps match within 1 bracket — both parties have something to lose</div>
           </div>}
+          <div>
+            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>invite code <span style={{ color: "var(--t3)" }}>— optional · unlocks ✦ Elite</span></label>
+            <input className="ifield" value={form.invite} onChange={e => setForm(f => ({ ...f, invite: e.target.value }))} placeholder="have an Elite invite? enter it" style={{ textTransform: "uppercase" }} />
+            {form.invite.trim() && (isInvite(form.invite)
+              ? <div style={{ fontSize: 11, color: "var(--g)", marginTop: 5 }}>✦ Valid — you'll join as an Elite member</div>
+              : <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>Elite is invite-only. No code? You can still join — request one later.</div>)}
+          </div>
           <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 Barter Tokens</strong> in your account to get you trading.</div>
         </div>}
 
@@ -1142,7 +1155,21 @@ function Signup({ onDone }) {
               </label>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 10 }}>{selCerts.length}/2 minimum selected</div>
+          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 10, marginBottom: 16 }}>{selCerts.length}/2 minimum selected</div>
+
+          <div style={{ borderTop: "1px solid var(--bd)", paddingTop: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--tx)", marginBottom: 4 }}>License verification</div>
+            <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 11, lineHeight: 1.5 }}>This is what separates licensed pros from hobbyists. Submit your license/registration so we can verify you before you do B2B swaps.</div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 9 }}>
+              <input className="ifield" value={form.licenseNo} onChange={e => setForm(f => ({ ...f, licenseNo: e.target.value }))} placeholder="license / registration #" style={{ flex: 2 }} />
+              <input className="ifield" value={form.licenseState} onChange={e => setForm(f => ({ ...f, licenseState: e.target.value }))} placeholder="state / issuer" style={{ flex: 1 }} />
+            </div>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 11.5, color: "var(--t2)", cursor: "pointer", lineHeight: 1.5 }}>
+              <input type="checkbox" checked={form.certifyPro} onChange={e => setForm(f => ({ ...f, certifyPro: e.target.checked }))} style={{ accentColor: "var(--pu)", width: 15, height: 15, flexShrink: 0, marginTop: 2 }} />
+              I certify this license info is accurate and current. I understand false info can lead to removal and that I'm legally responsible for my own B2B agreements.
+            </label>
+            <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 9 }}>You'll show as <strong style={{ color: "var(--pu)" }}>Licensed Pro · pending verification</strong> until our team confirms — that's the badge that builds B2B trust.</div>
+          </div>
         </div>}
 
         {step === steps.length - 1 && <div style={{ textAlign: "center" }}>
@@ -1651,10 +1678,10 @@ function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport }
           <Av ini={l.ini} avc={l.avc} size={52} />
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800 }}>{l.name}</span>
+              <span style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800 }}>{cleanText(l.name)}</span>
               <TypeBadge t={l.type} />
-              {l.elite && <span className="pill pa">Elite</span>}
-              {l.b2b && <span className="b2b-badge">B2B Licensed</span>}
+              {l.elite && <span className="pill pa" title="Elite is invite-only">✦ Elite · invite-only</span>}
+              {l.b2b && <span className="b2b-badge">{l.verifiedPro === false ? "Licensed Pro · pending" : "✓ Licensed Pro"}</span>}
               {l.verified && <span className="pill pg">✓ verified</span>}
               <CreatorBadge l={l} />
             </div>
@@ -1748,11 +1775,18 @@ function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport }
         </div>
       )}
 
-      {l.b2b && l.certs?.length > 0 && (
+      {l.b2b && (
         <div className="card" style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>business credentials</div>
-          <div style={{ display: "flex", flexWrap: "wrap" }}>{l.certs.map(c => <CertBadge key={c} cert={c} />)}</div>
-          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 8 }}>Tax bracket: <strong style={{ color: "var(--tx)" }}>{l.taxBracket}</strong></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", textTransform: "uppercase", letterSpacing: ".06em" }}>licensed pro</span>
+            {l.verifiedPro === false
+              ? <span className="pill" style={{ background: "var(--amb)", color: "var(--am)" }}>⏳ verification pending</span>
+              : <span className="pill pg">✓ verified licensed pro</span>}
+          </div>
+          {l.certs?.length > 0 && <div style={{ display: "flex", flexWrap: "wrap" }}>{l.certs.map(c => <CertBadge key={c} cert={c} />)}</div>}
+          {l.license?.number && <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 8 }}>License: <strong style={{ color: "var(--tx)" }}>{l.license.number}</strong>{l.license.state ? ` · ${l.license.state}` : ""}</div>}
+          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 6 }}>Tax bracket: <strong style={{ color: "var(--tx)" }}>{l.taxBracket}</strong></div>
+          <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 10, lineHeight: 1.5, borderTop: "1px solid var(--bd)", paddingTop: 9 }}>{B2B_DISCLAIMER}</div>
         </div>
       )}
 
@@ -2281,18 +2315,21 @@ export default function App() {
   const persist = (u) => { setUser(u); storage.set("bt_user", u); };
 
   const handleSignup = form => {
+    const elite = isInvite(form.invite);                 // Elite is invite-only
+    const license = form.b2b ? { number: form.licenseNo, state: form.licenseState } : null;
+    const verifiedPro = form.b2b ? false : undefined;    // licensed pros start "pending verification"
     const u = {
       id: Date.now(), name: form.name, email: form.email, loc: form.loc,
       ini: form.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       avc: ac(Math.floor(Math.random() * 8)),
       cat: form.cat, sub: form.sub, title: form.title, desc: form.desc, wants: form.wants || [],
       badges: form.badges || [], specialties: form.specialties || [],
-      rate: form.rate, platforms: form.platforms, b2b: form.b2b,
+      rate: form.rate, platforms: form.platforms, b2b: form.b2b, elite, license, verifiedPro,
       certs: form.certs, taxBracket: form.taxBracket, score: 72, swaps: 0, rating: 0, credits: 50,
     };
     const catMeta = CATS.find(c => c.label === form.cat);
     if (form.title) {
-      const nl = { id: Date.now() + 1, uid: u.id, type: catMeta?.t || "service", name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc, remote: true, verified: form.platforms.length >= 1, elite: false, b2b: form.b2b, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket };
+      const nl = { id: Date.now() + 1, uid: u.id, type: catMeta?.t || "service", name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc, remote: true, verified: form.platforms.length >= 1, elite, b2b: form.b2b, license, verifiedPro, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket };
       setListings(p => [nl, ...p]);
     }
     persist(u);
