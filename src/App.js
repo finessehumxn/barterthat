@@ -574,7 +574,7 @@ function marketRate(l, listings) {
 }
 
 // ── SPLASH ────────────────────────────────────────────────────────────────────
-function Splash({ onEnter }) {
+function Splash({ onEnter, onHow }) {
   return (
     <div style={{ minHeight: "100vh", width: "100%", maxWidth: "100vw", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 20px", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "44px 44px", opacity: .5 }} />
@@ -594,9 +594,12 @@ function Splash({ onEnter }) {
         <div style={{ fontSize: 14, color: "var(--g)", fontStyle: "italic", maxWidth: 480, margin: "0 auto 32px", fontFamily: "var(--fd)" }}>
           One person is great at one thing. Together, we're unstoppable.
         </div>
-        <div className="cta-row" style={{ marginBottom: 14 }}>
+        <div className="cta-row" style={{ marginBottom: 12 }}>
           <button className="btn bp blg" onClick={() => onEnter("signup")}>get started free</button>
           <button className="btn bg blg" onClick={() => onEnter("browse")}>explore marketplace</button>
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <button onClick={onHow} style={{ background: "none", border: "1px solid var(--bd)", borderRadius: 100, cursor: "pointer", color: "var(--tx)", fontSize: 13, fontWeight: 700, padding: "9px 18px" }}>▶ How it works — 60-second walkthrough</button>
         </div>
         <div style={{ marginBottom: 28 }}>
           <button onClick={() => onEnter("pitch")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--pu)", fontSize: 12, fontWeight: 600, letterSpacing: ".03em" }}>◆ investors — see the pitch →</button>
@@ -1010,6 +1013,15 @@ function AdminLeads({ onBack }) {
 }
 
 // ── SIGNUP ────────────────────────────────────────────────────────────────────
+// Friendly, plain-language guide for each step — what it is + why it helps.
+const STEP_GUIDE = {
+  "account": { n: "1st", t: "Let's meet you", why: "Just your name to start — so people know who they're trading with. The realer you are, the more people trust you and want to swap." },
+  "your offer": { n: "2nd", t: "What can you offer?", why: "List one thing you do well or have to give. This is your side of the trade — describe it honestly and you'll attract the right matches." },
+  "what you want": { n: "3rd", t: "What do you need?", why: "Tap what you're after. Our AI uses this to find your swaps — the more you add, the more trades we can line up for you." },
+  "platforms": { n: "4th", t: "Show your proof", why: "Link anywhere your work is already reviewed (Instagram, Etsy, LinkedIn…). It builds instant trust — but it's optional, add it anytime." },
+  "B2B credentials": { n: "5th", t: "Verify your license", why: "Licensed pros submit real credentials. This protects everyone in B2B deals and sets you apart from hobbyists." },
+  "launch": { n: "🎉", t: "You're all set!", why: "" },
+};
 function Signup({ onDone }) {
   const [step, setStep] = useState(0);
   const [isB2B, setIsB2B] = useState(false);
@@ -1056,11 +1068,22 @@ function Signup({ onDone }) {
             ))}
           </div>
         )}
-        <div style={{ fontSize: 11, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".09em", marginBottom: 6 }}>step {step + 1} of {steps.length}</div>
-        <div style={{ fontFamily: "var(--fd)", fontSize: 24, fontWeight: 800, marginBottom: 20, letterSpacing: "-.5px" }}>{steps[step]}</div>
+        {(() => { const gd = STEP_GUIDE[steps[step]] || {}; return (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontFamily: "var(--fd)", fontSize: 12, fontWeight: 800, color: "#fff", background: "var(--g)", borderRadius: 100, padding: "2px 10px" }}>{gd.n || step + 1}</span>
+              <span style={{ fontSize: 11, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".08em" }}>step {step + 1} of {steps.length}</span>
+            </div>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 24, fontWeight: 800, letterSpacing: "-.5px" }}>{gd.t || steps[step]}</div>
+            {gd.why && <div style={{ fontSize: 12.5, color: "var(--t2)", lineHeight: 1.55, marginTop: 6 }}>{gd.why}</div>}
+            {step === 0 && <div style={{ fontSize: 11.5, color: "var(--am)", marginTop: 9, background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "8px 11px", lineHeight: 1.5 }}>Takes about 2 minutes. You can <strong>type or tap 🎤 to speak</strong> any answer. Being honest and complete = your best matches, guaranteed.</div>}
+          </div>
+        ); })()}
 
         {step === 0 && <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>{isB2B ? "business name" : "full name"}</label><input className="ifield" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isB2B ? "e.g. Swift Auto Detail" : "e.g. Nia Kendrick"} /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>{isB2B ? "business name" : "full name"}{SPEECH_OK ? " — type or say it 🎤" : ""}</label>
+            <div style={{ display: "flex", gap: 8 }}><input className="ifield" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isB2B ? "e.g. Swift Auto Detail" : "e.g. Nia Kendrick"} style={{ flex: 1 }} /><VoiceButton onText={t => setForm(f => ({ ...f, name: t }))} /></div>
+          </div>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email <span style={{ color: "var(--t3)" }}>— optional</span></label><input className="ifield" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@email.com" /></div>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>location <span style={{ color: "var(--t3)" }}>— optional, defaults to Remote</span></label><input className="ifield" value={form.loc} onChange={e => setForm(f => ({ ...f, loc: e.target.value }))} placeholder="city, state or 'Remote'" /></div>
           {isB2B && <div>
@@ -1095,8 +1118,13 @@ function Signup({ onDone }) {
               {selectedCat.subs.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>}
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>listing title</label><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe what you offer in one line" /></div>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details <span style={{ color: "var(--t3)" }}>— optional, add later</span></label><textarea className="ifield" rows={3} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? hours? requirements?" style={{ resize: "none" }} /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>listing title{SPEECH_OK ? " — type or say it 🎤" : ""}</label>
+            <div style={{ display: "flex", gap: 8 }}><input className="ifield" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="describe what you offer in one line" style={{ flex: 1 }} /><VoiceButton onText={t => setForm(f => ({ ...f, title: t }))} /></div>
+          </div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>details <span style={{ color: "var(--t3)" }}>— optional, type or just talk</span></label>
+            <textarea className="ifield" rows={3} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} placeholder="what's included? hours? requirements?" style={{ resize: "none", marginBottom: 8 }} />
+            <VoiceButton label="Speak the details" onText={t => setForm(f => ({ ...f, desc: (f.desc ? f.desc + " " : "") + t }))} />
+          </div>
           <div>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>your value — <strong style={{ color: "var(--g)" }}>${form.rate}{form.rate > 0 ? "/hr" : ""}</strong> {form.rate === 0 && "(free / community swap)"}</label>
             <input type="range" min={0} max={250} step={5} value={form.rate} onChange={e => setForm(f => ({ ...f, rate: +e.target.value }))} style={{ width: "100%", accentColor: "var(--g)" }} />
@@ -2329,6 +2357,7 @@ export default function App() {
   const [proposeTo, setProposeTo] = useState(null);
   const [toast, setToast] = useState(null);
   const [coach, setCoach] = useState(false);
+  const [showHow, setShowHow] = useState(false);
 
   useEffect(() => {
     const saved = storage.get("bt_user");
@@ -2454,7 +2483,7 @@ export default function App() {
   };
 
   const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
-  if (screen === "splash") return <><G /><Splash onEnter={enter} /></>;
+  if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <CoachMarks onDone={() => setShowHow(false)} />}</>;
   if (screen === "signup") return <><G /><Signup onDone={handleSignup} /></>;
   if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen("splash")} onEnter={enter} /></>;
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
