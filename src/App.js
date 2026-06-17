@@ -105,11 +105,25 @@ const TYPE_META = {
 // Opt-in, seller self-identified community/heritage badges. Buyers choose to SUPPORT
 // these — they are never used to exclude or screen providers (that would be discrimination).
 const COMMUNITY_BADGES = [
-  { id:"black", l:"Black-owned" }, { id:"latino", l:"Latino/a-owned" }, { id:"aapi", l:"AAPI-owned" },
-  { id:"indigenous", l:"Indigenous-owned" }, { id:"mena", l:"MENA-owned" }, { id:"immigrant", l:"Immigrant-owned" },
-  { id:"woman", l:"Woman-owned" }, { id:"lgbtq", l:"LGBTQ+-owned" }, { id:"veteran", l:"Veteran-owned" },
-  { id:"disability", l:"Disability-owned" }, { id:"faith", l:"Faith-based" },
+  // Heritage / ethnicity (self-identified, celebratory — never exclusionary)
+  { id:"black", l:"Black-owned", g:"Heritage" }, { id:"african", l:"African-owned", g:"Heritage" }, { id:"caribbean", l:"Caribbean-owned", g:"Heritage" },
+  { id:"latino", l:"Latino/a/e-owned", g:"Heritage" }, { id:"hispanic", l:"Hispanic-owned", g:"Heritage" },
+  { id:"aapi", l:"AAPI-owned", g:"Heritage" }, { id:"eastasian", l:"East Asian-owned", g:"Heritage" }, { id:"southasian", l:"South Asian-owned", g:"Heritage" },
+  { id:"pacific", l:"Pacific Islander-owned", g:"Heritage" }, { id:"indigenous", l:"Indigenous-owned", g:"Heritage" },
+  { id:"mena", l:"MENA-owned", g:"Heritage" }, { id:"white", l:"White-owned", g:"Heritage" }, { id:"multiracial", l:"Multiracial-owned", g:"Heritage" },
+  { id:"immigrant", l:"Immigrant-owned", g:"Heritage" }, { id:"minority", l:"Minority-owned", g:"Heritage" },
+  // Faith
+  { id:"faith", l:"Faith-based", g:"Faith" }, { id:"christian", l:"Christian-owned", g:"Faith" }, { id:"muslim", l:"Muslim-owned", g:"Faith" },
+  { id:"jewish", l:"Jewish-owned", g:"Faith" }, { id:"hindu", l:"Hindu-owned", g:"Faith" }, { id:"buddhist", l:"Buddhist-owned", g:"Faith" },
+  { id:"sikh", l:"Sikh-owned", g:"Faith" },
+  // Gender & identity
+  { id:"woman", l:"Woman-owned", g:"Identity" }, { id:"man", l:"Man-owned", g:"Identity" }, { id:"lgbtq", l:"LGBTQ+-owned", g:"Identity" },
+  { id:"trans", l:"Trans-owned", g:"Identity" }, { id:"nonbinary", l:"Nonbinary-owned", g:"Identity" },
+  // Community
+  { id:"veteran", l:"Veteran-owned", g:"Community" }, { id:"disability", l:"Disability-owned", g:"Community" },
+  { id:"senior", l:"Senior-owned", g:"Community" }, { id:"youth", l:"Young entrepreneur", g:"Community" }, { id:"family", l:"Family-owned", g:"Community" },
 ];
+const BADGE_GROUPS = ["Heritage", "Faith", "Identity", "Community"];
 const BADGE_LABEL = id => (COMMUNITY_BADGES.find(b => b.id === id) || { l: id }).l;
 
 // Service attributes that describe the OFFER (not the person) — helps people find
@@ -1094,11 +1108,16 @@ function Signup({ onDone }) {
           </label>
           <div style={{ borderTop: "1px solid var(--bd)", paddingTop: 13 }}>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 3 }}>community badges <span style={{ color: "var(--t3)" }}>— optional, self-identify to help your community find & support you</span></label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 7 }}>
-              {COMMUNITY_BADGES.map(b => (
-                <button key={b.id} className={`chip ${badges.includes(b.id) ? "on" : ""}`} onClick={() => setBadges(p => p.includes(b.id) ? p.filter(x => x !== b.id) : [...p, b.id])}>{badges.includes(b.id) ? "♥ " : ""}{b.l}</button>
-              ))}
-            </div>
+            {BADGE_GROUPS.map(grp => (
+              <div key={grp} style={{ marginTop: 9 }}>
+                <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 5 }}>{grp}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {COMMUNITY_BADGES.filter(b => b.g === grp).map(b => (
+                    <button key={b.id} className={`chip ${badges.includes(b.id) ? "on" : ""}`} onClick={() => setBadges(p => p.includes(b.id) ? p.filter(x => x !== b.id) : [...p, b.id])}>{badges.includes(b.id) ? "♥ " : ""}{b.l}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
           <div>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 3 }}>service specialties <span style={{ color: "var(--t3)" }}>— optional, describes your offer</span></label>
@@ -1329,12 +1348,17 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
         {showSupport && (
           <div style={{ background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: "var(--r)", padding: "12px 13px", marginBottom: 12 }}>
             <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 9, lineHeight: 1.5 }}>Discover & support businesses that self-identify with these communities. Sellers opt in — this celebrates them, it never excludes anyone.</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {COMMUNITY_BADGES.map(b => (
-                <button key={b.id} className={`chip ${support.includes(b.id) ? "on" : ""}`} onClick={() => setSupport(p => p.includes(b.id) ? p.filter(x => x !== b.id) : [...p, b.id])}>{support.includes(b.id) ? "♥ " : ""}{b.l}</button>
-              ))}
-            </div>
-            {support.length > 0 && <button onClick={() => setSupport([])} style={{ marginTop: 10, fontSize: 11, color: "var(--t3)", background: "none", border: "none", cursor: "pointer" }}>✕ clear</button>}
+            {BADGE_GROUPS.map(grp => (
+              <div key={grp} style={{ marginBottom: 9 }}>
+                <div style={{ fontSize: 10, color: "var(--t3)", marginBottom: 5 }}>{grp}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {COMMUNITY_BADGES.filter(b => b.g === grp).map(b => (
+                    <button key={b.id} className={`chip ${support.includes(b.id) ? "on" : ""}`} onClick={() => setSupport(p => p.includes(b.id) ? p.filter(x => x !== b.id) : [...p, b.id])}>{support.includes(b.id) ? "♥ " : ""}{b.l}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {support.length > 0 && <button onClick={() => setSupport([])} style={{ marginTop: 4, fontSize: 11, color: "var(--t3)", background: "none", border: "none", cursor: "pointer" }}>✕ clear</button>}
           </div>
         )}
         {showCats && (
