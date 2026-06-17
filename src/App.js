@@ -298,6 +298,50 @@ function PlatBadge({ p }) {
     </div>
   );
 }
+// ── SAFETY: report, block & basic content moderation ───────────────────────
+const REPORT_REASONS = ["Scam or fraud", "Harassment or hate", "Sexual or explicit content", "Violence or threats", "Illegal goods or services", "Spam", "Something else"];
+const BAD_WORDS = ["fuck", "shit", "bitch", "cunt", "nigger", "faggot", "asshole", "whore", "slut", "dick", "pussy"];
+// Mask profanity/slurs in user-generated text shown in the app.
+function cleanText(t) {
+  if (!t) return t;
+  let s = String(t);
+  for (const w of BAD_WORDS) s = s.replace(new RegExp(`\\b${w}\\w*`, "gi"), m => m[0] + "*".repeat(Math.max(1, m.length - 1)));
+  return s;
+}
+// Report + Block actions shown on a person's listing (and reusable elsewhere).
+function ReportBlock({ l, user, onBlock, onReport }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  if (!l || !user || l.uid === user.id) return null;
+  const link = { background: "none", border: "none", cursor: "pointer", color: "var(--t3)", fontSize: 12, fontWeight: 600, padding: "6px 10px" };
+  const submit = () => { if (!reason) return; onReport({ type: "listing", id: l.id, uid: l.uid, name: l.name, reason }); setOpen(false); setReason(""); };
+  return (
+    <>
+      <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 8 }}>
+        <button onClick={() => setOpen(true)} style={link}>⚑ Report</button>
+        <span style={{ color: "var(--t3)", alignSelf: "center" }}>·</span>
+        <button onClick={() => { if (window.confirm(`Block ${l.name}? You won't see their listings or messages anymore.`)) onBlock(l.uid); }} style={link}>⊘ Block</button>
+      </div>
+      {open && (
+        <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(8,12,20,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 360, background: "var(--s2)", border: "1px solid var(--bd)", borderRadius: 16, padding: 20 }}>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Report {cleanText(l.name)}</div>
+            <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 12 }}>What's wrong? Our team reviews every report.</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+              {REPORT_REASONS.map(r => (
+                <button key={r} onClick={() => setReason(r)} style={{ textAlign: "left", padding: "9px 12px", borderRadius: "var(--rs)", border: `1px solid ${reason === r ? "var(--g)" : "var(--bd)"}`, background: reason === r ? "var(--gl)" : "var(--s3)", color: reason === r ? "#EF5D47" : "var(--t2)", cursor: "pointer", fontSize: 12.5 }}>{reason === r ? "✓ " : ""}{r}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => setOpen(false)}>cancel</button>
+              <button className="btn bp bsm" style={{ flex: 1 }} disabled={!reason} onClick={submit}>submit report</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 function CertBadge({ cert }) {
   return <span className="pill pp" style={{ margin: "2px 3px 2px 0" }}>{cert}</span>;
 }
@@ -1191,6 +1235,7 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
 
   const filtered = listings.filter(l => {
     if (user && l.uid === user.id) return false;
+    if (user?.blocked?.includes(l.uid)) return false;
     if (cat !== "All" && l.cat !== cat) return false;
     if (type !== "All" && l.type !== type) return false;
     if (support.length && !support.some(b => l.badges?.includes(b))) return false;
@@ -1358,10 +1403,11 @@ function Match({ listings, user, onView, onPropose }) {
 
   const [openGroups, setOpenGroups] = useState(false);
 
+  const visible = useMemo(() => listings.filter(l => !user?.blocked?.includes(l.uid)), [listings, user]);
   const results = useMemo(() => {
     if (!run) return null;
-    return findSwaps({ uid: user?.id || -1, offer, wants }, listings);
-  }, [run, offer, wants, listings, user]);
+    return findSwaps({ uid: user?.id || -1, offer, wants }, visible);
+  }, [run, offer, wants, visible, user]);
 
   const find = (w = wants) => {
     setLoading(true); setRun(false); setAi(null);
@@ -1373,7 +1419,7 @@ function Match({ listings, user, onView, onPropose }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         me: { uid: user?.id || -1, offer, wants: w },
-        listings: listings.map(l => ({ id: l.id, uid: l.uid, name: l.name, cat: l.cat, wants: l.wants, rate: l.rate, score: l.score, dist: l.dist }))
+        listings: visible.map(l => ({ id: l.id, uid: l.uid, name: l.name, cat: l.cat, wants: l.wants, rate: l.rate, score: l.score, dist: l.dist }))
       })
     })
       .then(r => r.ok ? r.json() : { suggestions: [] })
@@ -1585,7 +1631,7 @@ function Community({ listings, user, onView, onPropose, onNav }) {
 }
 
 // ── DETAIL ────────────────────────────────────────────────────────────────────
-function Detail({ l, user, listings = [], onBack, onPropose }) {
+function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport }) {
   const [myRate, setMyRate] = useState(user?.rate || 60);
   const [hrs, setHrs] = useState(3);
   const diff = Math.max(0, Math.round((l.rate - myRate) * hrs));
@@ -1629,6 +1675,7 @@ function Detail({ l, user, listings = [], onBack, onPropose }) {
         <button className="btn bp" style={{ flex: 1 }} onClick={() => onPropose(l)}>propose a swap</button>
         <VideoMeetButton seed={"listing" + l.id} label="📹 video meet" small={false} />
       </div>
+      <ReportBlock l={l} user={user} onBlock={onBlock} onReport={onReport} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
         {[{ label: "value", val: l.rate === 0 ? "free" : `$${l.rate}${l.type === "service" ? "/hr" : ""}` }, { label: "type", val: TYPE_META[l.type].l }, { label: "top-up", val: "accepted" }].map(v => (
@@ -2304,6 +2351,22 @@ export default function App() {
     flash(`⬡ +${amount} tokens added`);
   };
 
+  const handleBlock = uid => {
+    if (!user) return;
+    persist({ ...user, blocked: [...new Set([...(user.blocked || []), uid])] });
+    setViewing(null);
+    flash("Blocked — you won't see them anymore");
+  };
+
+  const handleReport = payload => {
+    try {
+      const r = storage.get("bt_reports") || [];
+      r.push({ ...payload, by: user?.id, at: new Date().toISOString() });
+      storage.set("bt_reports", r);
+    } catch (e) {}
+    flash("Reported — our team will review it. Thank you.");
+  };
+
   const handleLogout = () => { storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
 
   const handleReset = () => {
@@ -2325,7 +2388,7 @@ export default function App() {
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
 
   const renderMain = () => {
-    if (viewing) return <Detail l={viewing} user={user} listings={listings} onBack={() => setViewing(null)} onPropose={handlePropose} />;
+    if (viewing) return <Detail l={viewing} user={user} listings={listings} onBack={() => setViewing(null)} onPropose={handlePropose} onBlock={handleBlock} onReport={handleReport} />;
     switch (nav) {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
