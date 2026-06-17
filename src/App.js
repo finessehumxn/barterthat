@@ -2327,6 +2327,25 @@ function CoachMarks({ onDone }) {
   );
 }
 
+// ── HOW-IT-WORKS VIDEO ───────────────────────────────────────────────────────
+// Plays the bundled 60-sec explainer. If REACT_APP_INTRO_VIDEO (a YouTube URL)
+// is set, it embeds that instead — so you can swap in a real promo video later.
+function VideoModal({ onDone }) {
+  const yt = process.env.REACT_APP_INTRO_VIDEO;
+  const embed = yt ? yt.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/") : null;
+  return (
+    <div onClick={onDone} style={{ position: "fixed", inset: 0, zIndex: 320, background: "rgba(8,12,20,0.9)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 420 }}>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 16, fontWeight: 800, color: "var(--tx)", marginBottom: 10, textAlign: "center" }}>How BarterThat works — 60 seconds</div>
+        {embed
+          ? <div style={{ position: "relative", paddingBottom: "177%", height: 0, borderRadius: 14, overflow: "hidden" }}><iframe title="How it works" src={embed} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} allow="autoplay; encrypted-media; fullscreen" allowFullScreen /></div>
+          : <video src="/explainer.mp4" controls autoPlay playsInline style={{ width: "100%", borderRadius: 14, background: "#000", display: "block" }} />}
+        <button className="btn bp" style={{ width: "100%", marginTop: 12 }} onClick={onDone}>got it — let's start</button>
+      </div>
+    </div>
+  );
+}
+
 // ── NAV ───────────────────────────────────────────────────────────────────────
 function Nav({ scr, onNav }) {
   const items = [{ id: "browse", ic: "◫", l: "explore" }, { id: "match", ic: "◆", l: "find swaps" }, { id: "post", ic: "✦", l: "post", prime: true }, { id: "community", ic: "⚇", l: "community" }, { id: "profile", ic: "◎", l: "profile" }];
@@ -2483,7 +2502,7 @@ export default function App() {
   };
 
   const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
-  if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <CoachMarks onDone={() => setShowHow(false)} />}</>;
+  if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <VideoModal onDone={() => setShowHow(false)} />}</>;
   if (screen === "signup") return <><G /><Signup onDone={handleSignup} /></>;
   if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen("splash")} onEnter={enter} /></>;
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
