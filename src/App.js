@@ -1209,9 +1209,10 @@ function ListingCard({ l, user, onView, onSave, onPropose, i = 0 }) {
           <Av ini={l.ini} avc={l.avc} size={40} />
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-              {l.name}
-              {l.elite && <span className="pill pa">Elite</span>}
-              {l.b2b && <span className="b2b-badge">B2B</span>}
+              {cleanText(l.name)}
+              {l.elite && <span className="pill pa" title="Invite-only">✦ Elite</span>}
+              {l.b2b && <span className="b2b-badge">{l.verifiedPro === false ? "Pro · pending" : "Licensed Pro"}</span>}
+              {creatorReach(l) >= 5000 && <span className="pill" style={{ background: "rgba(155,114,221,0.16)", color: "var(--pu)" }}>✦ Creator</span>}
             </div>
             <Stars r={l.rating} />
           </div>
@@ -1259,10 +1260,15 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
   const [showCats, setShowCats] = useState(false);
   const [support, setSupport] = useState([]);
   const [showSupport, setShowSupport] = useState(false);
+  const [seg, setSeg] = useState("all");
 
   const filtered = listings.filter(l => {
     if (user && l.uid === user.id) return false;
     if (user?.blocked?.includes(l.uid)) return false;
+    if (seg === "everyday" && l.b2b) return false;
+    if (seg === "pro" && !l.b2b) return false;
+    if (seg === "elite" && !l.elite) return false;
+    if (seg === "creator" && creatorReach(l) < 5000) return false;
     if (cat !== "All" && l.cat !== cat) return false;
     if (type !== "All" && l.type !== type) return false;
     if (support.length && !support.some(b => l.badges?.includes(b))) return false;
@@ -1288,6 +1294,11 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
             <span style={{ fontSize: 10, color: "var(--t3)", whiteSpace: "nowrap" }}>max ${maxR}</span>
             <input type="range" min={0} max={250} step={5} value={maxR} onChange={e => setMaxR(+e.target.value)} style={{ width: 64, accentColor: "var(--g)" }} />
           </div>
+        </div>
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", marginTop: 8, paddingBottom: 2, WebkitOverflowScrolling: "touch" }}>
+          {[["all", "Everyone"], ["everyday", "🙋 Everyday people"], ["pro", "🪪 Licensed Pros"], ["elite", "✦ Elite"], ["creator", "✦ Creators"]].map(([s, lbl]) => (
+            <button key={s} onClick={() => setSeg(s)} style={{ flexShrink: 0, padding: "5px 12px", borderRadius: "var(--rp)", border: `1px solid ${seg === s ? "var(--pu)" : "var(--bd)"}`, background: seg === s ? "var(--pub,rgba(155,114,221,0.12))" : "transparent", color: seg === s ? "var(--pu)" : "var(--t2)", fontSize: 11.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{lbl}</button>
+          ))}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
           {["All", ...Object.keys(TYPE_META)].map(tk => (
