@@ -2235,6 +2235,16 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
         <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 9 }}>Tax bracket: <strong style={{ color: "var(--tx)" }}>{user.taxBracket}</strong></div>
       </div>}
 
+      <div className="card" style={{ marginBottom: 10, cursor: "pointer", background: "radial-gradient(circle at 90% 0%, rgba(155,114,221,0.14), var(--s2) 60%)", borderColor: "rgba(155,114,221,0.3)" }} onClick={() => onNav("pitch")}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 22 }}>◆</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--pu)" }}>Investor opportunity</div>
+            <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 2 }}>See the BarterThat pitch deck & request more info →</div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: "flex", gap: 8 }}>
         <button className="btn bg" style={{ flex: 1 }} onClick={onLogout}>log out</button>
         <button className="btn bg" style={{ flex: 1, color: "var(--rd)" }} onClick={onReset}>reset demo data</button>
@@ -2718,7 +2728,7 @@ export default function App() {
   if (screen === "login") return <><G /><Login onLogin={handleLogin} onSignup={() => setScreen("signup")} onBack={() => setScreen("splash")} /></>;
   if (screen === "verify") return <><G /><VerifyEmail email={pendingEmail} onLogin={() => setScreen("login")} onBack={() => setScreen("splash")} /></>;
   if (screen === "signup") return <><G /><Signup onDone={handleSignup} onLogin={() => setScreen("login")} /></>;
-  if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen("splash")} onEnter={enter} /></>;
+  if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen(user ? "main" : "splash")} onEnter={enter} /></>;
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
 
   const renderMain = () => {
@@ -2731,7 +2741,7 @@ export default function App() {
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); setNav(n); }} onLogout={handleLogout} onReset={handleReset} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} />;
       default: return null;
     }
   };
