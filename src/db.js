@@ -49,7 +49,9 @@ export async function loadProfile(uid) {
 }
 
 // ── LISTINGS (shared) ─────────────────────────────────────────────────────────
-const rowToListing = r => ({ ...r.data, id: r.id, uid: r.uid });
+// Namespace real-listing ids ("L<n>") so they never collide with demo seed ids.
+// Keep the numeric DB id as _dbId for foreign-key writes (trades, backings).
+const rowToListing = r => ({ ...r.data, id: "L" + r.id, _dbId: r.id, uid: r.uid });
 export async function loadListings() {
   try {
     const { data, error } = await supabase.from("listings").select("*").order("created_at", { ascending: false }).limit(500);
@@ -109,6 +111,26 @@ export async function sendMessage(tradeId, fromUid, data) {
     return row;
   } catch (e) { return null; }
 }
+// ── BACKINGS (crowdfunding: token pledges + interest pledges) ────────────────
+export async function addBacking(listingId, uid, kind, amount, data = {}) {
+  try {
+    const { data: row, error } = await supabase.from("backings")
+      .insert({ listing_id: listingId, backer_uid: uid, kind, amount, data }).select("*").single();
+    if (error || !row) return null;
+    return row;
+  } catch (e) { return null; }
+}
+export async function loadBackings(listingId) {
+  try {
+    const { data, error } = await supabase.from("backings").select("kind,amount,backer_uid").eq("listing_id", listingId);
+    if (error || !data) return { tokens: 0, interest: 0, backers: 0 };
+    const tokens = data.filter(b => b.kind === "tokens").reduce((s, b) => s + Number(b.amount || 0), 0);
+    const interest = data.filter(b => b.kind === "interest").reduce((s, b) => s + Number(b.amount || 0), 0);
+    const backers = new Set(data.map(b => b.backer_uid)).size;
+    return { tokens, interest, backers };
+  } catch (e) { return { tokens: 0, interest: 0, backers: 0 }; }
+}
+
 // Live updates: calls cb(newMessage) whenever a message is inserted on this trade.
 export function subscribeMessages(tradeId, cb) {
   const ch = supabase

@@ -364,6 +364,38 @@ function ReportBlock({ l, user, onBlock, onReport }) {
     </>
   );
 }
+// ── CROWDFUNDING: back a venture (tokens / interest / external portal) ───────
+function BackVenture({ listing, user, onBack }) {
+  const [stats, setStats] = useState(null);
+  const [amt, setAmt] = useState(25);
+  const [busy, setBusy] = useState(false);
+  const goal = listing.fundGoal || 1000;
+  useEffect(() => { if (listing._dbId) db.loadBackings(listing._dbId).then(setStats); else setStats({ tokens: 0, interest: 0, backers: 0 }); }, [listing._dbId]);
+  const pct = stats ? Math.min(100, Math.round((stats.tokens / goal) * 100)) : 0;
+  const pledge = async kind => { setBusy(true); const ok = await onBack(listing, kind, amt); if (ok && listing._dbId) db.loadBackings(listing._dbId).then(setStats); setBusy(false); };
+  return (
+    <div className="card" style={{ marginBottom: 10, borderColor: "rgba(155,114,221,0.3)", background: "linear-gradient(180deg,rgba(155,114,221,0.08),transparent)" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--pu)", marginBottom: 8, textTransform: "uppercase", letterSpacing: ".06em" }}>💸 back this venture</div>
+      {stats && <>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--t2)", marginBottom: 5 }}>
+          <span><strong style={{ color: "var(--am)" }}>⬡ {stats.tokens}</strong> backed</span>
+          <span>{stats.backers} backer{stats.backers !== 1 ? "s" : ""}{stats.interest > 0 ? ` · $${stats.interest} interest` : ""}</span>
+        </div>
+        <div style={{ height: 7, background: "var(--s3)", borderRadius: 100, overflow: "hidden", marginBottom: 12 }}><div style={{ width: pct + "%", height: "100%", background: "linear-gradient(90deg,var(--pu),var(--am))" }} /></div>
+      </>}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 12, color: "var(--t2)" }}>Amount</span>
+        <input type="number" min={5} step={5} value={amt} onChange={e => setAmt(Math.max(5, +e.target.value || 5))} className="ifield" style={{ width: 80, textAlign: "center", padding: "6px 8px" }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+        <button className="btn bpu bsm" disabled={busy} onClick={() => pledge("tokens")}>🪙 Back with {amt} Barter Tokens</button>
+        <button className="btn bg bsm" disabled={busy} onClick={() => pledge("interest")}>✋ Pledge ${amt} interest (no charge — founder follows up)</button>
+        {listing.raiseUrl && <a className="btn bg bsm" href={listing.raiseUrl} target="_blank" rel="noopener noreferrer" style={{ textAlign: "center" }}>💵 Invest real money on their licensed portal →</a>}
+      </div>
+      <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 9, lineHeight: 1.5 }}>Token backing & interest pledges involve no real-money securities. Cash investment happens only on the founder's regulated funding portal (e.g. Wefunder/Republic).</div>
+    </div>
+  );
+}
 function CertBadge({ cert }) {
   return <span className="pill pp" style={{ margin: "2px 3px 2px 0" }}>{cert}</span>;
 }
@@ -1770,7 +1802,7 @@ function Community({ listings, user, onView, onPropose, onNav }) {
 }
 
 // ── DETAIL ────────────────────────────────────────────────────────────────────
-function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport }) {
+function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport, onFund }) {
   const [myRate, setMyRate] = useState(user?.rate || 60);
   const [hrs, setHrs] = useState(3);
   const diff = Math.max(0, Math.round((l.rate - myRate) * hrs));
@@ -1814,6 +1846,7 @@ function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport }
         <button className="btn bp" style={{ flex: 1 }} onClick={() => onPropose(l)}>propose a swap</button>
         <VideoMeetButton seed={"listing" + l.id} label="📹 video meet" small={false} />
       </div>
+      {l.type === "venture" && <BackVenture listing={l} user={user} onBack={onFund} />}
       <ReportBlock l={l} user={user} onBlock={onBlock} onReport={onReport} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7, marginBottom: 10 }}>
@@ -2168,7 +2201,7 @@ function Trades({ trades, user, onAccept, onComplete }) {
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
-function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
+function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
@@ -2222,6 +2255,7 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
         <div style={{ fontFamily: "var(--fd)", fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{mine.title}</div>
         <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5, marginBottom: 10 }}>{mine.desc}</div>
         <span style={{ color: "var(--g)", fontWeight: 700, fontFamily: "var(--fd)" }}>${mine.rate}{mine.type === "service" ? "/hr" : ""} · {mine.loc}</span>
+        <button className="btn bpu bsm" style={{ width: "100%", marginTop: 11 }} onClick={() => onPromote && onPromote()}>🚀 Promote this listing — featured for 7 days ($9)</button>
       </div>}
 
       {user.platforms?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
@@ -2257,7 +2291,7 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset }) {
 // ── EARN TOKENS ────────────────────────────────────────────────────────────
 // Easy ways to stock up on Barter Tokens before your first swap, so new users
 // can start spending right away. Claims are tracked on the user (localStorage).
-function EarnTokens({ user, listings, onEarn, onNav }) {
+function EarnTokens({ user, listings, onEarn, onNav, onSubscribe }) {
   const claims = user.claims || {};
   const today = new Date().toISOString().slice(0, 10);
   const [adBusy, setAdBusy] = useState(false);
@@ -2355,7 +2389,7 @@ function EarnTokens({ user, listings, onEarn, onNav }) {
         </div>
       )}
       <Row icon="✦" title="Post your first listing" reward={30} sub="List a service, item or rental. Auto-credited when it goes live." done={hasListing} doneLabel="posted" cta="post" onClick={() => onNav("post")} />
-      <Row icon="⭐" title="Subscribe to BarterThat+" reward={100} sub="$12/mo: priority matching, unlimited proposals + 30 tokens every month. 100-token signup bonus." done={!!claims.sub} doneLabel="active" cta="subscribe" color="var(--pu)" onClick={() => { if (window.confirm("Start BarterThat+ ($12/mo)? You'll get a 100-token bonus now plus 30/month. (Demo — no charge.)")) onEarn(100, setClaims({ sub: true })); }} />
+      <Row icon="⭐" title="Subscribe to BarterThat+" reward={30} sub="$12/mo: priority matching, unlimited proposals + 30 tokens every month." done={!!claims.sub} doneLabel="active" cta="subscribe" color="var(--pu)" onClick={() => onSubscribe && onSubscribe()} />
 
       <div style={{ fontSize: 10.5, color: "var(--t3)", textAlign: "center", marginTop: 14, lineHeight: 1.5 }}>More ways coming: community challenges, leaving reviews, completing your first 3 swaps, and seasonal bonus drops.</div>
     </div>
@@ -2693,6 +2727,32 @@ export default function App() {
     flash(`⬡ +${amount} tokens added`);
   };
 
+  // Real income: Stripe Checkout for BarterThat+ subscription / promoted listing.
+  const startCheckout = async kind => {
+    try {
+      const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, email: user?.email, origin: window.location.origin }) });
+      const d = await r.json();
+      if (d.url) { window.location.href = d.url; return; }
+      flash(d.error === "stripe_offline" ? "Payments aren't switched on yet — coming soon." : "Couldn't start checkout — try again.");
+    } catch (e) { flash("Couldn't start checkout."); }
+  };
+
+  // Crowdfunding: back a venture with tokens, or pledge investor interest.
+  const handleBack = async (listing, kind, amount) => {
+    if (!user) { setScreen("login"); return false; }
+    const dbId = listing._dbId;
+    if (kind === "tokens") {
+      if ((user.credits || 0) < amount) { flash("Not enough tokens — earn more first."); return false; }
+      persist({ ...user, credits: user.credits - amount });
+      if (dbId) await db.addBacking(dbId, user.id, "tokens", amount);
+      flash(`🪙 Backed with ${amount} Barter Tokens!`);
+    } else {
+      if (dbId) await db.addBacking(dbId, user.id, "interest", amount, { email: user.email });
+      flash("✅ Interest pledged — the founder will follow up.");
+    }
+    return true;
+  };
+
   const handleBlock = uid => {
     if (!user) return;
     persist({ ...user, blocked: [...new Set([...(user.blocked || []), uid])] });
@@ -2732,7 +2792,7 @@ export default function App() {
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;
 
   const renderMain = () => {
-    if (viewing) return <Detail l={viewing} user={user} listings={listings} onBack={() => setViewing(null)} onPropose={handlePropose} onBlock={handleBlock} onReport={handleReport} />;
+    if (viewing) return <Detail l={viewing} user={user} listings={listings} onBack={() => setViewing(null)} onPropose={handlePropose} onBlock={handleBlock} onReport={handleReport} onFund={handleBack} />;
     switch (nav) {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
@@ -2740,8 +2800,8 @@ export default function App() {
       case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} />;
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
-      case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} />;
+      case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} />;
       default: return null;
     }
   };
