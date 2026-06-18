@@ -66,3 +66,54 @@ export async function addListing(uid, listing) {
     return rowToListing(data);
   } catch (e) { return null; }
 }
+
+// ── TRADES + MESSAGES (real, shared, realtime) ───────────────────────────────
+const isUuid = v => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(v);
+export { isUuid };
+
+export async function createTrade(meUid, themUid, data) {
+  if (!isUuid(themUid)) return null; // can't open a real trade with a demo/seed listing
+  try {
+    const { data: row, error } = await supabase.from("trades")
+      .insert({ participants: [meUid, themUid], data, status: "pending" })
+      .select("*").single();
+    if (error || !row) return null;
+    return row;
+  } catch (e) { return null; }
+}
+export async function loadTrades(uid) {
+  try {
+    const { data, error } = await supabase.from("trades")
+      .select("*").contains("participants", [uid]).order("created_at", { ascending: false });
+    if (error || !data) return [];
+    return data;
+  } catch (e) { return []; }
+}
+export async function updateTrade(id, patch) {
+  try { const { error } = await supabase.from("trades").update(patch).eq("id", id); return !error; }
+  catch (e) { return false; }
+}
+export async function loadMessages(tradeId) {
+  try {
+    const { data, error } = await supabase.from("messages")
+      .select("*").eq("trade_id", tradeId).order("created_at", { ascending: true });
+    if (error || !data) return [];
+    return data;
+  } catch (e) { return []; }
+}
+export async function sendMessage(tradeId, fromUid, data) {
+  try {
+    const { data: row, error } = await supabase.from("messages")
+      .insert({ trade_id: tradeId, from_uid: fromUid, data }).select("*").single();
+    if (error || !row) return null;
+    return row;
+  } catch (e) { return null; }
+}
+// Live updates: calls cb(newMessage) whenever a message is inserted on this trade.
+export function subscribeMessages(tradeId, cb) {
+  const ch = supabase
+    .channel(`msgs-${tradeId}`)
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `trade_id=eq.${tradeId}` }, payload => cb(payload.new))
+    .subscribe();
+  return () => { try { supabase.removeChannel(ch); } catch (e) {} };
+}

@@ -3,6 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { AdMob } from "@capacitor-community/admob";
 import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
 import * as db from "./db";
+import { LANGUAGES, langByLabel, translateText, speak, TTS_OK, linkify } from "./comms";
 
 // ── ADMOB (real rewarded ads → tokens, native apps only) ───────────────────
 const ADMOB = {
@@ -1992,62 +1993,147 @@ function ProposeModal({ l, user, onClose, onSend }) {
 }
 
 // ── TRADES ────────────────────────────────────────────────────────────────────
-function Trades({ trades, onAccept, onComplete }) {
+// Live chat thread for one trade — realtime messages, translate, read-aloud,
+// links, photos/videos, voice notes, and the secured video call.
+function ChatThread({ t, user, onAccept, onComplete }) {
+  const [msgs, setMsgs] = useState(t._real ? null : (t.msgs || []).map((m, i) => ({ id: "s" + i, from_uid: m.from === "me" ? user?.id : "them", data: { text: m.txt } })));
+  const [text, setText] = useState("");
+  const [lang, setLang] = useState(user?.lang || "English");
+  const [autoTr, setAutoTr] = useState(false);
+  const [tr, setTr] = useState({});          // messageId -> translated text
+  const [recording, setRecording] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const recRef = useRef(null);
+  const endRef = useRef(null);
+  const meId = user?.id;
+
+  useEffect(() => {
+    if (!t._real) return;
+    let off;
+    (async () => {
+      setMsgs(await db.loadMessages(t.id));
+      off = db.subscribeMessages(t.id, m => setMsgs(prev => (prev || []).some(x => x.id === m.id) ? prev : [...(prev || []), m]));
+    })();
+    return () => { off && off(); };
+  }, [t.id, t._real]);
+  useEffect(() => { endRef.current && endRef.current.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+
+  const push = async data => {
+    if (t._real) { const row = await db.sendMessage(t.id, meId, data); if (row) setMsgs(prev => (prev || []).some(x => x.id === row.id) ? prev : [...(prev || []), row]); }
+    else setMsgs(prev => [...(prev || []), { id: "l" + Date.now(), from_uid: meId, data }]);
+  };
+  const sendText = async () => { const v = text.trim(); if (!v) return; setText(""); await push({ text: v, lang }); };
+  const attach = async file => {
+    if (!file) return; setBusy(true);
+    try { const m = await uploadToCloud(file); await push(m); } catch (e) {} setBusy(false);
+  };
+  const startVoice = async () => {
+    if (recording) { recRef.current && recRef.current.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream); const chunks = [];
+      mr.ondataavailable = e => chunks.push(e.data);
+      mr.onstop = async () => {
+        stream.getTracks().forEach(tr => tr.stop());
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        setBusy(true);
+        try { if (CLOUD_ON) { const m = await uploadToCloud(new File([blob], "voice.webm", { type: "audio/webm" })); await push({ ...m, kind: "audio" }); } else { const url = URL.createObjectURL(blob); await push({ kind: "audio", url }); } } catch (e) {}
+        setBusy(false);
+      };
+      recRef.current = mr; mr.start(); setRecording(true);
+      mr.onstart = () => {};
+      // auto-stop safety after 60s
+      setTimeout(() => { try { mr.state === "recording" && mr.stop(); } catch (e) {} }, 60000);
+      const origStop = mr.stop.bind(mr); mr.stop = () => { setRecording(false); origStop(); };
+    } catch (e) { setRecording(false); }
+  };
+  const doTranslate = async m => {
+    if (tr[m.id]) { setTr(p => { const n = { ...p }; delete n[m.id]; return n; }); return; }
+    const r = await translateText(m.data.text, lang); setTr(p => ({ ...p, [m.id]: r.translated }));
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 116px)" }}>
+      <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--bd)", display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={() => onAccept._back()} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 17 }}>←</button>
+        <Av ini={t.wi} avc={t.wc} size={32} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>{cleanText(t.wu)}{t.b2b && <span className="b2b-badge" style={{ fontSize: 9 }}>B2B</span>}</div>
+          <div style={{ fontSize: 10, color: "var(--t3)" }}>{t.ms} ⇄ {t.ts}</div>
+        </div>
+        {t.status !== "completed" && <VideoMeetButton seed={"trade" + t.id} label="📹" />}
+        <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : "pg"}`}>{t.status}</span>
+      </div>
+      <div style={{ padding: "6px 14px", background: "var(--s2)", borderBottom: "1px solid var(--bd)", display: "flex", gap: 8, alignItems: "center", fontSize: 11 }}>
+        <span style={{ color: "var(--t2)" }}>🌍</span>
+        <select value={lang} onChange={e => setLang(e.target.value)} style={{ background: "var(--s3)", color: "var(--tx)", border: "1px solid var(--bd)", borderRadius: 8, padding: "3px 6px", fontSize: 11, maxWidth: 130 }}>
+          {LANGUAGES.map(l => <option key={l.code} value={l.label}>{l.label}</option>)}
+        </select>
+        <label style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--t2)", cursor: "pointer" }}>
+          <input type="checkbox" checked={autoTr} onChange={e => setAutoTr(e.target.checked)} style={{ accentColor: "var(--g)" }} /> auto-translate
+        </label>
+        {t.topup > 0 && <span className={`pill ${t.tpb === "them" ? "pg" : "pa"}`} style={{ marginLeft: "auto" }}>{t.tpb === "them" ? "+" : "−"}${t.topup} escrow</span>}
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
+        {msgs === null && <div style={{ textAlign: "center", color: "var(--t3)", fontSize: 12, padding: 20 }}>loading…</div>}
+        {msgs && msgs.length === 0 && <div style={{ textAlign: "center", color: "var(--t3)", fontSize: 12, padding: 20 }}>Say hi 👋 — keep it on BarterThat so it stays safe & protected.</div>}
+        {(msgs || []).map(m => {
+          const mine = m.from_uid === meId;
+          const d = m.data || {};
+          const shown = autoTr && d.text && tr[m.id] ? tr[m.id] : d.text;
+          if (autoTr && d.text && tr[m.id] === undefined) { /* lazy translate */ translateText(d.text, lang).then(r => setTr(p => ({ ...p, [m.id]: r.translated }))); }
+          return (
+            <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 10 }}>
+              <div style={{ maxWidth: "78%", padding: "9px 12px", borderRadius: "var(--r)", background: mine ? "var(--g)" : "var(--s3)", color: mine ? "#fff" : "var(--tx)", fontSize: 12.5, lineHeight: 1.5, wordBreak: "break-word" }}>
+                {d.kind === "image" && <img src={d.url} alt="" style={{ maxWidth: 200, borderRadius: 8, display: "block" }} />}
+                {d.kind === "video" && <video src={d.url} controls playsInline style={{ maxWidth: 220, borderRadius: 8, display: "block", background: "#000" }} />}
+                {d.kind === "audio" && <audio src={d.url} controls style={{ height: 34 }} />}
+                {d.text && <span>{linkify(shown || d.text).map((p, i) => p.t === "link" ? <a key={i} href={p.href} target="_blank" rel="noopener noreferrer" style={{ color: mine ? "#fff" : "var(--am)", textDecoration: "underline" }}>{p.v}</a> : <span key={i}>{p.v}</span>)}</span>}
+                {d.text && <div style={{ display: "flex", gap: 10, marginTop: 5, opacity: .85 }}>
+                  <button onClick={() => doTranslate(m)} title="Translate" style={{ background: "none", border: "none", cursor: "pointer", color: mine ? "#fff" : "var(--t2)", fontSize: 12 }}>🌍</button>
+                  {TTS_OK && <button onClick={() => speak(tr[m.id] || d.text, langByLabel(lang).code)} title="Read aloud" style={{ background: "none", border: "none", cursor: "pointer", color: mine ? "#fff" : "var(--t2)", fontSize: 12 }}>🔊</button>}
+                </div>}
+                {!autoTr && tr[m.id] && <div style={{ fontSize: 11.5, marginTop: 5, opacity: .9, fontStyle: "italic" }}>{tr[m.id]}</div>}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef} />
+      </div>
+
+      {t.status === "pending" && t._incoming && (
+        <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
+          <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onAccept(t)}>accept swap ✓</button>
+        </div>
+      )}
+      {t.status === "escrow" && (
+        <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)" }}>
+          <div style={{ fontSize: 11, color: "var(--am)", marginBottom: 7 }}>🔒 {t.topup > 0 ? `$${t.topup} in escrow — ` : ""}confirm when the swap is done to close it & earn tokens.</div>
+          <button className="btn bp bsm" style={{ width: "100%" }} onClick={() => onComplete(t)}>confirm completed ✓</button>
+        </div>
+      )}
+      {t.status === "completed"
+        ? <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · tokens awarded</div>
+        : <div style={{ padding: "9px 12px", borderTop: "1px solid var(--bd)", display: "flex", gap: 6, alignItems: "center" }}>
+            <label style={{ cursor: "pointer", fontSize: 19, color: "var(--t2)" }} title="Photo or video">📎<input type="file" accept="image/*,video/*" style={{ display: "none" }} onChange={e => { attach(e.target.files[0]); e.target.value = ""; }} /></label>
+            <button onClick={startVoice} title="Voice note" style={{ background: recording ? "var(--g)" : "none", border: "none", cursor: "pointer", fontSize: 18, color: recording ? "#fff" : "var(--t2)", borderRadius: 8, padding: "0 4px" }}>{recording ? "● stop" : "🎙️"}</button>
+            <input className="ifield" style={{ flex: 1 }} value={text} onChange={e => setText(e.target.value)} placeholder={busy ? "sending…" : "message…"} onKeyDown={e => { if (e.key === "Enter") sendText(); }} />
+            <button className="btn bp bsm" disabled={!text.trim() || busy} onClick={sendText}>send</button>
+          </div>}
+    </div>
+  );
+}
+
+function Trades({ trades, user, onAccept, onComplete }) {
   const [active, setActive] = useState(null);
-  const [newMsg, setNewMsg] = useState("");
 
   if (active != null) {
     const t = trades.find(x => x.id === active);
     if (!t) { setActive(null); return null; }
-    return (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 116px)" }}>
-        <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--bd)", display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => setActive(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 17 }}>←</button>
-          <Av ini={t.wi} avc={t.wc} size={32} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>{t.wu}{t.b2b && <span className="b2b-badge" style={{ fontSize: 9 }}>B2B</span>}</div>
-            <div style={{ fontSize: 10, color: "var(--t3)" }}>{t.plat}</div>
-          </div>
-          {t.status !== "completed" && <VideoMeetButton seed={"trade" + t.id} label="📹 meet" />}
-          <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : "pg"}`}>{t.status}</span>
-        </div>
-        <div style={{ padding: "8px 14px", background: "var(--s2)", borderBottom: "1px solid var(--bd)", display: "flex", gap: 8, alignItems: "center", fontSize: 11 }}>
-          <span style={{ color: "var(--t2)" }}>{t.ms}</span><span style={{ color: "var(--t3)" }}>⇄</span><span style={{ color: "var(--t2)" }}>{t.ts}</span>
-          {t.topup > 0 && <span className={`pill ${t.tpb === "them" ? "pg" : "pa"}`} style={{ marginLeft: "auto" }}>{t.tpb === "them" ? "+" : "−"}${t.topup} escrow</span>}
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
-          {t.msgs.map((m, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: m.from === "me" ? "flex-end" : "flex-start", marginBottom: 10 }}>
-              <div style={{ maxWidth: "76%", padding: "9px 13px", borderRadius: "var(--r)", background: m.from === "me" ? "var(--g)" : "var(--s3)", color: m.from === "me" ? "#fff" : "var(--tx)", fontSize: 12, lineHeight: 1.5 }}>
-                {m.txt}<div style={{ fontSize: 9, opacity: .55, marginTop: 3, textAlign: m.from === "me" ? "right" : "left" }}>{m.time}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {t.status === "pending" && (
-          <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
-            <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onAccept(t.id)}>accept ✓</button>
-            <button className="btn bg bsm">counter</button>
-            <button className="btn bg bsm" style={{ color: "var(--rd)" }}>decline</button>
-          </div>
-        )}
-        {t.status === "escrow" && (
-          <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)" }}>
-            <div style={{ fontSize: 11, color: "var(--bl)", marginBottom: 7 }}>🔒 {t.topup > 0 ? `$${t.topup} in escrow — ` : ""}confirm completion to close & earn credits</div>
-            <button className="btn bp bsm" style={{ width: "100%" }} onClick={() => onComplete(t.id)}>confirm completed ✓</button>
-          </div>
-        )}
-        {t.status === "completed" && (
-          <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · Barter Tokens awarded</div>
-        )}
-        {t.status !== "completed" && (
-          <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
-            <input className="ifield" style={{ flex: 1 }} value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="message..." />
-            <button className="btn bp bsm" disabled={!newMsg.trim()}>send</button>
-          </div>
-        )}
-      </div>
-    );
+    const back = () => setActive(null);
+    const acceptFn = tr => onAccept(tr); acceptFn._back = back;
+    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} />;
   }
 
   return (
@@ -2413,6 +2499,22 @@ function Nav({ scr, onNav }) {
   );
 }
 
+// Map a Supabase trade row to the shape the Trades UI expects, from "my" view.
+function mapTrade(row, meId) {
+  const d = row.data || {};
+  const iAmProposer = meId === d.proposerId;
+  const other = iAmProposer
+    ? { name: d.ownerName, ini: d.ownerIni, avc: d.ownerAvc }
+    : { name: d.proposerName, ini: d.proposerIni, avc: d.proposerAvc };
+  return {
+    id: row.id, _real: true, _row: row,
+    wu: other.name, wi: other.ini, wc: other.avc,
+    ms: d.myOffer, ts: d.theirOffer, topup: d.topup || 0, tpb: d.tpb,
+    status: row.status, b2b: d.b2b, plat: d.plat || "",
+    time: "recent", unread: false, _incoming: !iAmProposer, msgs: [],
+  };
+}
+
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("splash");
@@ -2439,6 +2541,8 @@ export default function App() {
       if (m.listing) { const sv = await db.addListing(uid, { ...m.listing, uid }); if (sv) setListings(prev => [sv, ...prev]); }
     }
     setUser(prof); storage.set("bt_user", prof);
+    const myTrades = await db.loadTrades(uid);
+    setTrades((myTrades || []).map(r => mapTrade(r, uid)));
     setScreen("main"); setNav("browse"); setPendingEmail("");
   };
 
@@ -2534,21 +2638,43 @@ export default function App() {
 
   const handlePropose = l => { if (!user) { setScreen("signup"); return; } setProposeTo(l); };
 
-  const handleSend = ({ l, svc, myH, thH, msg }) => {
+  const handleSend = async ({ l, svc, myH, thH, msg }) => {
     const mv = (user.rate || 75) * myH, tv = l.rate * thH, diff = tv - mv;
-    setTrades(p => [{ id: Date.now(), wu: l.name, wi: l.ini, wc: l.avc, ms: `${svc} (${myH})`, ts: `${l.title} (${thH})`, mv, tv, topup: Math.abs(diff), tpb: diff > 0 ? "them" : diff < 0 ? "me" : null, status: "pending", plat: (l.platforms[0]?.l || "") + " · " + (l.platforms[0]?.proof || "verified"), time: "just now", unread: false, b2b: l.b2b, value: Math.max(mv, tv), msgs: msg ? [{ from: "me", txt: msg, time: "just now" }] : [] }, ...p]);
+    const data = {
+      proposerId: user.id, proposerName: user.name, proposerIni: user.ini, proposerAvc: user.avc,
+      ownerId: l.uid, ownerName: l.name, ownerIni: l.ini, ownerAvc: l.avc,
+      myOffer: `${svc} (${myH}h)`, theirOffer: `${l.title} (${thH}h)`,
+      topup: Math.abs(diff), tpb: diff > 0 ? "them" : diff < 0 ? "me" : null,
+      b2b: l.b2b, listingId: l.id, plat: l.platforms?.[0]?.l || "",
+    };
     setProposeTo(null);
+    if (db.isUuid(l.uid)) {
+      const row = await db.createTrade(user.id, l.uid, data);
+      if (row) {
+        setTrades(p => [mapTrade(row, user.id), ...p]);
+        if (msg) await db.sendMessage(row.id, user.id, { text: msg, lang: user.lang || "English" });
+        setNav("trades"); setViewing(null); flash("✦ swap proposed — your chat is live");
+        return;
+      }
+    }
+    // Demo/sample listing (no real member behind it) → local-only trade
+    const local = { id: "l" + Date.now(), _real: false, wu: l.name, wi: l.ini, wc: l.avc, ms: data.myOffer, ts: data.theirOffer, topup: data.topup, tpb: data.tpb, status: "pending", b2b: l.b2b, plat: data.plat, time: "just now", unread: false, _incoming: false, msgs: msg ? [{ from: "me", txt: msg, time: "now" }] : [] };
+    setTrades(p => [local, ...p]);
     setNav("trades"); setViewing(null);
+    flash(db.isUuid(l.uid) ? "Saved locally — couldn't reach the server" : "That's a sample listing — propose to a real member for a live chat");
   };
 
-  const handleAccept = id => setTrades(p => p.map(t => t.id === id ? { ...t, status: "escrow", unread: false, msgs: [...t.msgs, { from: "them", txt: "Accepted! Funds in escrow — let's make it happen.", time: "just now" }] } : t));
+  const handleAccept = async t => {
+    if (t._real) await db.updateTrade(t.id, { status: "escrow" });
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, status: "escrow" } : x));
+  };
 
-  const handleComplete = id => {
-    setTrades(p => p.map(t => t.id === id ? { ...t, status: "completed", unread: false } : t));
-    const t = trades.find(x => x.id === id);
-    const earned = Math.max(10, Math.round((t?.value || t?.mv || 100) / 10));
+  const handleComplete = async t => {
+    if (t._real) await db.updateTrade(t.id, { status: "completed" });
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, status: "completed" } : x));
+    const earned = Math.max(10, Math.round((t.topup || 50) / 5));
     if (user) persist({ ...user, credits: (user.credits || 0) + earned, swaps: (user.swaps || 0) + 1 });
-    flash(`⬡ +${earned} Barter Tokens earned`);
+    flash(`⬡ +${earned} tokens earned`);
   };
 
   const handleEarn = (amount, patch = {}) => {
@@ -2601,7 +2727,7 @@ export default function App() {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
       case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "trades": return <Trades trades={trades} onAccept={handleAccept} onComplete={handleComplete} />;
+      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} />;
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} />;
