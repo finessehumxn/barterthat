@@ -1082,7 +1082,7 @@ function Signup({ onDone, onLogin }) {
   const steps = isB2B ? ["account", "your offer", "what you want", "platforms", "B2B credentials", "launch"] : ["account", "your offer", "what you want", "platforms", "launch"];
 
   const ok = () => {
-    if (step === 0) return form.name.trim() && /\S+@\S+\.\S+/.test(form.email) && form.password.length >= 6;
+    if (step === 0) return form.name.trim() && /\S+@\S+\.\S+/.test(form.email) && form.password.length >= 8;
     if (step === 1) return form.cat && form.title.trim();    // category + a one-line title
     if (isB2B && step === 4) return selCerts.length >= 2 && form.licenseNo.trim() && form.licenseState.trim() && form.certifyPro;
     return true;                                             // wants & platforms are optional
@@ -1131,7 +1131,7 @@ function Signup({ onDone, onLogin }) {
             <div style={{ display: "flex", gap: 8 }}><input className="ifield" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={isB2B ? "e.g. Swift Auto Detail" : "e.g. Nia Kendrick"} style={{ flex: 1 }} /><VoiceButton onText={t => setForm(f => ({ ...f, name: t }))} /></div>
           </div>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>email <span style={{ color: "var(--t3)" }}>— so you can log in on any device</span></label><input className="ifield" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@email.com" /></div>
-          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>password <span style={{ color: "var(--t3)" }}>— at least 6 characters</span></label><input className="ifield" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="choose a password" /></div>
+          <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>password <span style={{ color: "var(--t3)" }}>— at least 8 characters</span></label><input className="ifield" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="choose a password" /></div>
           <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>location <span style={{ color: "var(--t3)" }}>— optional, defaults to Remote</span></label><input className="ifield" value={form.loc} onChange={e => setForm(f => ({ ...f, loc: e.target.value }))} placeholder="city, state or 'Remote'" /></div>
           {isB2B && <div>
             <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>tax bracket</label>
