@@ -1041,6 +1041,23 @@ function Login({ onLogin, onSignup, onBack }) {
   );
 }
 
+// ── VERIFY EMAIL (after sign-up) ─────────────────────────────────────────────
+function VerifyEmail({ email, onLogin, onBack }) {
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px", textAlign: "center" }}>
+      <div style={{ width: "100%", maxWidth: 420 }} className="fu">
+        <div style={{ marginBottom: 18 }}><Logo height={28} style={{ margin: "0 auto" }} /></div>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Check your email</div>
+        <div style={{ fontSize: 13.5, color: "var(--t2)", lineHeight: 1.6, marginBottom: 20 }}>We sent a verification link to <strong style={{ color: "var(--tx)" }}>{email || "your email"}</strong>. Tap it to confirm you're real — that's what keeps everyone on BarterThat safe to trade and meet in person. Then come back and log in.</div>
+        <button className="btn bp" style={{ width: "100%" }} onClick={onLogin}>I verified — log me in →</button>
+        <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--t3)", lineHeight: 1.5 }}>Didn't get it? Check spam, or give it a minute. The link opens BarterThat and signs you in automatically.</div>
+        <div style={{ marginTop: 14 }}><button onClick={onBack} style={{ background: "none", border: "none", color: "var(--t3)", fontSize: 12, cursor: "pointer" }}>← back</button></div>
+      </div>
+    </div>
+  );
+}
+
 // ── SIGNUP ────────────────────────────────────────────────────────────────────
 // Friendly, plain-language guide for each step — what it is + why it helps.
 const STEP_GUIDE = {
@@ -2408,20 +2425,36 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [coach, setCoach] = useState(false);
   const [showHow, setShowHow] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const bootedRef = useRef(false);
+
+  // Build (or load) the user's profile + first listing once they have a verified session.
+  const bootstrap = async authUser => {
+    const uid = authUser.id;
+    let prof = await db.loadProfile(uid);
+    if (!prof) {
+      const m = await db.getMeta();
+      prof = { ...(m.profile || { name: (authUser.email || "member").split("@")[0], credits: 50, wants: [] }), id: uid, email: authUser.email };
+      await db.saveProfile(uid, prof);
+      if (m.listing) { const sv = await db.addListing(uid, { ...m.listing, uid }); if (sv) setListings(prev => [sv, ...prev]); }
+    }
+    setUser(prof); storage.set("bt_user", prof);
+    setScreen("main"); setNav("browse"); setPendingEmail("");
+  };
 
   useEffect(() => {
     initAdMob(); // no-op on web
     (async () => {
-      // Shared marketplace: real listings from everyone, prepended to demo content.
+      // Shared marketplace: everyone's real listings, prepended to demo content.
       const real = await db.loadListings();
       if (real && real.length) setListings([...real, ...LISTINGS]);
-      // Restore real account session (works across devices).
-      const uid = await db.currentUserId();
-      if (uid) {
-        const prof = await db.loadProfile(uid);
-        if (prof) { setUser(prof); setScreen("main"); }
-      }
     })();
+    // Single source of truth for sessions: fires on load (existing session) and
+    // right after the user clicks their email-verification link and returns.
+    const off = db.onAuth(async session => {
+      if (session && session.user && !bootedRef.current) { bootedRef.current = true; await bootstrap(session.user); }
+    });
+    return off;
   }, []);
 
   // Show the 3 quick tips the first time someone reaches the marketplace.
@@ -2438,44 +2471,37 @@ export default function App() {
   const persist = (u) => { setUser(u); storage.set("bt_user", u); if (u && u.id) db.saveProfile(u.id, u); };
 
   const handleSignup = async form => {
-    // Create a real account so the profile + tokens follow them across devices.
-    const res = await db.signUp(form.email, form.password);
-    if (res.error) {
-      flash(/already|registered|exists/i.test(res.error) ? "That email already has an account — tap “Log in” instead." : res.error);
-      setScreen("login");
-      return;
-    }
-    const uid = res.user?.id;
     const elite = isInvite(form.invite);
     const license = form.b2b ? { number: form.licenseNo, state: form.licenseState } : null;
     const verifiedPro = form.b2b ? false : undefined;
-    const u = {
-      id: uid, name: form.name, email: form.email, loc: form.loc,
-      ini: form.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-      avc: ac(Math.floor(Math.random() * 8)),
+    const ini = form.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+    const avc = ac(Math.floor(Math.random() * 8));
+    // Stashed in user_metadata; turned into real rows once their email is verified.
+    const profile = {
+      name: form.name, email: form.email, loc: form.loc || "Remote", ini, avc,
       cat: form.cat, sub: form.sub, title: form.title, desc: form.desc, wants: form.wants || [],
       badges: form.badges || [], specialties: form.specialties || [],
       rate: form.rate, platforms: form.platforms, b2b: form.b2b, elite, license, verifiedPro,
       certs: form.certs, taxBracket: form.taxBracket, score: 72, swaps: 0, rating: 0, credits: 50,
     };
-    if (form.title) {
-      const catMeta = CATS.find(c => c.label === form.cat);
-      const nl = { uid, type: catMeta?.t || "service", name: u.name, ini: u.ini, avc: u.avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc || "Remote", remote: true, verified: form.platforms.length >= 1, elite, b2b: form.b2b, license, verifiedPro, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket };
-      const saved = await db.addListing(uid, nl);
-      setListings(p => [saved || { ...nl, id: Date.now() }, ...p]);
+    const catMeta = CATS.find(c => c.label === form.cat);
+    const listing = form.title ? { type: catMeta?.t || "service", name: form.name, ini, avc, cat: form.cat || "Creative Arts & Design", sub: form.sub, title: form.title, desc: form.desc, rate: form.rate, loc: form.loc || "Remote", remote: true, verified: form.platforms.length >= 1, elite, b2b: form.b2b, license, verifiedPro, score: 72, swaps: 0, rating: 0, rev: 0, saved: [], wants: form.wants || [], badges: form.badges || [], specialties: form.specialties || [], platforms: form.platforms, certs: form.certs, taxBracket: form.taxBracket } : null;
+
+    const res = await db.signUp(form.email, form.password, { profile, listing });
+    if (res.error) {
+      flash(/already|registered|exists/i.test(res.error) ? "That email already has an account — tap “Log in” instead." : res.error);
+      setScreen("login");
+      return;
     }
-    persist(u);
-    setScreen("main");
-    setNav("match");
+    // If email confirmation is on, there's no session yet → ask them to verify.
+    // (When it's off, onAuth fires immediately and bootstraps them straight in.)
+    if (!res.session) { setPendingEmail(form.email); setScreen("verify"); }
   };
 
   const handleLogin = async (email, password) => {
     const res = await db.signIn(email, password);
-    if (res.error) { flash("Couldn't log in — check your email & password."); return false; }
-    const prof = await db.loadProfile(res.user.id);
-    if (prof) persist(prof); else persist({ id: res.user.id, name: email.split("@")[0], email, credits: 50, wants: [] });
-    setScreen("main"); setNav("browse");
-    return true;
+    if (res.error) { flash(/confirm/i.test(res.error) ? "Please verify your email first — check your inbox." : "Couldn't log in — check your email & password."); return false; }
+    return true; // onAuth listener bootstraps the profile + opens the app
   };
 
   const handlePost = async form => {
@@ -2547,7 +2573,7 @@ export default function App() {
     flash("Reported — our team will review it. Thank you.");
   };
 
-  const handleLogout = () => { db.signOut(); storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
+  const handleLogout = () => { db.signOut(); bootedRef.current = false; storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
 
   const handleReset = () => {
     ["bt_user", "bt_listings", "bt_trades", "bt_coach"].forEach(k => storage.remove(k));
@@ -2564,6 +2590,7 @@ export default function App() {
   const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "login") setScreen("login"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
   if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <VideoModal onDone={() => setShowHow(false)} />}</>;
   if (screen === "login") return <><G /><Login onLogin={handleLogin} onSignup={() => setScreen("signup")} onBack={() => setScreen("splash")} /></>;
+  if (screen === "verify") return <><G /><VerifyEmail email={pendingEmail} onLogin={() => setScreen("login")} onBack={() => setScreen("splash")} /></>;
   if (screen === "signup") return <><G /><Signup onDone={handleSignup} onLogin={() => setScreen("login")} /></>;
   if (screen === "pitch") return <><G /><InvestorPitch onBack={() => setScreen("splash")} onEnter={enter} /></>;
   if (screen === "admin") return <><G /><AdminLeads onBack={() => setScreen("pitch")} /></>;

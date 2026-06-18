@@ -4,10 +4,23 @@
 import { supabase } from "./supabase";
 
 // ── AUTH ─────────────────────────────────────────────────────────────────────
-export async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+const REDIRECT = typeof window !== "undefined" ? window.location.origin : undefined;
+// meta = { profile, listing } stashed in user_metadata so we can build the row
+// after the user verifies their email and signs in.
+export async function signUp(email, password, meta = {}) {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim(), password,
+    options: { data: meta, emailRedirectTo: REDIRECT },
+  });
   if (error) return { error: error.message };
   return { user: data.user, session: data.session };
+}
+export function onAuth(cb) {
+  const { data } = supabase.auth.onAuthStateChange((_e, session) => cb(session));
+  return () => data?.subscription?.unsubscribe?.();
+}
+export async function getMeta() {
+  try { const { data } = await supabase.auth.getUser(); return data?.user?.user_metadata || {}; } catch (e) { return {}; }
 }
 export async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
