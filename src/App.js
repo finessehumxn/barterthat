@@ -2619,6 +2619,7 @@ export default function App() {
         <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => { setViewing(null); setNav("browse"); }}><Logo height={28} /></div>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {user && <span className="credit" title="Barter Tokens — free store credit you can use to even out any trade. Tap to see your balance & earn more." style={{ cursor: "pointer" }} onClick={() => { setViewing(null); setNav("earn"); }}>⬡ {user.credits ?? 0}</span>}
+          <button onClick={() => setShowHow(true)} title="How BarterThat works" style={{ width: 26, height: 26, borderRadius: "50%", border: "1px solid var(--bd)", background: "var(--s3)", color: "var(--t2)", cursor: "pointer", fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>?</button>
           <button onClick={() => { setViewing(null); setNav("trades"); }} style={{ position: "relative", background: "none", border: "none", cursor: "pointer", color: nav === "trades" ? "var(--g)" : "var(--t2)", fontSize: 18 }}>
             ⇄{unread > 0 && <span style={{ position: "absolute", top: -3, right: -6, width: 14, height: 14, borderRadius: "50%", background: "var(--g)", fontSize: 9, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>{unread}</span>}
           </button>
@@ -2630,6 +2631,7 @@ export default function App() {
       {renderMain()}
       <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} />
       {coach && <CoachMarks onDone={dismissCoach} />}
+      {showHow && <VideoModal onDone={() => setShowHow(false)} />}
       {proposeTo && <ProposeModal l={proposeTo} user={user} onClose={() => setProposeTo(null)} onSend={handleSend} />}
       {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(232,177,74,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
     </>
