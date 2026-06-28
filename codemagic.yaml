@@ -19,7 +19,7 @@ workflows:
       cocoapods: default
     scripts:
       - name: Install npm dependencies
-        script: npm ci
+        script: npm install --no-audit --no-fund
       - name: Build web app
         script: CI=false npm run build
       - name: Capacitor sync (iOS)
