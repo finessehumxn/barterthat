@@ -4,6 +4,7 @@ import { AdMob } from "@capacitor-community/admob";
 import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
 import * as db from "./db";
 import { LANGUAGES, langByLabel, translateText, speak, TTS_OK, linkify } from "./comms";
+import * as iap from "./iap";
 
 // ── ADMOB (real rewarded ads → tokens, native apps only) ───────────────────
 const ADMOB = {
@@ -2201,7 +2202,7 @@ function Trades({ trades, user, onAccept, onComplete }) {
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
-function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote }) {
+function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
@@ -2255,7 +2256,13 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote }
         <div style={{ fontFamily: "var(--fd)", fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{mine.title}</div>
         <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5, marginBottom: 10 }}>{mine.desc}</div>
         <span style={{ color: "var(--g)", fontWeight: 700, fontFamily: "var(--fd)" }}>${mine.rate}{mine.type === "service" ? "/hr" : ""} · {mine.loc}</span>
-        <button className="btn bpu bsm" style={{ width: "100%", marginTop: 11 }} onClick={() => onPromote && onPromote()}>🚀 Promote this listing — featured for 7 days ($9)</button>
+        {!IS_NATIVE && <button className="btn bpu bsm" style={{ width: "100%", marginTop: 11 }} onClick={() => onPromote && onPromote()}>🚀 Promote this listing — featured for 7 days ($9)</button>}
+      </div>}
+
+      {IS_NATIVE && <div className="card" style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 9, textTransform: "uppercase", letterSpacing: ".06em" }}>BarterThat+</div>
+        <div style={{ fontSize: 12.5, color: "var(--t2)", lineHeight: 1.55, marginBottom: 10 }}>{user.plus ? "Your BarterThat+ subscription is active — thank you for supporting BarterThat!" : "Go BarterThat+ for priority matching, unlimited proposals, and 30 Barter Tokens every month."}</div>
+        <button className="btn bpu bsm" style={{ width: "100%" }} onClick={() => onRestore && onRestore()}>↻ Restore purchases</button>
       </div>}
 
       {user.platforms?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
@@ -2585,6 +2592,12 @@ export default function App() {
       if (m.listing) { const sv = await db.addListing(uid, { ...m.listing, uid }); if (sv) setListings(prev => [sv, ...prev]); }
     }
     setUser(prof); storage.set("bt_user", prof);
+    // Native IAP: link this user to RevenueCat and reflect any active BarterThat+ entitlement.
+    if (iap.IS_NATIVE) {
+      iap.loginIAP(uid).then(active => {
+        if (active) { const up = { ...prof, plus: true }; setUser(up); storage.set("bt_user", up); db.saveProfile(uid, up); }
+      });
+    }
     const myTrades = await db.loadTrades(uid);
     setTrades((myTrades || []).map(r => mapTrade(r, uid)));
     setScreen("main"); setNav("browse"); setPendingEmail("");
@@ -2592,6 +2605,7 @@ export default function App() {
 
   useEffect(() => {
     initAdMob(); // no-op on web
+    iap.initIAP(); // native In-App Purchase (RevenueCat); no-op on web
     (async () => {
       // Shared marketplace: everyone's real listings, prepended to demo content.
       const real = await db.loadListings();
@@ -2727,14 +2741,42 @@ export default function App() {
     flash(`⬡ +${amount} tokens added`);
   };
 
-  // Real income: Stripe Checkout for BarterThat+ subscription / promoted listing.
+  // BarterThat+ subscription / promoted listing.
+  // Native iOS & Android MUST use In-App Purchase (RevenueCat) per store policy;
+  // the web app keeps using Stripe Checkout (see api/checkout.js).
   const startCheckout = async kind => {
+    if (iap.IS_NATIVE) {
+      if (kind !== "plus") return; // one-time "promote" is web-only for now
+      try {
+        const active = await iap.purchasePlus();
+        if (active) {
+          persist({ ...user, plus: true, credits: (user.credits || 0) + 30 });
+          flash("BarterThat+ is active — welcome! ⬡ +30 tokens");
+        } else {
+          flash("Purchase didn't complete — try again.");
+        }
+      } catch (e) {
+        const m = String(e?.message || e);
+        if (m === "purchase_cancelled") return;
+        flash(m === "iap_unavailable" ? "Subscriptions aren't available right now." : "Couldn't complete purchase — try again.");
+      }
+      return;
+    }
     try {
       const r = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, email: user?.email, origin: window.location.origin }) });
       const d = await r.json();
       if (d.url) { window.location.href = d.url; return; }
       flash(d.error === "stripe_offline" ? "Payments aren't switched on yet — coming soon." : "Couldn't start checkout — try again.");
     } catch (e) { flash("Couldn't start checkout."); }
+  };
+
+  // Apple requires a visible "Restore Purchases" action for subscriptions.
+  const handleRestore = async () => {
+    if (!iap.IS_NATIVE) return;
+    flash("Restoring purchases…");
+    const active = await iap.restore();
+    if (active && user) persist({ ...user, plus: true });
+    flash(active ? "BarterThat+ restored ✓" : "No active purchases found.");
   };
 
   // Crowdfunding: back a venture with tokens, or pledge investor interest.
@@ -2801,7 +2843,7 @@ export default function App() {
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} />;
       default: return null;
     }
   };

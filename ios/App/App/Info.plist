@@ -12,6 +12,10 @@
 	<string>BarterThat needs access to your photos so you can add pictures and videos to your listings.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>BarterThat may save media you create for your listings.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>BarterThat uses this to show more relevant ads and keep the app free. You can decline and still use everything.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
     <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
