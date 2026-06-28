@@ -11,7 +11,7 @@ workflows:
       app_store_connect: BarterThat ASC Key
     environment:
       vars:
-        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
         BUNDLE_ID: "com.barterthat.app"
       node: 22
@@ -24,9 +24,10 @@ workflows:
         script: CI=false npm run build
       - name: Capacitor sync (iOS)
         script: npx cap sync ios
-      - name: Install CocoaPods dependencies
+      - name: Resolve Swift Package dependencies
         script: |
-          cd ios/App && pod install
+          xcodebuild -resolvePackageDependencies \
+            -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME"
       - name: Set up code signing (creates cert + App Store profile if missing)
         script: |
           keychain initialize
@@ -42,7 +43,7 @@ workflows:
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
