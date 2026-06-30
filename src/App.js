@@ -1606,6 +1606,19 @@ function Match({ listings, user, onView, onPropose }) {
   const [narr, setNarr] = useState({});     // { "d-<id>" | "l-<idx>": { fit, story } } — Claude's narration of real swaps
   const [aiLoading, setAiLoading] = useState(false);
   const [loopView, setLoopView] = useState(null);  // the loop being coordinated in the modal
+  const [shared, setShared] = useState(false);
+
+  // Viral moment: "AI found me a multi-way trade and I paid nothing" — the screenshot
+  // the cash marketplaces can't produce. Native share sheet, clipboard fallback.
+  const shareLoop = async (loop) => {
+    const n = loop.nodes.length;
+    const text = `🔄 BarterThat just found me a ${n}-way trade — everyone gives one thing, nobody pays a cent, and I end up with ${loop.youGet}. No fees, no cash. Find your swap →`;
+    const url = "https://barterthat.app";
+    try {
+      if (navigator.share) { await navigator.share({ title: "BarterThat", text, url }); }
+      else { await navigator.clipboard.writeText(text + " " + url); setShared(true); setTimeout(() => setShared(false), 2500); }
+    } catch (e) { /* user dismissed share sheet */ }
+  };
 
   const [openGroups, setOpenGroups] = useState(false);
 
@@ -1678,6 +1691,7 @@ function Match({ listings, user, onView, onPropose }) {
             <div style={{ background: "rgba(46,196,140,0.08)", borderRadius: "var(--rs)", padding: "10px 12px", fontSize: 12, color: "var(--g)", fontWeight: 700, margin: "12px 0 14px", textAlign: "center" }}>✓ You end up with {loopView.youGet}</div>
             <div style={{ fontSize: 11, color: "var(--t3)", marginBottom: 14, lineHeight: 1.5 }}>How it works: you message the first person to kick it off. As each person confirms their part, the next is looped in — and it only locks when everyone's in, so no one is left holding the bag.</div>
             <button className="btn bpu" style={{ width: "100%" }} onClick={() => { const first = loopView.nodes[1]; setLoopView(null); onPropose(first); }}>Message {loopView.nodes[1]?.name?.split(" ")[0] || "the first person"} to start →</button>
+            <button className="btn bg bsm" style={{ width: "100%", marginTop: 8 }} onClick={() => shareLoop(loopView)}>{shared ? "✓ copied — go show someone" : "↗ share this loop"}</button>
           </div>
         </div>
       )}
