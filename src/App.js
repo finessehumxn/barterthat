@@ -641,7 +641,7 @@ function Splash({ onEnter, onHow }) {
       <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px)`, backgroundSize: "44px 44px", opacity: .5 }} />
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div className="fu" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 640 }}>
-        <div className="pill pp" style={{ marginBottom: 18 }}>swap skills · build community · where it's at</div>
+        <div className="pill pp" style={{ marginBottom: 18 }}>the marketplace where money isn't the point</div>
         <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}>
           <Logo style={{ height: "clamp(48px,11vw,82px)" }} />
         </div>
@@ -650,7 +650,7 @@ function Splash({ onEnter, onHow }) {
           Barter That<span style={{ color: "var(--g)", opacity: .7 }}>.. that</span><span style={{ color: "var(--g)", opacity: .45 }}>.. that</span><span style={{ color: "var(--g)", opacity: .25 }}>..</span>
         </div>
         <div style={{ fontSize: 16, color: "var(--t2)", lineHeight: 1.7, maxWidth: 500, margin: "0 auto 14px" }}>
-          Trade <strong style={{ color: "var(--tx)" }}>everything</strong> — skills, goods, gear, even a co-founder. Our AI finds the swap (or the <em>chain</em> of swaps) so everyone wins. No cash. Just proof.
+          Trade <strong style={{ color: "var(--tx)" }}>everything</strong> — skills, goods, gear, even a co-founder — with <strong style={{ color: "var(--g)" }}>no cash</strong>. Our AI even finds the <em>multi-way chain</em> (you help them, they help someone, that person helps you) so deals happen that money never could.
         </div>
         <div style={{ fontSize: 14, color: "var(--g)", fontStyle: "italic", maxWidth: 480, margin: "0 auto 32px", fontFamily: "var(--fd)" }}>
           One person is great at one thing. Together, we're unstoppable.
