@@ -1605,6 +1605,7 @@ function Match({ listings, user, onView, onPropose }) {
   const [loading, setLoading] = useState(false);
   const [narr, setNarr] = useState({});     // { "d-<id>" | "l-<idx>": { fit, story } } — Claude's narration of real swaps
   const [aiLoading, setAiLoading] = useState(false);
+  const [loopView, setLoopView] = useState(null);  // the loop being coordinated in the modal
 
   const [openGroups, setOpenGroups] = useState(false);
 
@@ -1651,6 +1652,35 @@ function Match({ listings, user, onView, onPropose }) {
 
   return (
     <div style={{ padding: "14px 14px 90px" }}>
+      {loopView && (
+        <div onClick={() => setLoopView(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+          <div onClick={e => e.stopPropagation()} className="card" style={{ width: "100%", maxWidth: 460, borderRadius: "18px 18px 0 0", maxHeight: "88vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span className="pill pp">🔄 {loopView.nodes.length}-way loop</span>
+              <button onClick={() => setLoopView(null)} style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--t2)", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Start this loop</div>
+            <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 14, lineHeight: 1.5 }}>Nobody pays. Everyone does just <strong style={{ color: "var(--tx)" }}>one</strong> trade — but because it forms a circle, everybody ends up with what they wanted.</div>
+            {loopView.hops.map((h, hi) => (
+              <div key={hi}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Av ini={h.from.ini} avc={h.from.id === "you" ? "var(--g)" : h.from.avc} size={34} />
+                  <div style={{ flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 1.4 }}>
+                    <span style={{ fontWeight: 700, color: h.from.id === "you" ? "var(--g)" : "var(--tx)" }}>{h.from.id === "you" ? "You" : h.from.name.split(" ")[0]}</span>
+                    <span style={{ color: "var(--t2)" }}> give </span>
+                    <span style={{ fontWeight: 700, color: "var(--pu)" }}>{h.gives}</span>
+                    <span style={{ color: "var(--t3)" }}> → {h.to.id === "you" ? "you" : h.to.name.split(" ")[0]}</span>
+                  </div>
+                </div>
+                {hi < loopView.hops.length - 1 && <div style={{ width: 2, height: 13, background: "var(--bd2)", marginLeft: 16 }} />}
+              </div>
+            ))}
+            <div style={{ background: "rgba(46,196,140,0.08)", borderRadius: "var(--rs)", padding: "10px 12px", fontSize: 12, color: "var(--g)", fontWeight: 700, margin: "12px 0 14px", textAlign: "center" }}>✓ You end up with {loopView.youGet}</div>
+            <div style={{ fontSize: 11, color: "var(--t3)", marginBottom: 14, lineHeight: 1.5 }}>How it works: you message the first person to kick it off. As each person confirms their part, the next is looped in — and it only locks when everyone's in, so no one is left holding the bag.</div>
+            <button className="btn bpu" style={{ width: "100%" }} onClick={() => { const first = loopView.nodes[1]; setLoopView(null); onPropose(first); }}>Message {loopView.nodes[1]?.name?.split(" ")[0] || "the first person"} to start →</button>
+          </div>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <span className="pill pp">◆ AI</span>
         <div style={{ fontFamily: "var(--fd)", fontSize: 20, fontWeight: 800 }}>Find my swaps</div>
@@ -1796,7 +1826,7 @@ function Match({ listings, user, onView, onPropose }) {
               {narr["l-" + li]?.story && <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginTop: 9, fontSize: 11.5, color: "var(--t2)", lineHeight: 1.5 }}><span className="pill pp" style={{ fontSize: 8, flexShrink: 0 }}>◆ AI</span><span>{narr["l-" + li].story}{typeof narr["l-" + li].fit === "number" ? ` · ${narr["l-" + li].fit}% fit` : ""}</span></div>}
               <div style={{ display: "flex", gap: 7, marginTop: 12 }}>
                 <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(loop.nodes[1])}>view chain</button>
-                <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(loop.nodes[1])}>start loop</button>
+                <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => setLoopView(loop)}>start loop</button>
               </div>
             </div>
           ))}
