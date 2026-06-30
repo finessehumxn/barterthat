@@ -2302,7 +2302,7 @@ function Trades({ trades, user, onAccept, onComplete }) {
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
-function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore }) {
+function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
@@ -2316,7 +2316,11 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
             <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 2 }}>{user.cat || "Community member"} · {user.loc}</div>
             {user.b2b && <div style={{ marginTop: 6 }}><span className="b2b-badge">B2B · {user.taxBracket}</span></div>}
             <div style={{ display: "flex", gap: 7, marginTop: 8, flexWrap: "wrap" }}>
-              <Score score={user.score || 72} /><span className="pill pg">✓ verified</span><span className="pill pd">{done} swaps</span>
+              <Score score={user.score || 72} />
+              {user.idVerified
+                ? <span className="pill pg">✓ ID Verified</span>
+                : <button className="pill pa" style={{ cursor: "pointer", border: "none", font: "inherit" }} onClick={() => onVerify && onVerify()}>+ Verify ID</button>}
+              <span className="pill pd">{done} swaps</span>
             </div>
           </div>
         </div>
@@ -2705,6 +2709,18 @@ export default function App() {
 
   useEffect(() => {
     initAdMob(); // no-op on web
+    // Returned from Stripe Identity? Confirm the result and mark the profile verified.
+    if (new URLSearchParams(window.location.search).get("idcheck") === "done") {
+      try {
+        const u = JSON.parse(localStorage.getItem("bt_user") || "null");
+        if (u && u.verifySessionId && !u.idVerified) {
+          fetch("/api/verify-status?id=" + encodeURIComponent(u.verifySessionId))
+            .then(r => r.json())
+            .then(d => { if (d && d.verified) { const nu = { ...u, idVerified: true }; setUser(nu); storage.set("bt_user", nu); if (nu.id) db.saveProfile(nu.id, nu); flash("✓ Identity verified — trust badge unlocked!"); } })
+            .catch(() => {});
+        }
+      } catch (e) {}
+    }
     iap.initIAP(); // native In-App Purchase (RevenueCat); no-op on web
     (async () => {
       // Shared marketplace: everyone's real listings, prepended to demo content.
@@ -2795,6 +2811,17 @@ export default function App() {
   };
 
   const handlePropose = l => { if (!user) { setScreen("signup"); return; } setProposeTo(l); };
+
+  // Real ID verification via Stripe Identity — opens the hosted ID + selfie flow.
+  const handleVerify = async () => {
+    if (!user) { setScreen("signup"); return; }
+    try {
+      const r = await fetch("/api/verify-identity", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, origin: window.location.origin }) });
+      const d = await r.json();
+      if (d.url) { persist({ ...user, verifySessionId: d.id }); window.location.href = d.url; }
+      else flash(d.error === "stripe_offline" ? "ID verification isn't switched on yet — coming soon." : "Couldn't start verification — try again.");
+    } catch (e) { flash("Couldn't start verification."); }
+  };
 
   const handleSend = async ({ l, svc, myH, thH, msg }) => {
     const mv = (user.rate || 75) * myH, tv = l.rate * thH, diff = tv - mv;
@@ -2961,7 +2988,7 @@ export default function App() {
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} />;
       default: return null;
     }
   };
