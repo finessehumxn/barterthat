@@ -301,7 +301,18 @@ function findSwaps(me, listings) {
     const hops = order.map((n, i) => ({ from: n, to: order[(i + 1) % order.length], gives: offerOf(n) }));
     loops.push({ nodes: order, hops, youGet: offerOf(order[order.length - 1]) });
   }
-  return { direct: direct.slice(0, 8), loops: loops.slice(0, 6) };
+  // NEAR-MISSES — warm one-sided leads so the app never dead-ends: people who
+  // already want what you offer (or who offer what you want). A message can turn
+  // these into a deal or seed a future loop.
+  const directIds = new Set(direct.map(d => d.partner.id));
+  const nearMisses = pool
+    .filter(a => !directIds.has(a.id))
+    .map(a => ({ partner: a, theyWantYou: wantsOffer(a, you), youWantThem: wantsOffer(you, a) }))
+    .filter(n => n.theyWantYou || n.youWantThem)
+    .sort((a, b) => (b.partner.score || 0) - (a.partner.score || 0))
+    .slice(0, 6);
+
+  return { direct: direct.slice(0, 8), loops: loops.slice(0, 6), nearMisses };
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
@@ -1580,6 +1591,13 @@ function LiveFeed({ listings, onView }) {
 }
 
 // ── MATCH (AI Swap Matchmaker + circular trades) ─────────────────────────────
+function NotifyMe() {
+  const [on, setOn] = useState(false);
+  return on
+    ? <div style={{ textAlign: "center", padding: "12px", fontSize: 12, color: "var(--g)", fontWeight: 700 }}>✓ We'll alert you the moment a match appears.</div>
+    : <button className="btn bpu" style={{ width: "100%", marginTop: 6 }} onClick={() => setOn(true)}>🔔 Notify me when a match shows up</button>;
+}
+
 function Match({ listings, user, onView, onPropose }) {
   const [offer, setOffer] = useState(user?.cat || "Creative Arts & Design");
   const [wants, setWants] = useState(user?.wants?.length ? user.wants : ["Beauty & Personal Care", "Tech & Digital Services"]);
@@ -1690,11 +1708,36 @@ function Match({ listings, user, onView, onPropose }) {
 
       {results && !loading && <>
         {results.direct.length === 0 && results.loops.length === 0 && (
-          <div style={{ textAlign: "center", padding: "44px 24px", color: "var(--t3)" }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>🔍</div>
-            <div style={{ marginBottom: 6 }}>No matches yet for that combo.</div>
-            <div style={{ fontSize: 12 }}>Add more "I want" categories — loops need flexibility.</div>
-          </div>
+          (results.nearMisses && results.nearMisses.length > 0) ? (
+            <>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--am)", margin: "4px 0 4px", textTransform: "uppercase", letterSpacing: ".06em" }}>◐ so close — worth a message ({results.nearMisses.length})</div>
+              <div style={{ fontSize: 11.5, color: "var(--t2)", marginBottom: 10, lineHeight: 1.5 }}>No perfect loop yet — but these people are half-way there. A quick message often turns one into a deal (or seeds a loop as more people join).</div>
+              {results.nearMisses.map(({ partner: b, theyWantYou, youWantThem }) => (
+                <div key={"nm" + b.id} className="card fu" style={{ marginBottom: 9, borderColor: "rgba(232,177,74,0.3)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Av ini={b.ini} avc={b.avc} size={36} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{b.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--am)" }}>{theyWantYou ? "wants what you offer" : ""}{theyWantYou && youWantThem ? " · " : ""}{youWantThem ? `offers ${b.cat}` : ""}</div>
+                    </div>
+                    <Score score={b.score} />
+                  </div>
+                  <div style={{ display: "flex", gap: 7, marginTop: 10 }}>
+                    <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(b)}>view</button>
+                    <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onPropose(b)}>message →</button>
+                  </div>
+                </div>
+              ))}
+              <div style={{ marginTop: 8 }}><NotifyMe /></div>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px 24px", color: "var(--t3)" }}>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>🔍</div>
+              <div style={{ marginBottom: 6 }}>Nothing close yet for that combo.</div>
+              <div style={{ fontSize: 12, marginBottom: 14 }}>Add more "I want" categories — loops need flexibility.</div>
+              <NotifyMe />
+            </div>
+          )
         )}
 
         {results.direct.length > 0 && <>
