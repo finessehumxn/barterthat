@@ -40,13 +40,17 @@ const G = () => (
       --rd:#EF5D47;--rdb:rgba(239,93,71,0.1);
       --bl:#4A90D9;--blb:rgba(74,144,217,0.12);
       --pu:#9B72DD;--pub:rgba(155,114,221,0.12);
-      --r:12px;--rs:7px;--rp:100px;
+      --r:14px;--rs:9px;--rp:100px;
       --fd:'Inter',sans-serif;--fb:'Inter',sans-serif;
+      --sh1:0 1px 2px rgba(0,0,0,0.28),0 3px 10px rgba(0,0,0,0.20);
+      --sh2:0 6px 16px rgba(0,0,0,0.34),0 18px 44px -12px rgba(0,0,0,0.55);
+      --shp:0 4px 16px rgba(239,93,71,0.38);
+      --shpu:0 4px 16px rgba(155,114,221,0.34);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{overflow-x:hidden;max-width:100vw}
     #root{max-width:100vw;overflow-x:hidden}
-    body{background:var(--bk);color:var(--tx);font-family:var(--fb);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+    body{background:var(--bk);background-image:radial-gradient(125% 80% at 50% -8%,rgba(46,66,117,0.45) 0%,transparent 56%);background-attachment:fixed;color:var(--tx);font-family:var(--fb);font-size:14px;line-height:1.6;letter-spacing:-0.011em;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}
     img{max-width:100%;height:auto}
     input,select,textarea,button{font-family:var(--fb);font-size:14px;color:var(--tx)}
     input:focus,select:focus,textarea:focus{outline:none}
@@ -60,19 +64,19 @@ const G = () => (
     @keyframes drift{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
     .fu{animation:fadeUp .35s ease both}
     .fi{animation:fadeIn .25s ease both}
-    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rp);font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
-    .bp{background:var(--g);color:#fff}.bp:hover{background:var(--gd);transform:translateY(-1px)}.bp:active{transform:translateY(0)}
-    .bg{background:transparent;color:var(--t2);border:1px solid var(--bd)}.bg:hover{border-color:var(--bd2);color:var(--tx)}
-    .bpu{background:var(--pu);color:#fff}.bpu:hover{filter:brightness(1.1);transform:translateY(-1px)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 19px;border-radius:var(--rp);font-family:var(--fb);font-size:13px;font-weight:600;letter-spacing:-0.01em;cursor:pointer;border:none;transition:transform .15s,box-shadow .15s,background .15s,filter .15s,border-color .15s;white-space:nowrap}
+    .bp{background:linear-gradient(180deg,#F4694F,#DE4733);color:#fff;box-shadow:var(--shp),inset 0 1px 0 rgba(255,255,255,0.18)}.bp:hover{transform:translateY(-1px);box-shadow:0 7px 22px rgba(239,93,71,0.48),inset 0 1px 0 rgba(255,255,255,0.18)}.bp:active{transform:translateY(0);box-shadow:var(--shp)}
+    .bg{background:rgba(255,255,255,0.02);color:var(--t2);border:1px solid var(--bd)}.bg:hover{border-color:var(--bd2);color:var(--tx);background:rgba(255,255,255,0.045)}
+    .bpu{background:linear-gradient(180deg,#A888E6,#8B5FD0);color:#fff;box-shadow:var(--shpu),inset 0 1px 0 rgba(255,255,255,0.18)}.bpu:hover{transform:translateY(-1px);box-shadow:0 7px 22px rgba(155,114,221,0.46),inset 0 1px 0 rgba(255,255,255,0.18)}.bpu:active{transform:translateY(0)}
     .bsm{padding:6px 13px;font-size:12px}.blg{padding:13px 26px;font-size:15px;font-weight:700}
     .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
-    .card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;transition:border-color .15s}
-    .card:hover{border-color:var(--bd2)}
+    .card{background:linear-gradient(180deg,#21345C,#1A2A49);border:1px solid var(--bd);border-radius:var(--r);padding:16px;box-shadow:var(--sh1);transition:border-color .2s,box-shadow .2s}
+    .card:hover{border-color:var(--bd2);box-shadow:var(--sh2)}
     .pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:var(--rp);font-size:11px;font-weight:600;white-space:nowrap}
     .pg{background:var(--gl);color:#EF5D47}.pa{background:var(--amb);color:var(--am)}.pr{background:var(--rdb);color:var(--rd)}.pb{background:var(--blb);color:var(--bl)}.pp{background:var(--pub);color:var(--pu)}.pd{background:var(--s3);color:var(--t2)}
     .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-weight:800;flex-shrink:0}
-    .ifield{width:100%;background:var(--s3);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx);padding:10px 13px;transition:border-color .15s}
-    .ifield:focus{border-color:var(--g)}.ifield::placeholder{color:var(--t3)}
+    .ifield{width:100%;background:rgba(0,0,0,0.18);border:1px solid var(--bd);border-radius:var(--rs);color:var(--tx);padding:11px 13px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.22);transition:border-color .15s,box-shadow .15s}
+    .ifield:focus{border-color:var(--g);box-shadow:inset 0 1px 2px rgba(0,0,0,0.22),0 0 0 3px var(--gl)}.ifield::placeholder{color:var(--t3)}
     select.ifield option{background:var(--s2)}
     .ndot{width:7px;height:7px;border-radius:50%;background:var(--g);animation:pulse 2s infinite;flex-shrink:0}
     .b2b-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--rp);font-size:10px;font-weight:700;background:var(--pub);color:var(--pu);border:1px solid rgba(155,114,221,0.3)}
@@ -318,7 +322,14 @@ function findSwaps(me, listings) {
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 // Brand logo. Uses the PNG at public/logo.png (swap that file to change it).
 function Logo({ height = 28, style = {}, onClick }) {
-  return <img src="/logo.png" alt="BarterThat" onClick={onClick} style={{ height, width: "auto", display: "block", ...style }} />;
+  // Crisp typographic wordmark — native to the dark theme, scales perfectly, no
+  // baked-in white box (the old raster logo.png was RGB with no alpha → looked like
+  // a sticker). fontSize is driven by `height` so existing callers keep their sizing.
+  return (
+    <div onClick={onClick} aria-label="BarterThat" style={{ display: "inline-flex", alignItems: "baseline", fontFamily: "var(--fd)", fontWeight: 900, fontSize: height, letterSpacing: "-0.035em", lineHeight: 1, whiteSpace: "nowrap", cursor: onClick ? "pointer" : "default", ...style }}>
+      <span style={{ color: "var(--g)" }}>Barter</span><span style={{ color: "var(--tx)" }}>That</span>
+    </div>
+  );
 }
 function Av({ ini, avc, size = 38, style = {}, onClick }) {
   return <div className="av" onClick={onClick} style={{ width: size, height: size, background: avc, fontSize: size * .32, color: "rgba(255,255,255,0.9)", ...style }}>{ini}</div>;
@@ -642,10 +653,7 @@ function Splash({ onEnter, onHow }) {
       <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(239,93,71,0.14) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div className="fu" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 640 }}>
         <div className="pill pp" style={{ marginBottom: 18 }}>the marketplace where money isn't the point</div>
-        <div style={{ marginBottom: 10, display: "flex", justifyContent: "center" }}>
-          <Logo style={{ height: "clamp(48px,11vw,82px)" }} />
-        </div>
-        <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>where it's at</div>
+        <div style={{ fontSize: 12, color: "var(--t3)", marginBottom: 10, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 600 }}>where it's at</div>
         <div style={{ fontFamily: "var(--fd)", fontWeight: 900, letterSpacing: "-.5px", fontSize: "clamp(18px,4.4vw,26px)", margin: "2px auto 14px", color: "var(--am)" }}>
           Barter That<span style={{ color: "var(--g)", opacity: .7 }}>.. that</span><span style={{ color: "var(--g)", opacity: .45 }}>.. that</span><span style={{ color: "var(--g)", opacity: .25 }}>..</span>
         </div>
