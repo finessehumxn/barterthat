@@ -263,30 +263,45 @@ const storage = {
 // A node "wants" another node's category. A valid loop is a cycle where
 // everyone receives something on their wishlist: you → A → B → you.
 function findSwaps(me, listings) {
-  const wantsOffer = (a, b) => {
-    const aWants = a.id === "you" ? (me.wants || []) : (a.wants || []);
-    const bOffer = b.id === "you" ? (me.offer) : b.cat;
-    return aWants.includes(bOffer);
-  };
-  const you = { id: "you", name: "You", ini: "YOU", avc: "var(--g)", offer: me.offer, wants: me.wants };
+  const offerOf = x => (x.id === "you" ? me.offer : x.cat);
+  const wantsOf = x => (x.id === "you" ? (me.wants || []) : (x.wants || []));
+  // "x wants y's offer"  ⇒  in a trade, y hands x that offer.
+  const wantsOffer = (x, y) => wantsOf(x).includes(offerOf(y));
+  const you = { id: "you", name: "You", ini: "YOU", avc: "var(--g)", cat: me.offer, wants: me.wants };
   const pool = listings.filter(l => l.uid !== me.uid && l.rate >= 0);
-  const direct = [], loops3 = [], loops4 = [];
 
+  // DIRECT 1:1 — you and a each want the other's offer. Track who gives what.
+  const direct = [];
   for (const a of pool) {
-    if (wantsOffer(you, a) && wantsOffer(a, you)) direct.push([you, a]);
+    if (wantsOffer(you, a) && wantsOffer(a, you)) direct.push({ partner: a, youGive: me.offer, youGet: a.cat });
   }
-  for (const a of pool) for (const b of pool) {
-    if (a.id === b.id) continue;
-    if (wantsOffer(you, a) && wantsOffer(a, b) && wantsOffer(b, you)) loops3.push([you, a, b]);
+
+  // CIRCULAR LOOPS — 3- and 4-way cycles where no single pair matches but a chain does.
+  const rawLoops = [];
+  for (const a of pool) {
+    if (!wantsOffer(you, a)) continue;                       // a can hand YOU something you want
+    for (const b of pool) {
+      if (b.id === a.id || !wantsOffer(a, b)) continue;       // a wants b's offer
+      if (wantsOffer(b, you)) rawLoops.push([you, a, b]);     // 3-way: closes back to you
+      for (const c of pool) {
+        if (c.id === a.id || c.id === b.id) continue;
+        if (wantsOffer(b, c) && wantsOffer(c, you)) rawLoops.push([you, a, b, c]); // 4-way
+      }
+    }
   }
-  for (const a of pool) for (const b of pool) for (const c of pool) {
-    if (a.id === b.id || b.id === c.id || a.id === c.id) continue;
-    if (wantsOffer(you, a) && wantsOffer(a, b) && wantsOffer(b, c) && wantsOffer(c, you)) loops4.push([you, a, b, c]);
+  // Express each cycle as giving-order hops: goods flow you → last → … → a → you,
+  // and each person simply hands over THEIR OWN offer to the next.
+  const seen = new Set();
+  const loops = [];
+  for (const cyc of rawLoops) {
+    const order = [you, ...cyc.slice(1).reverse()];          // giving order
+    const key = order.map(n => n.id).join(">");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const hops = order.map((n, i) => ({ from: n, to: order[(i + 1) % order.length], gives: offerOf(n) }));
+    loops.push({ nodes: order, hops, youGet: offerOf(order[order.length - 1]) });
   }
-  // de-dupe loops by member-set+order signature, cap counts
-  const sig = arr => arr.map(n => n.id).join(">");
-  const uniq = arr => { const seen = new Set(); return arr.filter(l => { const s = sig(l); if (seen.has(s)) return false; seen.add(s); return true; }); };
-  return { direct: direct.slice(0, 8), loops: [...uniq(loops3), ...uniq(loops4)].slice(0, 6) };
+  return { direct: direct.slice(0, 8), loops: loops.slice(0, 6) };
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
@@ -1692,15 +1707,22 @@ function Match({ listings, user, onView, onPropose }) {
 
         {results.direct.length > 0 && <>
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--g)", marginBottom: 10, textTransform: "uppercase", letterSpacing: ".06em" }}>⇄ direct swaps ({results.direct.length})</div>
-          {results.direct.map(([, b]) => (
+          {results.direct.map(({ partner: b, youGive, youGet }) => (
             <div key={"d" + b.id} className="card fu" style={{ marginBottom: 9 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <Av ini={b.ini} avc={b.avc} size={38} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{b.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--t2)" }}>{b.cat} · you both want each other's offer</div>
+                  <div style={{ fontSize: 11, color: "var(--t2)" }}>{b.loc || b.cat}</div>
                 </div>
                 <Score score={b.score} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap", marginTop: 10, padding: "9px 11px", background: "rgba(46,196,140,0.08)", borderRadius: "var(--rs)", fontSize: 11.5 }}>
+                <span style={{ color: "var(--t2)" }}>You give</span>
+                <span style={{ fontWeight: 700, color: "var(--g)" }}>{youGive}</span>
+                <span style={{ color: "var(--t3)" }}>⇄</span>
+                <span style={{ color: "var(--t2)" }}>get</span>
+                <span style={{ fontWeight: 700, color: "var(--g)" }}>{youGet}</span>
               </div>
               <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
                 <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(b)}>view</button>
@@ -1714,25 +1736,30 @@ function Match({ listings, user, onView, onPropose }) {
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--pu)", margin: "16px 0 10px", textTransform: "uppercase", letterSpacing: ".06em" }}>🔄 circular trade loops ({results.loops.length})</div>
           {results.loops.map((loop, li) => (
             <div key={"l" + li} className="card fu" style={{ marginBottom: 10, borderColor: "rgba(155,114,221,0.3)", animationDelay: `${li * .06}s` }}>
-              <div style={{ fontSize: 11, color: "var(--pu)", marginBottom: 10, fontWeight: 700 }}>{loop.length}-way loop — nobody pays, everybody wins</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, overflowX: "auto", paddingBottom: 4 }}>
-                {loop.map((n, ni) => (
-                  <div key={ni} style={{ display: "contents" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 56 }}>
-                      <Av ini={n.ini} avc={n.id === "you" ? "var(--g)" : n.avc} size={38} />
-                      <span style={{ fontSize: 9, color: "var(--t2)", textAlign: "center", maxWidth: 60, lineHeight: 1.2 }}>{n.id === "you" ? "You" : n.name.split(" ")[0]}</span>
+              <div style={{ fontSize: 11, color: "var(--pu)", marginBottom: 12, fontWeight: 700 }}>{loop.nodes.length}-way loop — nobody pays, everybody wins</div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {loop.hops.map((h, hi) => {
+                  const youGiver = h.from.id === "you";
+                  return (
+                    <div key={hi}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Av ini={h.from.ini} avc={youGiver ? "var(--g)" : h.from.avc} size={32} />
+                        <div style={{ flex: 1, minWidth: 0, fontSize: 12, lineHeight: 1.45 }}>
+                          <span style={{ fontWeight: 700, color: youGiver ? "var(--g)" : "var(--tx)" }}>{youGiver ? "You" : h.from.name.split(" ")[0]}</span>
+                          <span style={{ color: "var(--t2)" }}> give </span>
+                          <span style={{ fontWeight: 700, color: "var(--pu)" }}>{h.gives}</span>
+                          <span style={{ color: "var(--t3)" }}> → {h.to.id === "you" ? "you" : h.to.name.split(" ")[0]}</span>
+                        </div>
+                      </div>
+                      {hi < loop.hops.length - 1 && <div style={{ width: 2, height: 13, background: "var(--bd2)", marginLeft: 15 }} />}
                     </div>
-                    <div className="arrowline" />
-                  </div>
-                ))}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 56 }}>
-                  <Av ini={loop[0].ini} avc="var(--g)" size={38} style={{ opacity: .5 }} />
-                  <span style={{ fontSize: 9, color: "var(--t3)" }}>back to You</span>
-                </div>
+                  );
+                })}
               </div>
+              <div style={{ marginTop: 11, fontSize: 11.5, color: "var(--g)", fontWeight: 700, textAlign: "center" }}>✓ everybody gets what they wanted — you get {loop.youGet}</div>
               <div style={{ display: "flex", gap: 7, marginTop: 12 }}>
-                <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(loop[1].id === "you" ? loop[2] : loop[1])}>view chain</button>
-                <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(loop[1])}>start loop</button>
+                <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(loop.nodes[1])}>view chain</button>
+                <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(loop.nodes[1])}>start loop</button>
               </div>
             </div>
           ))}
