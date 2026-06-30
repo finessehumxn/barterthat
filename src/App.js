@@ -2168,6 +2168,12 @@ function ChatThread({ t, user, onAccept, onComplete }) {
           <button className="btn bp bsm" style={{ width: "100%" }} onClick={() => onComplete(t)}>confirm completed ✓</button>
         </div>
       )}
+      {t.status === "confirming" && (
+        <div style={{ padding: "11px 14px", borderTop: "1px solid var(--bd)", textAlign: "center" }}>
+          <div style={{ fontSize: 11.5, color: "var(--pu)", fontWeight: 700 }}>✓ You confirmed it's done</div>
+          <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 3, lineHeight: 1.5 }}>Waiting for {String(t.wu || "them").split(" ")[0]} to confirm too — then tokens release and you both earn reputation. This two-sided confirm is what makes BarterThat ratings real.</div>
+        </div>
+      )}
       {t.status === "completed"
         ? <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · tokens awarded</div>
         : <div style={{ padding: "9px 12px", borderTop: "1px solid var(--bd)", display: "flex", gap: 6, alignItems: "center" }}>
@@ -2206,7 +2212,7 @@ function Trades({ trades, user, onAccept, onComplete }) {
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-              <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : "pg"}`}>{t.status}</span>
+              <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : t.status === "confirming" ? "pp" : "pg"}`}>{t.status === "confirming" ? "confirming ✓" : t.status}</span>
               <span style={{ fontSize: 10, color: "var(--t3)" }}>{t.time}</span>
             </div>
           </div>
@@ -2748,12 +2754,30 @@ export default function App() {
     setTrades(p => p.map(x => x.id === t.id ? { ...x, status: "escrow" } : x));
   };
 
-  const handleComplete = async t => {
-    if (t._real) await db.updateTrade(t.id, { status: "completed" });
-    setTrades(p => p.map(x => x.id === t.id ? { ...x, status: "completed" } : x));
+  // Two-sided completion: a trade only completes (and pays out + builds reputation)
+  // when BOTH people confirm it happened — that's what makes the rating real, not
+  // self-claimed. Demo trades simulate the other side confirming a moment later.
+  const finalizeTrade = async t => {
+    if (t._real) await db.updateTrade(t.id, { status: "completed", done: { me: true, them: true } });
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, status: "completed", done: { me: true, them: true } } : x));
     const earned = Math.max(10, Math.round((t.topup || 50) / 5));
-    if (user) persist({ ...user, credits: (user.credits || 0) + earned, swaps: (user.swaps || 0) + 1 });
-    flash(`⬡ +${earned} tokens earned`);
+    if (user) persist({
+      ...user,
+      credits: (user.credits || 0) + earned,
+      swaps: (user.swaps || 0) + 1,
+      score: Math.min(100, (user.score || 72) + 1),   // reputation earned by completed trades
+    });
+    flash(`✓ Trade complete — ⬡ +${earned} tokens · reputation +1`);
+  };
+  const handleComplete = async t => {
+    if (t.status === "completed") return;
+    // If the other person already confirmed, this click closes it out.
+    if (t.done && t.done.them) { await finalizeTrade(t); return; }
+    const patch = { status: "confirming", done: { ...(t.done || {}), me: true } };
+    if (t._real) await db.updateTrade(t.id, patch);
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, ...patch } : x));
+    flash(`✓ You confirmed — completes once ${String(t.wu || "they").split(" ")[0]} confirms too.`);
+    if (!t._real) setTimeout(() => finalizeTrade(t), 2200); // demo: simulate the other side
   };
 
   const handleEarn = (amount, patch = {}) => {
