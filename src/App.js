@@ -1585,7 +1585,7 @@ function Match({ listings, user, onView, onPropose }) {
   const [wants, setWants] = useState(user?.wants?.length ? user.wants : ["Beauty & Personal Care", "Tech & Digital Services"]);
   const [run, setRun] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [ai, setAi] = useState(null);       // { suggestions:[...] } | null
+  const [narr, setNarr] = useState({});     // { "d-<id>" | "l-<idx>": { fit, story } } — Claude's narration of real swaps
   const [aiLoading, setAiLoading] = useState(false);
 
   const [openGroups, setOpenGroups] = useState(false);
@@ -1597,25 +1597,39 @@ function Match({ listings, user, onView, onPropose }) {
   }, [run, offer, wants, visible, user]);
 
   const find = (w = wants) => {
-    setLoading(true); setRun(false); setAi(null);
+    setLoading(true); setRun(false); setNarr({});
     setTimeout(() => { setLoading(false); setRun(true); }, 950);
-    // Real Claude-powered suggestions (server-side). Silently no-ops if AI is offline.
+    // Narrate the REAL swaps our deterministic engine found — Claude only ranks &
+    // explains them (never invents). Graceful no-op if AI is offline.
+    const swaps = findSwaps({ uid: user?.id || -1, offer, wants: w }, visible);
+    const keyOf = [];
+    const compact = [];
+    swaps.direct.forEach(d => {
+      keyOf[compact.length] = "d-" + d.partner.id;
+      compact.push({ i: compact.length, kind: "direct", chain: `You give ${d.youGive}, you get ${d.youGet} from ${d.partner.name}` });
+    });
+    swaps.loops.forEach((lp, k) => {
+      keyOf[compact.length] = "l-" + k;
+      const chain = lp.hops.map(h => `${h.from.id === "you" ? "You" : h.from.name.split(" ")[0]} give ${h.gives}`).join(" → ") + ` → you get ${lp.youGet}`;
+      compact.push({ i: compact.length, kind: "loop", chain });
+    });
+    if (!compact.length) { setAiLoading(false); return; }
     setAiLoading(true);
     fetch("/api/match", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        me: { uid: user?.id || -1, offer, wants: w },
-        listings: visible.map(l => ({ id: l.id, uid: l.uid, name: l.name, cat: l.cat, wants: l.wants, rate: l.rate, score: l.score, dist: l.dist }))
-      })
+      body: JSON.stringify({ swaps: compact })
     })
-      .then(r => r.ok ? r.json() : { suggestions: [] })
-      .then(d => setAi(d && Array.isArray(d.suggestions) ? d : { suggestions: [] }))
-      .catch(() => setAi({ suggestions: [] }))
+      .then(r => r.ok ? r.json() : { ranked: [] })
+      .then(d => {
+        const map = {};
+        (Array.isArray(d.ranked) ? d.ranked : []).forEach(rk => { const key = keyOf[rk.i]; if (key) map[key] = { fit: rk.fit, story: rk.story }; });
+        setNarr(map);
+      })
+      .catch(() => setNarr({}))
       .finally(() => setAiLoading(false));
   };
   const findAnything = () => { const all = CAT_LABELS; setWants(all); find(all); };
-  const byId = id => listings.find(l => String(l.id) === String(id));
 
   return (
     <div style={{ padding: "14px 14px 90px" }}>
@@ -1666,33 +1680,11 @@ function Match({ listings, user, onView, onPropose }) {
 
       {loading && <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: 26 }}><div className="spin" /><span style={{ fontSize: 13, color: "var(--t2)" }}>checking {listings.length} people for trades that work…</span></div>}
 
-      {run && !loading && (aiLoading || (ai && ai.suggestions.length > 0)) && (
-        <div className="card fu" style={{ marginBottom: 14, borderColor: "rgba(155,114,221,0.35)", background: "linear-gradient(180deg, rgba(155,114,221,0.08), transparent)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: aiLoading ? 0 : 10 }}>
-            <span className="pill pp">◆ Claude AI</span>
-            <span style={{ fontSize: 11, color: "var(--pu)", fontWeight: 700 }}>{aiLoading ? "thinking through your best swaps…" : "picked these for you"}</span>
-          </div>
-          {aiLoading && <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 4px" }}><div className="spin" /><span style={{ fontSize: 12, color: "var(--t2)" }}>reasoning over {listings.length} traders…</span></div>}
-          {!aiLoading && ai && ai.suggestions.map((s, i) => {
-            const l = byId(s.id);
-            return (
-              <div key={"ai" + i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderTop: i ? "1px solid var(--bd)" : "none" }}>
-                {l ? <Av ini={l.ini} avc={l.avc} size={34} /> : <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--pu)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🔄</div>}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700 }}>{s.title}</span>
-                    <span className="pill" style={{ background: s.kind === "loop" ? "rgba(155,114,221,0.18)" : "rgba(46,196,140,0.16)", color: s.kind === "loop" ? "var(--pu)" : "var(--g)", fontSize: 9 }}>{s.kind === "loop" ? "loop" : "direct"}</span>
-                    {typeof s.fit === "number" && <span style={{ fontSize: 10, color: "var(--t3)" }}>· {s.fit}% fit</span>}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "var(--t2)", marginTop: 3, lineHeight: 1.5 }}>{s.reason}</div>
-                  {l && <div style={{ display: "flex", gap: 7, marginTop: 8 }}>
-                    <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(l)}>view</button>
-                    <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(l)}>{s.kind === "loop" ? "start loop" : "propose"}</button>
-                  </div>}
-                </div>
-              </div>
-            );
-          })}
+      {run && !loading && aiLoading && (
+        <div className="card fu" style={{ marginBottom: 14, display: "flex", alignItems: "center", gap: 10, borderColor: "rgba(155,114,221,0.35)", background: "linear-gradient(180deg, rgba(155,114,221,0.08), transparent)" }}>
+          <div className="spin" />
+          <span className="pill pp">◆ Claude AI</span>
+          <span style={{ fontSize: 12, color: "var(--pu)", fontWeight: 700 }}>ranking your best swaps…</span>
         </div>
       )}
 
@@ -1724,6 +1716,7 @@ function Match({ listings, user, onView, onPropose }) {
                 <span style={{ color: "var(--t2)" }}>get</span>
                 <span style={{ fontWeight: 700, color: "var(--g)" }}>{youGet}</span>
               </div>
+              {narr["d-" + b.id]?.story && <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginTop: 8, fontSize: 11.5, color: "var(--t2)", lineHeight: 1.5 }}><span className="pill pp" style={{ fontSize: 8, flexShrink: 0 }}>◆ AI</span><span>{narr["d-" + b.id].story}{typeof narr["d-" + b.id].fit === "number" ? ` · ${narr["d-" + b.id].fit}% fit` : ""}</span></div>}
               <div style={{ display: "flex", gap: 7, marginTop: 11 }}>
                 <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(b)}>view</button>
                 <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onPropose(b)}>propose</button>
@@ -1757,6 +1750,7 @@ function Match({ listings, user, onView, onPropose }) {
                 })}
               </div>
               <div style={{ marginTop: 11, fontSize: 11.5, color: "var(--g)", fontWeight: 700, textAlign: "center" }}>✓ everybody gets what they wanted — you get {loop.youGet}</div>
+              {narr["l-" + li]?.story && <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginTop: 9, fontSize: 11.5, color: "var(--t2)", lineHeight: 1.5 }}><span className="pill pp" style={{ fontSize: 8, flexShrink: 0 }}>◆ AI</span><span>{narr["l-" + li].story}{typeof narr["l-" + li].fit === "number" ? ` · ${narr["l-" + li].fit}% fit` : ""}</span></div>}
               <div style={{ display: "flex", gap: 7, marginTop: 12 }}>
                 <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => onView(loop.nodes[1])}>view chain</button>
                 <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => onPropose(loop.nodes[1])}>start loop</button>
