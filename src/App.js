@@ -728,9 +728,9 @@ const PITCH = {
     note: "Tailwinds: $455B gig economy, $250B+ resale market, AI matching now viable at scale, and a cash-strapped consumer actively seeking alternatives.",
   },
   // — traction —
-  tractionTitle: "$380M swapped and compounding — network effects are kicking in.",
+  tractionTitle: "Shipped and live worldwide — on the App Store, Google Play & web. The safe, accountable layer barter has always lacked.",
   gmvTotal: "$380M",
-  gmvNote: "Gross swap value (GMV), $M — trailing 8 quarters",
+  gmvNote: "Illustrative GMV model ($M) — 3-yr projection, pre-launch (not actuals)",
   gmv: [18, 31, 54, 88, 142, 226, 310, 380],
   traders: "2.4M",
   cities: "180+",
@@ -754,7 +754,7 @@ const PITCH = {
     ["15%", "Trust, ops & compliance"],
     ["10%", "G&A"],
   ],
-  milestones: "Milestones: 25 cities · 5M verified traders · Barter Tokens ledger live · $1B GMV run-rate · Series A in 18 months.",
+  milestones: "Targets to Series A (~18 mo): 25 cities · 5M traders · Barter Tokens ledger live · $1B GMV run-rate. (Projections, not current.)",
   // — contact —
   contactEmail: "support@barterthat.app",
   company: "BarterThat, Inc.",
@@ -923,7 +923,7 @@ function InvestorPitch({ onBack, onEnter }) {
         </PitchSection>
 
         {/* TRACTION */}
-        <PitchSection tag="04 · traction" title={PITCH.tractionTitle}>
+        <PitchSection tag="04 · live & the model" title={PITCH.tractionTitle}>
           <div className="card" style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 12 }}>{PITCH.gmvNote}</div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 7, height: 130 }}>
@@ -936,10 +936,10 @@ function InvestorPitch({ onBack, onEnter }) {
             </div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 9 }}>
-            <PitchStat n={PITCH.traders} l="verified traders" />
-            <PitchStat n={PITCH.cities} l="active cities" />
-            <PitchStat n={PITCH.retention} l={PITCH.retentionLabel} c="var(--am)" />
-            <PitchStat n={PITCH.momGrowth} l={PITCH.momGrowthLabel} c="var(--pu)" />
+            <PitchStat n="Live" l="iOS · Android · web" c="var(--g)" />
+            <PitchStat n="Global" l="available worldwide" />
+            <PitchStat n="3 & 4-way" l="AI loops no rival does" c="var(--pu)" />
+            <PitchStat n="$12B/yr" l="barter market today · IRTA" c="var(--am)" />
           </div>
         </PitchSection>
 
