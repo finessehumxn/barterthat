@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",
-    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^8.4.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",

@@ -1,32 +1,15 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
-import { AdMob } from "@capacitor-community/admob";
 import { ALL_CATS, CAT_GROUPS, POPULAR_CAT_IDS } from "./categories";
 import * as db from "./db";
 import { LANGUAGES, langByLabel, translateText, speak, TTS_OK, linkify } from "./comms";
 import * as iap from "./iap";
 
-// ── ADMOB (real rewarded ads → tokens, native apps only) ───────────────────
-const ADMOB = {
-  appId: "ca-app-pub-6152684967386284~8863838009",
-  rewarded: "ca-app-pub-6152684967386284/5440432460",
-};
+// Ads removed for launch — no AdMob, no advertising ID / IDFA, no ad-tracking
+// (App Review 5.1.2). IS_NATIVE stays for platform checks; the ad fns are inert stubs.
 const IS_NATIVE = typeof Capacitor !== "undefined" && Capacitor.getPlatform && Capacitor.getPlatform() !== "web";
-let admobReady = false;
-async function initAdMob() {
-  if (!IS_NATIVE || admobReady) return;
-  try { await AdMob.initialize({}); admobReady = true; } catch (e) {}
-}
-// Resolves true only if the user actually earned the reward (watched the ad).
-async function showRewardedAd() {
-  if (!IS_NATIVE) return false;
-  try {
-    await initAdMob();
-    await AdMob.prepareRewardVideoAd({ adId: ADMOB.rewarded });
-    const reward = await AdMob.showRewardVideoAd();
-    return !!reward;
-  } catch (e) { return false; }
-}
+async function initAdMob() { /* no-op — ads removed */ }
+async function showRewardedAd() { return false; /* ads removed */ }
 
 const G = () => (
   <style>{`
@@ -2872,15 +2855,11 @@ function EarnTokens({ user, listings, onEarn, onNav, onSubscribe }) {
   const watchAd = async () => {
     if (adsToday >= 5 || adBusy) return;
     setAdBusy(true);
-    let earned;
-    if (IS_NATIVE) {
-      earned = await showRewardedAd();            // real AdMob rewarded ad
-    } else {
-      await new Promise(r => setTimeout(r, 1600)); // web preview — no ad network on web
-      earned = true;
-    }
+    // Ads removed for launch — no ad network, no advertising ID / tracking. This is
+    // now a simple daily activity bonus you can claim a few times a day.
+    await new Promise(r => setTimeout(r, 700));
     setAdBusy(false);
-    if (earned) onEarn(5, setClaims({ adsDate: today, adsCount: adsToday + 1 }));
+    onEarn(5, setClaims({ adsDate: today, adsCount: adsToday + 1 }));
   };
   const copyCode = () => {
     try { navigator.clipboard?.writeText(`Join me on BarterThat — trade skills & goods, no cash. Use my code ${code}: https://barterthat.vercel.app`); } catch (e) {}
@@ -2923,7 +2902,7 @@ function EarnTokens({ user, listings, onEarn, onNav, onSubscribe }) {
 
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", margin: "16px 0 9px" }}>every day</div>
       <Row icon="📅" title="Daily check-in" reward={10} sub="Open the app and check in once a day. Comes back tomorrow." done={dailyDone} doneLabel="today" cta="check in" onClick={() => onEarn(10, setClaims({ daily: today }))} />
-      <Row icon="▶" title={adBusy ? "Watching ad…" : "Watch a quick ad"} reward={5} sub={`Supports the platform. Up to 5/day — ${5 - adsToday} left today.`} done={adsToday >= 5} doneLabel="maxed today" cta={adBusy ? "…" : "watch"} disabled={adBusy} onClick={watchAd} />
+      <Row icon="⚡" title={adBusy ? "Claiming…" : "Daily activity bonus"} reward={5} sub={`A little thank-you for staying active. Up to 5/day — ${5 - adsToday} left today.`} done={adsToday >= 5} doneLabel="maxed today" cta={adBusy ? "…" : "claim"} disabled={adBusy} onClick={watchAd} />
 
       <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", margin: "16px 0 9px" }}>bigger rewards</div>
       <div className="card" style={{ marginBottom: 9 }}>
