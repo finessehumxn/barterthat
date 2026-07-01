@@ -2774,6 +2774,61 @@ function CoachMarks({ onDone }) {
 // ── HOW-IT-WORKS VIDEO ───────────────────────────────────────────────────────
 // Plays the bundled 60-sec explainer. If REACT_APP_INTRO_VIDEO (a YouTube URL)
 // is set, it embeds that instead — so you can swap in a real promo video later.
+// First-run interactive demo — teaches the concept (esp. the multi-way loop) with
+// zero dependency on a video file, so a new user never lands confused.
+function InteractiveDemo({ onDone }) {
+  const [i, setI] = useState(0);
+  const A = (ini, c, on) => <div className="av" style={{ width: 40, height: 40, background: c, color: "#fff", fontSize: 13, border: on ? "2px solid var(--g)" : "2px solid transparent" }}>{ini}</div>;
+  const arrow = <span style={{ color: "var(--t3)", fontSize: 18 }}>→</span>;
+  const steps = [
+    {
+      icon: "⇄", title: "Trade without cash",
+      body: <>You've got skills, gear, or stuff — so does everyone here. BarterThat helps you <b style={{ color: "var(--tx)" }}>swap for what you actually want</b>. No money changes hands.</>,
+      visual: <div style={{ fontSize: 52, textAlign: "center" }}>⇄</div>,
+    },
+    {
+      icon: "🤝", title: "Sometimes it's a simple swap",
+      body: <>You want what they offer, they want what you offer. That's a <b style={{ color: "var(--tx)" }}>direct swap</b> — you both win, done.</>,
+      visual: <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--am)", fontSize: 22 }}>⇄</span>{A("AN", "#7A5FD0")}</div>,
+    },
+    {
+      icon: "🔄", title: "The magic: multi-way loops", accent: true,
+      body: <>Usually there's no perfect 1:1 match. So our AI finds a <b style={{ color: "var(--pu)" }}>chain</b>: you help someone, they help someone, that person helps <b style={{ color: "var(--g)" }}>you</b>. Everyone gives once — everyone gets what they wanted — <b style={{ color: "var(--tx)" }}>nobody pays</b>.</>,
+      visual: <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--t2)" }}>give design →</span>{A("AN", "#7A5FD0")}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("AN", "#7A5FD0")}<span style={{ color: "var(--t2)" }}>gives photos →</span>{A("MR", "#C98A3A")}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("MR", "#C98A3A")}<span style={{ color: "var(--t2)" }}>gives you a website →</span>{A("YOU", "var(--g)", true)}</div>
+        <div style={{ fontSize: 12, color: "var(--g)", fontWeight: 700, marginTop: 2 }}>✓ everybody wins</div>
+      </div>,
+    },
+    {
+      icon: "🔒", title: "Safe with strangers",
+      body: <>Real <b style={{ color: "var(--tx)" }}>ID verification</b>, two-sided confirmation, and honest ratings mean people show up and follow through. No-shows lose their standing.</>,
+      visual: <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}><span className="pill pg">✓ ID Verified</span><span className="pill pd">both confirm</span><span className="pill pa">★ ratings</span></div>,
+    },
+  ];
+  const last = i === steps.length - 1;
+  const s = steps[i];
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 340, background: "rgba(8,12,20,0.94)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+      <div className="card fu" key={i} style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <span className={`pill ${s.accent ? "pp" : "pg"}`}>{s.icon} how it works · {i + 1}/{steps.length}</span>
+          <button onClick={onDone} style={{ background: "none", border: "none", color: "var(--t3)", fontSize: 12, cursor: "pointer" }}>skip</button>
+        </div>
+        <div style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "22px 16px", marginBottom: 16, minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.visual}</div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 19, fontWeight: 800, marginBottom: 8 }}>{s.title}</div>
+        <div style={{ fontSize: 14, color: "var(--t2)", lineHeight: 1.6, marginBottom: 18 }}>{s.body}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", gap: 5, flex: 1 }}>{steps.map((_, n) => <div key={n} style={{ width: n === i ? 20 : 7, height: 7, borderRadius: 100, background: n === i ? "var(--g)" : "var(--bd2)", transition: "all .2s" }} />)}</div>
+          {i > 0 && <button className="btn bg bsm" onClick={() => setI(i - 1)}>back</button>}
+          <button className="btn bp bsm" onClick={() => last ? onDone() : setI(i + 1)}>{last ? "find my first swap →" : "next"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function VideoModal({ onDone }) {
   const yt = process.env.REACT_APP_INTRO_VIDEO;
   const embed = yt ? yt.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/") : null;
@@ -2864,6 +2919,8 @@ export default function App() {
 
   useEffect(() => {
     initAdMob(); // no-op on web
+    // First-ever open: auto-show the how-it-works demo so nobody lands confused.
+    try { if (!localStorage.getItem("bt_demo_seen")) setShowHow(true); } catch (e) {}
     // Returned from Stripe Identity? Confirm the result and mark the profile verified.
     if (new URLSearchParams(window.location.search).get("idcheck") === "done") {
       try {
@@ -3170,7 +3227,7 @@ export default function App() {
   };
 
   const enter = d => { if (d === "signup") setScreen("signup"); else if (d === "login") setScreen("login"); else if (d === "pitch") setScreen("pitch"); else if (d === "admin") setScreen("admin"); else { setScreen("main"); setNav("browse"); } };
-  if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <VideoModal onDone={() => setShowHow(false)} />}</>;
+  if (screen === "splash") return <><G /><Splash onEnter={enter} onHow={() => setShowHow(true)} />{showHow && <InteractiveDemo onDone={() => { setShowHow(false); try { localStorage.setItem("bt_demo_seen","1"); } catch(e){} }} />}</>;
   if (screen === "login") return <><G /><Login onLogin={handleLogin} onSignup={() => setScreen("signup")} onBack={() => setScreen("splash")} /></>;
   if (screen === "verify") return <><G /><VerifyEmail email={pendingEmail} onLogin={() => setScreen("login")} onBack={() => setScreen("splash")} /></>;
   if (screen === "signup") return <><G /><Signup onDone={handleSignup} onLogin={() => setScreen("login")} /></>;
@@ -3213,7 +3270,7 @@ export default function App() {
       {renderMain()}
       <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} />
       {coach && <CoachMarks onDone={dismissCoach} />}
-      {showHow && <VideoModal onDone={() => setShowHow(false)} />}
+      {showHow && <InteractiveDemo onDone={() => { setShowHow(false); try { localStorage.setItem("bt_demo_seen","1"); } catch(e){} }} />}
       {proposeTo && <ProposeModal l={proposeTo} user={user} onClose={() => setProposeTo(null)} onSend={handleSend} />}
       {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(232,177,74,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
     </>
