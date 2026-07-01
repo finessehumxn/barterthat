@@ -2145,8 +2145,11 @@ function ProposeModal({ l, user, onClose, onSend }) {
 // ── TRADES ────────────────────────────────────────────────────────────────────
 // Live chat thread for one trade — realtime messages, translate, read-aloud,
 // links, photos/videos, voice notes, and the secured video call.
-function ChatThread({ t, user, onAccept, onComplete }) {
+function ChatThread({ t, user, onAccept, onComplete, onRate }) {
   const [msgs, setMsgs] = useState(t._real ? null : (t.msgs || []).map((m, i) => ({ id: "s" + i, from_uid: m.from === "me" ? user?.id : "them", data: { text: m.txt } })));
+  const [rStars, setRStars] = useState(t.myRating || 0);
+  const [rText, setRText] = useState("");
+  const [rDone, setRDone] = useState(!!t.myRating);
   const [text, setText] = useState("");
   const [lang, setLang] = useState(user?.lang || "English");
   const [autoTr, setAutoTr] = useState(false);
@@ -2270,7 +2273,19 @@ function ChatThread({ t, user, onAccept, onComplete }) {
         </div>
       )}
       {t.status === "completed"
-        ? <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · tokens awarded</div>
+        ? ((rDone || t.myRating)
+            ? <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · you rated {String(t.wu || "them").split(" ")[0]} <span style={{ color: "var(--am)" }}>{"★".repeat(rStars || t.myRating || 0)}</span></div>
+            : <div style={{ padding: "13px 14px", borderTop: "1px solid var(--bd)", textAlign: "center" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>How was your trade with {String(t.wu || "them").split(" ")[0]}?</div>
+                <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 10 }}>
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button key={n} onClick={() => setRStars(n)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 27, lineHeight: 1, padding: 0, color: n <= rStars ? "var(--am)" : "var(--s4)", transition: "color .1s, transform .1s" }}>★</button>
+                  ))}
+                </div>
+                <input className="ifield" value={rText} onChange={e => setRText(e.target.value)} placeholder="Add a quick review (optional)…" style={{ marginBottom: 9 }} />
+                <button className="btn bp bsm" disabled={!rStars} style={{ width: "100%" }} onClick={() => { onRate && onRate(t, rStars, rText.trim()); setRDone(true); }}>submit rating</button>
+                <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 7, lineHeight: 1.5 }}>Your review builds {String(t.wu || "their").split(" ")[0]}'s reputation — real reviews from real completed trades are what make cashless trade safe.</div>
+              </div>)
         : <div style={{ padding: "9px 12px", borderTop: "1px solid var(--bd)", display: "flex", gap: 6, alignItems: "center" }}>
             <label style={{ cursor: "pointer", fontSize: 19, color: "var(--t2)" }} title="Photo or video">📎<input type="file" accept="image/*,video/*" style={{ display: "none" }} onChange={e => { attach(e.target.files[0]); e.target.value = ""; }} /></label>
             <button onClick={startVoice} title="Voice note" style={{ background: recording ? "var(--g)" : "none", border: "none", cursor: "pointer", fontSize: 18, color: recording ? "#fff" : "var(--t2)", borderRadius: 8, padding: "0 4px" }}>{recording ? "● stop" : "🎙️"}</button>
@@ -2281,7 +2296,7 @@ function ChatThread({ t, user, onAccept, onComplete }) {
   );
 }
 
-function Trades({ trades, user, onAccept, onComplete }) {
+function Trades({ trades, user, onAccept, onComplete, onRate }) {
   const [active, setActive] = useState(null);
 
   if (active != null) {
@@ -2289,7 +2304,7 @@ function Trades({ trades, user, onAccept, onComplete }) {
     if (!t) { setActive(null); return null; }
     const back = () => setActive(null);
     const acceptFn = tr => onAccept(tr); acceptFn._back = back;
-    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} />;
+    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} />;
   }
 
   return (
@@ -2902,6 +2917,15 @@ export default function App() {
     if (!t._real) setTimeout(() => finalizeTrade(t), 2200); // demo: simulate the other side
   };
 
+  // Post-trade rating — closes the loop (propose → trade → complete → rate) and
+  // feeds real, earned-from-completed-trades reputation. Persists on real trades.
+  const handleRate = async (t, stars, review) => {
+    const patch = { myRating: stars, myReview: review || "" };
+    if (t._real) await db.updateTrade(t.id, patch);
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, ...patch } : x));
+    flash(`★ Thanks — you rated ${String(t.wu || "them").split(" ")[0]} ${stars}/5`);
+  };
+
   const handleEarn = (amount, patch = {}) => {
     if (!user) return;
     persist({ ...user, credits: (user.credits || 0) + amount, ...patch });
@@ -3006,7 +3030,7 @@ export default function App() {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
       case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} />;
+      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} />;
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
