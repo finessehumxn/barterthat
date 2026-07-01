@@ -2152,6 +2152,9 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedul
   const [rIssue, setRIssue] = useState("");
   const [rDone, setRDone] = useState(!!t.myRating);
   const [schedAt, setSchedAt] = useState("");
+  const [dispOpen, setDispOpen] = useState(false);
+  const [dispReason, setDispReason] = useState("");
+  const [dispDetail, setDispDetail] = useState("");
   const [text, setText] = useState("");
   const [lang, setLang] = useState(user?.lang || "English");
   const [autoTr, setAutoTr] = useState(false);
@@ -2222,8 +2225,8 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedul
           <div style={{ fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>{cleanText(t.wu)}{t.b2b && <span className="b2b-badge" style={{ fontSize: 9 }}>B2B</span>}</div>
           <div style={{ fontSize: 10, color: "var(--t3)" }}>{t.ms} ⇄ {t.ts}</div>
         </div>
-        {t.status !== "completed" && <VideoMeetButton seed={"trade" + t.id} label="📹" />}
-        <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : "pg"}`}>{t.status}</span>
+        {t.status !== "completed" && t.status !== "disputed" && <VideoMeetButton seed={"trade" + t.id} label="📹" />}
+        <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : t.status === "disputed" ? "pr" : t.status === "confirming" ? "pp" : "pg"}`}>{t.status === "disputed" ? "⚠ disputed" : t.status === "confirming" ? "confirming ✓" : t.status}</span>
       </div>
       <div style={{ padding: "6px 14px", background: "var(--s2)", borderBottom: "1px solid var(--bd)", display: "flex", gap: 8, alignItems: "center", fontSize: 11 }}>
         <span style={{ color: "var(--t2)" }}>🌍</span>
@@ -2299,12 +2302,29 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedul
           <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 3, lineHeight: 1.5 }}>Waiting for {String(t.wu || "them").split(" ")[0]} to confirm too — then tokens release and you both earn reputation. This two-sided confirm is what makes BarterThat ratings real.</div>
         </div>
       )}
-      {t.flagged
-        ? <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 11.5, color: "var(--am)" }}>⚠ You reported: {t.flagged} · on record</div>
-        : (t.status === "pending" || t.status === "escrow" || t.status === "confirming") && (
-          <div style={{ padding: "0 14px 9px", textAlign: "center" }}>
-            <button onClick={() => { if (window.confirm(`Report ${String(t.wu || "them").split(" ")[0]} for a no-show or broken deal?\n\nThis dents their Reliability and is permanently on record. Only report real problems.`)) onReport && onReport(t, "No-show / broken deal"); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t3)", fontSize: 11, textDecoration: "underline", padding: 4 }}>⚠ report a no-show or broken deal</button>
+      {(t.flagged || t.status === "disputed")
+        ? <div style={{ padding: "11px 14px", borderTop: "1px solid var(--bd)", background: "rgba(239,93,71,0.06)" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--g)", marginBottom: 3 }}>⚠ {t.topup > 0 ? "Dispute open — escrow frozen" : "Issue reported — on record"}</div>
+            <div style={{ fontSize: 11, color: "var(--t2)", lineHeight: 1.5 }}>{t.flagged}{t.disputeDetail ? ` — "${t.disputeDetail}"` : ""}. {t.topup > 0 ? `Your $${t.topup} is held safe until our team reviews within the 72-hour window. Neither side can move it.` : `${String(t.wu || "Their").split(" ")[0]}'s Reliability was dinged.`}</div>
           </div>
+        : (t.status === "pending" || t.status === "escrow" || t.status === "confirming") && (
+          dispOpen
+            ? <div style={{ padding: "11px 14px", borderTop: "1px solid var(--bd)" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>What happened? {t.topup > 0 ? "(opens a dispute — your escrow stays frozen)" : ""}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 9 }}>
+                  {["No-show", "Didn't deliver", "Not as described", "Broke the deal", "Wasted my time"].map(r => (
+                    <button key={r} onClick={() => setDispReason(r)} className={"chip" + (dispReason === r ? " on" : "")} style={{ fontSize: 11 }}>{r}</button>
+                  ))}
+                </div>
+                <textarea className="ifield" value={dispDetail} onChange={e => setDispDetail(e.target.value)} placeholder="Add details / evidence (what was promised, what happened)…" rows={2} style={{ marginBottom: 9, resize: "vertical" }} />
+                <div style={{ display: "flex", gap: 7 }}>
+                  <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => { setDispOpen(false); setDispReason(""); setDispDetail(""); }}>cancel</button>
+                  <button className="btn bp bsm" style={{ flex: 1 }} disabled={!dispReason} onClick={() => { onReport && onReport(t, dispReason, dispDetail.trim()); setDispOpen(false); }}>{t.topup > 0 ? "open dispute" : "submit report"}</button>
+                </div>
+              </div>
+            : <div style={{ padding: "0 14px 9px", textAlign: "center" }}>
+                <button onClick={() => setDispOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t3)", fontSize: 11, textDecoration: "underline", padding: 4 }}>⚠ {t.topup > 0 ? "open a dispute" : "report a no-show or broken deal"}</button>
+              </div>
         )}
       {t.status === "completed"
         ? ((rDone || t.myRating)
@@ -2368,7 +2388,7 @@ function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedu
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-              <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : t.status === "confirming" ? "pp" : "pg"}`}>{t.status === "confirming" ? "confirming ✓" : t.status}</span>
+              <span className={`pill ${t.status === "pending" ? "pa" : t.status === "escrow" ? "pb" : t.status === "completed" ? "pd" : t.status === "disputed" ? "pr" : t.status === "confirming" ? "pp" : "pg"}`}>{t.status === "disputed" ? "⚠ disputed" : t.status === "confirming" ? "confirming ✓" : t.status}</span>
               <span style={{ fontSize: 10, color: "var(--t3)" }}>{t.time}</span>
             </div>
           </div>
@@ -2385,7 +2405,7 @@ function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedu
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
-function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify }) {
+function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify, onTaxReport }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
@@ -2448,6 +2468,12 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
           ))}
         </div>
         <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.55 }}>Show up and follow through → your Reliability climbs and you get <strong style={{ color: "var(--t2)" }}>priority in matches</strong>. No-shows, broken deals, and false promises lower it, shrink your reach, and repeat offenders get <strong style={{ color: "var(--t2)" }}>restricted</strong>. Everyone's time matters here.</div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".06em" }}>barter income & taxes</div>
+        <div style={{ fontSize: 11.5, color: "var(--t3)", lineHeight: 1.55, marginBottom: 10 }}>The IRS treats the fair-market value of what you <em>receive</em> in a barter as income. Export a clean record of your completed swaps for your books or accountant — 1099-B style.</div>
+        <button className="btn bg bsm" style={{ width: "100%" }} onClick={() => onTaxReport && onTaxReport()}>📄 Export barter income report (CSV)</button>
       </div>
 
       {user.wants?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
@@ -2992,6 +3018,20 @@ export default function App() {
     else flash(`★ Thanks — you rated ${nm} ${stars}/5`);
   };
 
+  // Barter income report — export completed swaps (IRS treats FMV received as income).
+  const handleTaxReport = () => {
+    const done = trades.filter(t => t.status === "completed");
+    if (!done.length) { flash("No completed trades yet to report."); return; }
+    const rows = [["Date", "Partner", "You gave", "You received", "Fair market value (USD)", "Type"]];
+    let total = 0;
+    done.forEach(t => { const fmv = t.tv || t.mv || 0; total += fmv; rows.push([t.time || "", t.wu || "", t.ms || "", t.ts || "", fmv, t.b2b ? "B2B" : "Personal"]); });
+    rows.push([], ["", "", "", "TOTAL BARTER INCOME (USD)", total, ""]);
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a"); a.href = url; a.download = "barterthat-barter-income.csv"; a.click(); URL.revokeObjectURL(url);
+    flash(`📄 Exported ${done.length} trade${done.length > 1 ? "s" : ""} · $${total} barter income`);
+  };
+
   // Scheduling: lock in a time for the swap. A locked time you miss becomes a no-show.
   const handleSchedule = async (t, when) => {
     const patch = { scheduledAt: when };
@@ -3002,11 +3042,13 @@ export default function App() {
 
   // Accountability: report a no-show / broken deal on a trade that never completed.
   // Real consequences — flags the partner and dents their Reliability.
-  const handleTradeReport = async (t, reason) => {
-    const patch = { flagged: reason, unread: false };
+  const handleTradeReport = async (t, reason, detail) => {
+    const disputed = t.topup > 0;
+    const patch = { flagged: reason, disputeDetail: detail || "", unread: false, status: disputed ? "disputed" : t.status };
     if (t._real) await db.updateTrade(t.id, patch);
     setTrades(p => p.map(x => x.id === t.id ? { ...x, ...patch } : x));
-    flash(`⚠ Reported: "${reason}". ${String(t.wu || "They").split(" ")[0]}'s Reliability was dinged and this is on record.`);
+    const nm = String(t.wu || "They").split(" ")[0];
+    flash(disputed ? `⚠ Dispute opened — $${t.topup} escrow frozen pending review (72-hr window).` : `⚠ Reported: "${reason}". ${nm}'s Reliability was dinged and it's on record.`);
   };
 
   const handleEarn = (amount, patch = {}) => {
@@ -3117,7 +3159,7 @@ export default function App() {
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} onTaxReport={handleTaxReport} />;
       default: return null;
     }
   };
