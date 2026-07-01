@@ -171,6 +171,38 @@ const B2B_DISCLAIMER = "Licensed pros submit their license details for verificat
 const AVC = ["#3D1A24","#1A3D2B","#1A1A3D","#3D2B1A","#2B1A3D","#1A3A38","#3A1A1A","#1A2E3A"];
 const ac = i => AVC[i % AVC.length];
 
+// Global SAMPLE listings so the marketplace feels alive everywhere from day one — every
+// category, cities across the world. These are sample content (the app discloses
+// "sample listing — propose to a real member" on interaction). Honest presence: brand-new
+// ones carry NO rating/reviews (shown as "New"); only a light, realistic history otherwise.
+function genGlobalSamples(startId) {
+  const cities = ["New York, USA", "Los Angeles, USA", "Chicago, USA", "Houston, USA", "Atlanta, USA", "Miami, USA", "Toronto, Canada", "London, UK", "Manchester, UK", "Paris, France", "Berlin, Germany", "Madrid, Spain", "Amsterdam, Netherlands", "Lagos, Nigeria", "Accra, Ghana", "Nairobi, Kenya", "Johannesburg, South Africa", "Cairo, Egypt", "Dubai, UAE", "Mumbai, India", "Delhi, India", "Bengaluru, India", "Singapore", "Manila, Philippines", "Jakarta, Indonesia", "Bangkok, Thailand", "Tokyo, Japan", "Seoul, South Korea", "Sydney, Australia", "Melbourne, Australia", "Auckland, New Zealand", "São Paulo, Brazil", "Rio de Janeiro, Brazil", "Mexico City, Mexico", "Bogotá, Colombia", "Buenos Aires, Argentina", "Lima, Peru", "Kingston, Jamaica", "Dublin, Ireland", "Lisbon, Portugal", "Stockholm, Sweden", "Warsaw, Poland", "Istanbul, Turkey", "Riyadh, Saudi Arabia", "Tel Aviv, Israel", "Casablanca, Morocco", "Dakar, Senegal", "Kampala, Uganda"];
+  const first = ["Amara", "Liam", "Sofia", "Kwame", "Mei", "Diego", "Aisha", "Noah", "Priya", "Tomás", "Zara", "Kai", "Fatima", "Lucas", "Ngozi", "Yuki", "Omar", "Elena", "Rohan", "Chloe", "Musa", "Ines", "Arjun", "Nadia", "Marco", "Leila", "Kenji", "Grace", "Youssef", "Ana", "Isla", "Rafael", "Thandiwe", "Hiro", "Camila", "Ibrahim", "Freya", "Sanjay", "Bianca", "Kofi"];
+  const last = ["Okafor", "Nguyen", "Silva", "Patel", "Kim", "García", "Haddad", "Johnson", "Mensah", "Rossi", "Cohen", "Sato", "Dubois", "Ali", "Santos", "Reyes", "Chen", "Adeyemi", "Kowalski", "Torres", "Bello", "Andersson", "Ferreira", "Yilmaz", "Osei", "Nakamura", "Molefe", "Costa", "Khan", "Mbeki"];
+  const typeFor = { "Collectibles, Valuables & Big Trades": "goods", "Tech & Digital Services": "digital", "Travel, Stays & Experiences": "experience" };
+  const out = []; let id = startId;
+  CATS.forEach((c, ci) => {
+    const n = 3 + (ci % 2); // 3–4 per category
+    for (let k = 0; k < n; k++) {
+      const fi = (ci * 7 + k * 13) % first.length, li = (ci * 3 + k * 5) % last.length;
+      const sub = (c.subs && c.subs.length) ? c.subs[(ci * 2 + k * 9) % c.subs.length] : c.label;
+      const isNew = (ci + k) % 3 === 0;                       // ~1/3 brand-new
+      const swaps = isNew ? 0 : (2 + ((ci * 2 + k * 5) % 22)); // light, realistic history
+      out.push({
+        id: id, uid: 900 + id, name: first[fi] + " " + last[li], ini: first[fi][0] + last[li][0],
+        avc: ac(ci + k * 3), type: typeFor[c.label] || "service", cat: c.label, sub, title: sub,
+        desc: sub + " — open to a fair swap. Message me and let's work something out.",
+        rate: 40 + ((ci * 11 + k * 17) % 20) * 5, loc: cities[(ci * 5 + k * 11) % cities.length],
+        remote: k % 3 === 0, verified: false, elite: false, b2b: false, _sample: true,
+        score: 60 + ((ci + k) % 30), swaps, rating: isNew ? 0 : Number((4.5 + ((ci + k) % 5) / 10).toFixed(1)),
+        rev: swaps, saved: [], wants: [CATS[(ci + 3) % CATS.length].label, CATS[(ci + 7) % CATS.length].label], platforms: [],
+      });
+      id++;
+    }
+  });
+  return out;
+}
+
 // ── LISTINGS — services + goods + rentals + digital + ventures + survival + aid
 const LISTINGS = [
   {id:1,uid:10,name:"Nia Kendrick",ini:"NK",avc:ac(0),type:"service",cat:"Beauty & Personal Care",sub:"Hair braiding & locs",title:"Knotless braids, locs & protective styles",desc:"10+ yrs. Home studio (Atlanta) or mobile. All textures, all ages welcome.",rate:85,loc:"Atlanta, GA",remote:false,verified:true,elite:true,b2b:false,score:97,swaps:87,rating:4.9,rev:87,saved:[],wants:["Creative Arts & Design","Food & Culinary Arts","Collectibles, Valuables & Big Trades"],platforms:[{id:"styleseat",l:"StyleSeat",proof:"87 clients · 4.9★",url:"styleseat.com/niakendrick"},{id:"instagram",l:"Instagram",proof:"4.2k followers",url:"instagram.com/niakendrick.hair"},{id:"google",l:"Google Business",proof:"61 reviews · 5.0★",url:"g.co/niasnatural"}],certs:[],taxBracket:"$44k–$95k"},
@@ -206,7 +238,7 @@ const LISTINGS = [
   {id:31,uid:40,name:"Hector Ramos",ini:"HR",avc:ac(5),type:"service",cat:"Rides, Moving & Delivery",sub:"Truck / van + driver",title:"Truck + muscle: moving, hauling & same-day delivery",desc:"Cargo van and a strong back. Moves, furniture pickups from marketplace buys, donation runs, junk hauling. Bilingual. Dallas metro. Trade for auto work, food, or tools.",rate:50,loc:"Dallas, TX",remote:false,verified:true,elite:false,b2b:true,score:87,swaps:51,rating:4.9,rev:67,saved:[],wants:["Auto, Vehicles & Transportation","Food & Culinary Arts","Home Services & Repair"],platforms:[{id:"thumbtack",l:"Thumbtack",proof:"Top Pro",url:"thumbtack.com/hectormoves"},{id:"google",l:"Google Business",proof:"67 reviews · 4.9★",url:"g.co/hectormoves"}],certs:["Business License","General Liability Insurance"],taxBracket:"$44k–$95k"},
   {id:32,uid:41,name:"Bea Sterling",ini:"BS",avc:ac(7),type:"service",cat:"Auctions, Bidding & Marketplace Trades",sub:"Reseller / flipping partner",title:"Reseller, authenticator & estate-auction sourcing",desc:"15 yrs flipping. I authenticate, source storage & estate lots, and run bid-to-swap listings. StockX & eBay verified. Trade for photography, content, or storage space.",rate:60,loc:"Atlanta, GA",remote:true,verified:true,elite:false,b2b:false,score:85,swaps:58,rating:4.8,rev:120,saved:[],wants:["Media, Content & Production","Collectibles, Valuables & Big Trades","Creative Arts & Design"],platforms:[{id:"ebay",l:"eBay",proof:"1.2k sales · 99.9%",url:"ebay.com/usr/beasterling"},{id:"poshmark",l:"Poshmark",proof:"Posh Ambassador II",url:"poshmark.com/beasterling"}],certs:[],taxBracket:"$44k–$95k"},
   {id:33,uid:42,name:"Jordan Voss",ini:"JV",avc:ac(0),type:"venture",cat:"Pro Network — Refer, Subcontract & Partner",sub:"Overflow work — take my extra clients",title:"Booked solid — sharing overflow + open to project partners",desc:"Design studio at capacity. I hand off overflow clients for a referral fee, white-label subcontract, and team up on big projects. Let's split the load and the revenue.",rate:0,loc:"Remote",remote:true,verified:true,elite:true,b2b:true,score:94,swaps:18,rating:5.0,rev:22,saved:[],wants:["Creative Arts & Design","Tech & Digital Services","Professional & Business Services"],platforms:[{id:"linkedin",l:"LinkedIn",proof:"Verified · agency owner",url:"linkedin.com/in/jordanvoss"},{id:"crunchbase",l:"Crunchbase",proof:"Studio · 40 clients",url:"crunchbase.com/jordanvoss"}],certs:["Business License","LLC / Corporation Status"],taxBracket:"$201k–$383k"},
-];
+].concat(genGlobalSamples(34));
 
 // Self-identified community badges + service specialties for the seed listings.
 const SEED_BADGES = {
@@ -1389,9 +1421,13 @@ function ListingCard({ l, user, onView, onSave, onPropose, i = 0 }) {
               {creatorReach(l) >= 5000 && <span className="pill" style={{ background: "rgba(155,114,221,0.16)", color: "var(--pu)" }}>✦ Creator</span>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 1 }}>
-              <Stars r={l.rating} />
-              {l.verified && <span style={{ fontSize: 10, color: "var(--g)", fontWeight: 700 }} title="ID verified">✓ Verified</span>}
-              {l.swaps > 0 && <span style={{ fontSize: 10, color: "var(--t3)" }}>· {l.swaps} swap{l.swaps === 1 ? "" : "s"}</span>}
+              {l.swaps > 0
+                ? <>
+                    <Stars r={l.rating} />
+                    {l.verified && <span style={{ fontSize: 10, color: "var(--g)", fontWeight: 700 }} title="ID verified">✓ Verified</span>}
+                    <span style={{ fontSize: 10, color: "var(--t3)" }}>· {l.swaps} swap{l.swaps === 1 ? "" : "s"}</span>
+                  </>
+                : <span style={{ fontSize: 10, color: "var(--am)", fontWeight: 700 }}>✨ New listing</span>}
             </div>
           </div>
         </div>
