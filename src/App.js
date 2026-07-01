@@ -671,7 +671,7 @@ function Splash({ onEnter, onHow }) {
           Trade <strong style={{ color: "var(--tx)" }}>everything</strong> — skills, goods, gear, even a co-founder — with <strong style={{ color: "var(--g)" }}>no cash</strong>. Our AI even finds the <em>multi-way chain</em> (you help them, they help someone, that person helps you) so deals happen that money never could.
         </div>
         <div style={{ fontSize: 14, color: "var(--g)", fontStyle: "italic", maxWidth: 480, margin: "0 auto 32px", fontFamily: "var(--fd)" }}>
-          One person is great at one thing. Together, we're unstoppable.
+          We're a movement all on our own — but one hell of a force when we do things together.
         </div>
         <div className="cta-row" style={{ marginBottom: 10 }}>
           <button className="btn bp blg" onClick={() => onEnter("signup")}>get started free</button>
@@ -3034,63 +3034,41 @@ function CoachMarks({ onDone }) {
 // ── HOW-IT-WORKS VIDEO ───────────────────────────────────────────────────────
 // Plays the bundled 60-sec explainer. If REACT_APP_INTRO_VIDEO (a YouTube URL)
 // is set, it embeds that instead — so you can swap in a real promo video later.
-// First-run instructions — teaches new users exactly how to use BarterThat, step by
-// step, so every user knows what to do. No video/voiceover dependency.
+// First-run walkthrough — REAL app screenshots, screen by screen, with a pulsing
+// "tap here" indicator on the actual button. Beats a raster video: no black frames,
+// works on every device, and stays current with the app.
 function InteractiveDemo({ onDone }) {
   const [i, setI] = useState(0);
-  const A = (ini, c, on) => <div className="av" style={{ width: 38, height: 38, background: c, color: "#fff", fontSize: 12, border: on ? "2px solid var(--g)" : "2px solid transparent" }}>{ini}</div>;
   const steps = [
-    {
-      icon: "⇄", title: "Trade without cash",
-      body: <>You've got skills, gear, or stuff — so does everyone here. BarterThat swaps them so <b style={{ color: "var(--tx)" }}>nobody spends a dime</b>. Here's exactly how to use it — 4 quick steps.</>,
-      visual: <div style={{ fontSize: 52, textAlign: "center" }}>⇄</div>,
-    },
-    {
-      icon: "①", title: "Post what you offer & want",
-      body: <>Tap <b style={{ color: "var(--g)" }}>✦ Post</b> in the bottom bar. Add what you can <b>give</b> (a service, item, or skill) and what you're <b>looking for</b>. That's your listing — it takes a minute.</>,
-      visual: <div style={{ display: "flex", flexDirection: "column", gap: 7, alignItems: "center" }}>
-        <span className="pill pg" style={{ fontSize: 12 }}>you give · Graphic design</span>
-        <span style={{ color: "var(--t3)", fontSize: 16 }}>＋</span>
-        <span className="pill pd" style={{ fontSize: 12 }}>you want · A website</span>
-      </div>,
-    },
-    {
-      icon: "②", title: "Find your swaps", accent: true,
-      body: <>Tap <b style={{ color: "var(--g)" }}>◆ Find Swaps</b>. Our AI shows your best trades — direct <b>and</b> multi-way <b style={{ color: "var(--pu)" }}>loops</b>, where everyone gives once and gets what they wanted. <b style={{ color: "var(--tx)" }}>Nobody pays.</b></>,
-      visual: <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--t2)" }}>give design →</span>{A("AN", "#7A5FD0")}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("AN", "#7A5FD0")}<span style={{ color: "var(--t2)" }}>gives photos →</span>{A("MR", "#C98A3A")}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("MR", "#C98A3A")}<span style={{ color: "var(--t2)" }}>→ your website →</span>{A("YOU", "var(--g)", true)}</div>
-        <div style={{ fontSize: 12, color: "var(--g)", fontWeight: 700, marginTop: 2 }}>✓ everybody wins</div>
-      </div>,
-    },
-    {
-      icon: "③", title: "Propose & agree",
-      body: <>Tap <b style={{ color: "var(--g)" }}>Propose</b> on any swap you like → chat, agree on the details, and lock in a time right in the message thread.</>,
-      visual: <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--am)", fontSize: 22 }}>💬</span>{A("AN", "#7A5FD0")}</div>,
-    },
-    {
-      icon: "④", title: "Do it, confirm & rate",
-      body: <>After the swap, <b style={{ color: "var(--tx)" }}>you both confirm</b> it's done — then rate each other. ID verification + no-show tracking keep everyone honest, so trading with strangers is safe.</>,
-      visual: <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}><span className="pill pg">✓ ID Verified</span><span className="pill pd">both confirm</span><span className="pill pa">★ rate</span></div>,
-    },
+    { img: "/howto/2-browse.png", title: "1. Browse the marketplace", body: <>See what people near you offer — services, goods, skills. To get matched, tap <b style={{ color: "var(--g)" }}>◆ find swaps</b> in the bottom bar.</>, tap: { x: 30, y: 96.5 } },
+    { img: "/howto/3-find.png", title: "2. Say what you want", body: <>Pick what you can <b>give</b> and what you're <b>looking for</b>, then tap <b style={{ color: "var(--g)" }}>find my swaps</b>.</>, tap: { x: 50, y: 92 } },
+    { img: "/howto/4-loops.png", title: "3. The AI finds your swaps", accent: true, body: <>Direct trades <b>and</b> multi-way <b style={{ color: "var(--pu)" }}>loops</b> — everyone gives once, <b style={{ color: "var(--tx)" }}>nobody pays</b>. Tap <b style={{ color: "var(--pu)" }}>start loop</b> to kick one off.</>, tap: { x: 72, y: 53 } },
+    { img: "/howto/5-trades.png", title: "4. Meet safely & finish", body: <>Chat, agree on a place & time, meet up, then <b style={{ color: "var(--tx)" }}>both confirm</b> it's done and rate each other. Safe Swap protects you the whole way.</>, tap: null },
   ];
   const last = i === steps.length - 1;
   const s = steps[i];
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 340, background: "rgba(8,12,20,0.94)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
-      <div className="card fu" key={i} style={{ width: "100%", maxWidth: 400 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <span className={`pill ${s.accent ? "pp" : "pg"}`}>{s.icon} how to use · {i + 1}/{steps.length}</span>
+    <div style={{ position: "fixed", inset: 0, zIndex: 340, background: "rgba(8,12,20,0.95)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div className="card fu" key={i} style={{ width: "100%", maxWidth: 380, padding: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <span className={`pill ${s.accent ? "pp" : "pg"}`}>▶ how to use · {i + 1}/{steps.length}</span>
           <button onClick={onDone} style={{ background: "none", border: "none", color: "var(--t3)", fontSize: 12, cursor: "pointer" }}>skip</button>
         </div>
-        <div style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "22px 16px", marginBottom: 16, minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.visual}</div>
-        <div style={{ fontFamily: "var(--fd)", fontSize: 19, fontWeight: 800, marginBottom: 8 }}>{s.title}</div>
-        <div style={{ fontSize: 14, color: "var(--t2)", lineHeight: 1.6, marginBottom: 18 }}>{s.body}</div>
+        <div style={{ position: "relative", height: "44vh", aspectRatio: "390 / 780", margin: "0 auto 12px", borderRadius: 16, overflow: "hidden", border: "2px solid var(--s4)", background: "#0E1825" }}>
+          <img src={s.img} alt={s.title} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
+          {s.tap && (
+            <div style={{ position: "absolute", left: `${s.tap.x}%`, top: `${s.tap.y}%`, transform: "translate(-50%,-50%)", pointerEvents: "none" }}>
+              <div style={{ position: "absolute", inset: -8, borderRadius: "50%", border: "2px solid var(--g)", animation: "ping 1.6s infinite" }} />
+              <div style={{ width: 28, height: 28, borderRadius: "50%", border: "2px solid #fff", background: "rgba(239,93,71,0.55)", boxShadow: "0 0 12px rgba(239,93,71,0.7)" }} />
+            </div>
+          )}
+        </div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 17, fontWeight: 800, marginBottom: 5 }}>{s.title}</div>
+        <div style={{ fontSize: 13.5, color: "var(--t2)", lineHeight: 1.55, marginBottom: 13 }}>{s.body}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ display: "flex", gap: 5, flex: 1 }}>{steps.map((_, n) => <div key={n} style={{ width: n === i ? 20 : 7, height: 7, borderRadius: 100, background: n === i ? "var(--g)" : "var(--bd2)", transition: "all .2s" }} />)}</div>
           {i > 0 && <button className="btn bg bsm" onClick={() => setI(i - 1)}>back</button>}
-          <button className="btn bp bsm" onClick={() => last ? onDone() : setI(i + 1)}>{last ? "find my first swap →" : "next"}</button>
+          <button className="btn bp bsm" onClick={() => last ? onDone() : setI(i + 1)}>{last ? "start swapping →" : "next"}</button>
         </div>
       </div>
     </div>
