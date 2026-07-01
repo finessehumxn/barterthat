@@ -490,7 +490,10 @@ function SpecTag({ s }) {
 // Tap to talk — turns speech into text so people can just say what they need.
 // Uses the browser's built-in Web Speech API (no key). Hides itself if the
 // browser doesn't support it, so nothing ever breaks.
-const SPEECH_OK = typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+// Web Speech exists in the iOS/Android webview but doesn't actually work there, so the
+// mic button did nothing (App Review 2.1 bug). Only enable voice input on the web.
+const IS_NATIVE_APP = typeof window !== "undefined" && !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const SPEECH_OK = typeof window !== "undefined" && !!(window.SpeechRecognition || window.webkitSpeechRecognition) && !IS_NATIVE_APP;
 function VoiceButton({ onText, onInterim, label, size = 40 }) {
   const [listening, setListening] = useState(false);
   const recRef = useRef(null);
