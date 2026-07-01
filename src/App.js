@@ -2145,12 +2145,13 @@ function ProposeModal({ l, user, onClose, onSend }) {
 // ── TRADES ────────────────────────────────────────────────────────────────────
 // Live chat thread for one trade — realtime messages, translate, read-aloud,
 // links, photos/videos, voice notes, and the secured video call.
-function ChatThread({ t, user, onAccept, onComplete, onRate, onReport }) {
+function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedule }) {
   const [msgs, setMsgs] = useState(t._real ? null : (t.msgs || []).map((m, i) => ({ id: "s" + i, from_uid: m.from === "me" ? user?.id : "them", data: { text: m.txt } })));
   const [rStars, setRStars] = useState(t.myRating || 0);
   const [rText, setRText] = useState("");
   const [rIssue, setRIssue] = useState("");
   const [rDone, setRDone] = useState(!!t.myRating);
+  const [schedAt, setSchedAt] = useState("");
   const [text, setText] = useState("");
   const [lang, setLang] = useState(user?.lang || "English");
   const [autoTr, setAutoTr] = useState(false);
@@ -2160,6 +2161,12 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport }) {
   const recRef = useRef(null);
   const endRef = useRef(null);
   const meId = user?.id;
+  const gcalLink = (tr) => {
+    const d = new Date(tr.scheduledAt), end = new Date(d.getTime() + 3600000);
+    const fmt = x => x.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`BarterThat swap with ${tr.wu || "a member"}`)}&dates=${fmt(d)}/${fmt(end)}&details=${encodeURIComponent(`${tr.ms || ""} for ${tr.ts || ""} — via BarterThat`)}`;
+  };
+  const fmtWhen = w => new Date(w).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
   useEffect(() => {
     if (!t._real) return;
@@ -2256,6 +2263,25 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport }) {
         <div ref={endRef} />
       </div>
 
+      {t.status !== "completed" && (
+        <div style={{ padding: "10px 14px", borderTop: "1px solid var(--bd)" }}>
+          {t.scheduledAt ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span className="pill pb" style={{ fontSize: 12 }}>📅 {fmtWhen(t.scheduledAt)}</span>
+              <a href={gcalLink(t)} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--bl)", fontWeight: 600, textDecoration: "none" }}>+ add to calendar</a>
+              <button onClick={() => onSchedule(t, "")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t3)", fontSize: 11, textDecoration: "underline" }}>reschedule</button>
+              <div style={{ fontSize: 10.5, color: "var(--t3)", width: "100%", lineHeight: 1.5 }}>Locked in. Miss it without notice and it counts as a no-show against your Reliability.</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, color: "var(--t2)", fontWeight: 600 }}>📅 Set a time</span>
+              <input type="datetime-local" className="ifield" value={schedAt} onChange={e => setSchedAt(e.target.value)} style={{ flex: 1, minWidth: 148, padding: "7px 10px" }} />
+              <button className="btn bp bsm" disabled={!schedAt} onClick={() => onSchedule(t, schedAt)}>lock it in</button>
+            </div>
+          )}
+        </div>
+      )}
+
       {t.status === "pending" && t._incoming && (
         <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
           <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onAccept(t)}>accept swap ✓</button>
@@ -2316,7 +2342,7 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport }) {
   );
 }
 
-function Trades({ trades, user, onAccept, onComplete, onRate, onReport }) {
+function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedule }) {
   const [active, setActive] = useState(null);
 
   if (active != null) {
@@ -2324,7 +2350,7 @@ function Trades({ trades, user, onAccept, onComplete, onRate, onReport }) {
     if (!t) { setActive(null); return null; }
     const back = () => setActive(null);
     const acceptFn = tr => onAccept(tr); acceptFn._back = back;
-    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} onReport={onReport} />;
+    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} onReport={onReport} onSchedule={onSchedule} />;
   }
 
   return (
@@ -2966,6 +2992,14 @@ export default function App() {
     else flash(`★ Thanks — you rated ${nm} ${stars}/5`);
   };
 
+  // Scheduling: lock in a time for the swap. A locked time you miss becomes a no-show.
+  const handleSchedule = async (t, when) => {
+    const patch = { scheduledAt: when };
+    if (t._real) await db.updateTrade(t.id, patch);
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, ...patch } : x));
+    flash(`📅 Locked in — ${new Date(when).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`);
+  };
+
   // Accountability: report a no-show / broken deal on a trade that never completed.
   // Real consequences — flags the partner and dents their Reliability.
   const handleTradeReport = async (t, reason) => {
@@ -3079,7 +3113,7 @@ export default function App() {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
       case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} onReport={handleTradeReport} />;
+      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} onReport={handleTradeReport} onSchedule={handleSchedule} />;
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
