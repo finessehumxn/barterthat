@@ -2774,13 +2774,18 @@ function CoachMarks({ onDone }) {
 // ── HOW-IT-WORKS VIDEO ───────────────────────────────────────────────────────
 // Plays the bundled 60-sec explainer. If REACT_APP_INTRO_VIDEO (a YouTube URL)
 // is set, it embeds that instead — so you can swap in a real promo video later.
-// First-run interactive demo — teaches the concept (esp. the multi-way loop) with
-// zero dependency on a video file, so a new user never lands confused.
+// First-run interactive demo — plays the explainer video first, then step-through
+// visuals reinforce the concept (esp. the multi-way loop), so nobody lands confused.
 function InteractiveDemo({ onDone }) {
   const [i, setI] = useState(0);
+  const yt = process.env.REACT_APP_INTRO_VIDEO;
+  const embed = yt ? yt.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/") : null;
   const A = (ini, c, on) => <div className="av" style={{ width: 40, height: 40, background: c, color: "#fff", fontSize: 13, border: on ? "2px solid var(--g)" : "2px solid transparent" }}>{ini}</div>;
-  const arrow = <span style={{ color: "var(--t3)", fontSize: 18 }}>→</span>;
   const steps = [
+    {
+      icon: "▶", title: "Watch: how BarterThat works", video: true,
+      body: <>A quick tour of cashless swaps and multi-way loops. Prefer to click through? Just tap <b style={{ color: "var(--tx)" }}>next</b>.</>,
+    },
     {
       icon: "⇄", title: "Trade without cash",
       body: <>You've got skills, gear, or stuff — so does everyone here. BarterThat helps you <b style={{ color: "var(--tx)" }}>swap for what you actually want</b>. No money changes hands.</>,
@@ -2816,7 +2821,13 @@ function InteractiveDemo({ onDone }) {
           <span className={`pill ${s.accent ? "pp" : "pg"}`}>{s.icon} how it works · {i + 1}/{steps.length}</span>
           <button onClick={onDone} style={{ background: "none", border: "none", color: "var(--t3)", fontSize: 12, cursor: "pointer" }}>skip</button>
         </div>
-        <div style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "22px 16px", marginBottom: 16, minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.visual}</div>
+        {s.video
+          ? <div style={{ borderRadius: "var(--rs)", overflow: "hidden", marginBottom: 16, background: "#000" }}>
+              {embed
+                ? <div style={{ position: "relative", paddingBottom: "56%", height: 0 }}><iframe title="How BarterThat works" src={embed} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} allow="autoplay; encrypted-media; fullscreen" allowFullScreen /></div>
+                : <video src="/explainer.mp4" controls autoPlay playsInline style={{ width: "100%", maxHeight: "42vh", display: "block", objectFit: "contain", background: "#000" }} />}
+            </div>
+          : <div style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "22px 16px", marginBottom: 16, minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.visual}</div>}
         <div style={{ fontFamily: "var(--fd)", fontSize: 19, fontWeight: 800, marginBottom: 8 }}>{s.title}</div>
         <div style={{ fontSize: 14, color: "var(--t2)", lineHeight: 1.6, marginBottom: 18 }}>{s.body}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
