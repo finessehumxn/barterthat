@@ -902,7 +902,7 @@ function InvestorPitch({ onBack, onEnter }) {
         {/* SOLUTION */}
         <PitchSection tag="02 · the solution" title="An AI matching engine that turns 'no match' into a chain of swaps everyone wins.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 10 }}>
-            {[["◆", "AI Swap Matchmaker", "Proprietary graph engine finds direct, 3-way & 4-way circular trades in real time. No competitor does multi-party.", "var(--pu)"], ["⬡", "Barter Tokens", "A barter currency that balances any deal — creating liquidity, a float, and powerful retention lock-in.", "var(--am)"], ["🔒", "Trust layer", "Platform-verified profiles, BT Score, escrow & smart contracts make cashless trade safe enough to scale.", "var(--bl)"], ["⚇", "Everything-exchange", "22 categories: services, goods, rentals, digital, ventures, survival, mutual aid. One graph, infinite matches.", "var(--g)"]].map(([ic, h, b, c]) => (
+            {[["◆", "AI Swap Matchmaker", "Proprietary graph engine finds direct, 3-way & 4-way circular trades in real time. No competitor does multi-party.", "var(--pu)"], ["⬡", "Barter Tokens", "A barter currency that balances any deal — creating liquidity, a float, and powerful retention lock-in.", "var(--am)"], ["🔒", "Trust layer", "ID verification, BT Score, held balances, two-sided confirmation & written agreements make cashless trade safe enough to scale.", "var(--bl)"], ["⚇", "Everything-exchange", "22 categories: services, goods, rentals, digital, ventures, survival, mutual aid. One graph, infinite matches.", "var(--g)"]].map(([ic, h, b, c]) => (
               <div key={h} className="card">
                 <div style={{ fontSize: 20, color: c, marginBottom: 7 }}>{ic}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 5 }}>{h}</div>
@@ -1955,7 +1955,7 @@ function Community({ listings, user, onView, onPropose, onNav }) {
 
       <div className="card" style={{ background: "var(--blb)", borderColor: "rgba(74,144,217,0.25)" }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--bl)", marginBottom: 6 }}>🔒 protected by design</div>
-        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Every member is platform-verified with a BT Score. Cash & credit top-ups sit in escrow until both sides confirm. B2B & venture deals generate a smart contract. Community trust, enforced by tech.</div>
+        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.6 }}>Every member gets a BT Score built from real completed trades, and can verify their ID. Cash & credit top-ups are held until both sides confirm the swap. B2B & venture deals get a clear written agreement both accept. Community trust, backed by the system.</div>
       </div>
     </div>
   );
@@ -2115,7 +2115,7 @@ function Detail({ l, user, listings = [], onBack, onPropose, onBlock, onReport, 
 
       <div style={{ background: "var(--blb)", border: "1px solid rgba(74,144,217,0.2)", borderRadius: "var(--rs)", padding: "11px 13px", marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "var(--bl)", marginBottom: 4 }}>🔒 escrow protection</div>
-        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5 }}>Top-ups held by BarterThat until both confirm delivery. 72-hr dispute window.{l.b2b || l.type === "venture" ? " This deal includes a smart contract." : ""}</div>
+        <div style={{ fontSize: 12, color: "var(--t2)", lineHeight: 1.5 }}>Top-ups held by BarterThat until both confirm delivery. 72-hr dispute window.{l.b2b || l.type === "venture" ? " This deal includes a written agreement both sides accept." : ""}</div>
       </div>
 
       <button className="btn bp" style={{ width: "100%" }} disabled={l.b2b && !taxMatch} onClick={() => onPropose(l)}>
@@ -2176,7 +2176,7 @@ function ProposeModal({ l, user, onClose, onSend }) {
               <div><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>their units/hrs</label><input type="number" className="ifield" value={thH} min={1} max={20} onChange={e => setThH(+e.target.value)} /></div>
             </div>
             <div style={{ marginBottom: 18 }}><label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>message (optional)</label><textarea className="ifield" rows={3} value={msg} onChange={e => setMsg(e.target.value)} placeholder="introduce yourself..." style={{ resize: "none" }} /></div>
-            {(l.b2b || l.type === "venture") && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", marginBottom: 14, fontSize: 11, color: "var(--pu)" }}>{l.type === "venture" ? "Venture deal" : "B2B swap"} — smart contract generated on acceptance</div>}
+            {(l.b2b || l.type === "venture") && <div style={{ background: "var(--pub)", border: "1px solid rgba(155,114,221,0.3)", borderRadius: "var(--rs)", padding: "9px 12px", marginBottom: 14, fontSize: 11, color: "var(--pu)" }}>{l.type === "venture" ? "Venture deal" : "B2B swap"} — written agreement generated on acceptance</div>}
             <button className="btn bp" style={{ width: "100%" }} disabled={!svc.trim()} onClick={send}>send proposal →</button>
           </>
         )}
