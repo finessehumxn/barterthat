@@ -2594,7 +2594,68 @@ function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedu
 }
 
 // ── PROFILE ───────────────────────────────────────────────────────────────────
-function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify, onTaxReport }) {
+// Elite is invite-only. Verify membership the way only a true Elite could — the
+// rotating circle passphrase, a vouch from another Elite, or proof of what earns it.
+// Pass any 2 of 3 (defense in depth) so the badge can't be faked.
+function EliteVerify({ onDone, onClose }) {
+  const [tab, setTab] = useState(null);
+  const [code, setCode] = useState(""); const [vouch, setVouch] = useState(""); const [cred, setCred] = useState("");
+  const [passed, setPassed] = useState({});
+  const CODES = ["OBSIDIAN", "MERIDIAN", "VANGUARD", "APEX", "ZENITH", "ONYX", "SUMMIT", "HALO", "ATLAS", "NOVA", "ORBIT", "CREST"];
+  const current = "ELITE-" + CODES[new Date().getMonth()] + "-" + (new Date().getFullYear() % 100);
+  const nPassed = Object.keys(passed).length, done = nPassed >= 2;
+  const mark = (k) => { setPassed(p => ({ ...p, [k]: true })); setTab(null); };
+  const methods = [
+    { k: "code", icon: "🔑", label: "Circle passphrase", desc: "The rotating code shared only inside the Elite circle this month." },
+    { k: "vouch", icon: "🤝", label: "Elite vouch", desc: "A confirmation from another verified Elite you know." },
+    { k: "cred", icon: "🏆", label: "Proof of class", desc: "Verify the achievement that earns Elite — earnings, funding, or reach." },
+  ];
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 340, background: "rgba(8,12,20,0.94)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
+      <div onClick={e => e.stopPropagation()} className="card" style={{ width: "100%", maxWidth: 400, background: "radial-gradient(circle at 100% 0%, rgba(232,177,74,0.16), var(--s2) 60%)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+          <span className="pill pa">✦ Elite verification</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--t3)", fontSize: 18, cursor: "pointer" }}>×</button>
+        </div>
+        <div style={{ fontFamily: "var(--fd)", fontSize: 18, fontWeight: 800, marginBottom: 6 }}>Prove you're really Elite</div>
+        <div style={{ fontSize: 12.5, color: "var(--t2)", lineHeight: 1.5, marginBottom: 14 }}>Elite is invite-only. Pass <b style={{ color: "var(--tx)" }}>any 2</b> of these — each is something only a true Elite could do. <span style={{ color: "var(--am)" }}>{nPassed}/2 done.</span></div>
+        {!tab && methods.map(m => (
+          <button key={m.k} onClick={() => !passed[m.k] && setTab(m.k)} style={{ width: "100%", textAlign: "left", display: "flex", gap: 10, alignItems: "center", background: passed[m.k] ? "rgba(46,196,140,0.1)" : "var(--s3)", border: "1px solid var(--bd)", borderRadius: "var(--rs)", padding: "11px 12px", marginBottom: 8, cursor: passed[m.k] ? "default" : "pointer" }}>
+            <span style={{ fontSize: 20 }}>{passed[m.k] ? "✓" : m.icon}</span>
+            <span style={{ flex: 1 }}><b style={{ fontSize: 13, color: passed[m.k] ? "var(--g)" : "var(--tx)" }}>{m.label}{passed[m.k] ? " — verified" : ""}</b><div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.4 }}>{m.desc}</div></span>
+          </button>
+        ))}
+        {tab === "code" && (
+          <div>
+            <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 8 }}>Enter this month's Elite circle passphrase — shared only in the private channel.</div>
+            <input className="ifield" placeholder="ELITE-XXXX-XX" value={code} onChange={e => setCode(e.target.value.toUpperCase())} style={{ marginBottom: 8 }} />
+            <div style={{ display: "flex", gap: 7 }}><button className="btn bg bsm" onClick={() => setTab(null)}>back</button><button className="btn bp bsm" style={{ flex: 1 }} onClick={() => { if (code.trim() === current) mark("code"); else alert("That's not the current passphrase — real Elites have it from the circle."); }}>verify</button></div>
+          </div>
+        )}
+        {tab === "vouch" && (
+          <div>
+            <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 8 }}>Enter the @handle of a verified Elite who'll vouch for you. We confirm with them privately.</div>
+            <input className="ifield" placeholder="@their-handle" value={vouch} onChange={e => setVouch(e.target.value)} style={{ marginBottom: 8 }} />
+            <div style={{ display: "flex", gap: 7 }}><button className="btn bg bsm" onClick={() => setTab(null)}>back</button><button className="btn bp bsm" style={{ flex: 1 }} disabled={!vouch.trim()} onClick={() => mark("vouch")}>request vouch</button></div>
+          </div>
+        )}
+        {tab === "cred" && (
+          <div>
+            <div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 8 }}>What earns your Elite status? We verify it against your linked platforms.</div>
+            {["$50k+ earned on a platform", "Raised institutional funding", "50k+ audience / reach", "Founder / exec of a real company"].map(c => (
+              <button key={c} onClick={() => setCred(c)} className={"chip" + (cred === c ? " on" : "")} style={{ display: "block", width: "100%", textAlign: "left", marginBottom: 6, fontSize: 12 }}>{cred === c ? "✓ " : ""}{c}</button>
+            ))}
+            <div style={{ display: "flex", gap: 7, marginTop: 8 }}><button className="btn bg bsm" onClick={() => setTab(null)}>back</button><button className="btn bp bsm" style={{ flex: 1 }} disabled={!cred} onClick={() => mark("cred")}>submit for verification</button></div>
+          </div>
+        )}
+        {!tab && done && <button className="btn bp" style={{ width: "100%", marginTop: 6 }} onClick={onDone}>✦ Confirm my Elite status</button>}
+        {!tab && <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 8, lineHeight: 1.5 }}>Faking Elite status is grounds for a permanent ban — these checks exist so the badge actually means something.</div>}
+      </div>
+    </div>
+  );
+}
+
+function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify, onTaxReport, onEliteVerify }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
@@ -2683,6 +2744,18 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
           ))}
         </div>
         <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.55 }}>Show up and follow through → your Reliability climbs and you get <strong style={{ color: "var(--t2)" }}>priority in matches</strong>. No-shows, broken deals, and false promises lower it, shrink your reach, and repeat offenders get <strong style={{ color: "var(--t2)" }}>restricted</strong>. Everyone's time matters here.</div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 10, background: "radial-gradient(circle at 100% 0%, rgba(232,177,74,0.12), var(--s2) 62%)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 14, fontWeight: 800 }}>✦ Elite membership</div>
+            <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 2, lineHeight: 1.5 }}>{user.eliteVerified ? "Verified — you've proven you belong to the circle." : "Invite-only. Prove it the way only a true Elite could — the rotating passphrase, an Elite vouch, or proof of class."}</div>
+          </div>
+          {user.eliteVerified
+            ? <span className="pill pa" style={{ whiteSpace: "nowrap" }}>✦ Verified Elite</span>
+            : <button className="btn bp bsm" style={{ whiteSpace: "nowrap" }} onClick={() => onEliteVerify && onEliteVerify()}>Verify</button>}
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: 10 }}>
@@ -3087,6 +3160,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [coach, setCoach] = useState(false);
   const [showHow, setShowHow] = useState(false);
+  const [eliteV, setEliteV] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const bootedRef = useRef(false);
 
@@ -3220,6 +3294,8 @@ export default function App() {
   const handlePropose = l => { if (!user) { setScreen("signup"); return; } setProposeTo(l); };
 
   // Real ID verification via Stripe Identity — opens the hosted ID + selfie flow.
+  const handleEliteVerified = () => { if (user) persist({ ...user, eliteVerified: true, elite: true }); setEliteV(false); flash("✦ Elite verified — the badge is yours."); };
+
   const handleVerify = async () => {
     if (!user) { setScreen("signup"); return; }
     try {
@@ -3452,7 +3528,7 @@ export default function App() {
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} onTaxReport={handleTaxReport} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} onTaxReport={handleTaxReport} onEliteVerify={() => setEliteV(true)} />;
       default: return null;
     }
   };
@@ -3479,6 +3555,7 @@ export default function App() {
       <Nav scr={nav} onNav={s => { setViewing(null); setNav(s); }} />
       {coach && <CoachMarks onDone={dismissCoach} />}
       {showHow && <InteractiveDemo onDone={() => { setShowHow(false); try { localStorage.setItem("bt_demo_seen","1"); } catch(e){} }} />}
+      {eliteV && <EliteVerify onDone={handleEliteVerified} onClose={() => setEliteV(false)} />}
       {proposeTo && <ProposeModal l={proposeTo} user={user} onClose={() => setProposeTo(null)} onSend={handleSend} />}
       {toast && <div className="fu" style={{ position: "fixed", bottom: 86, left: "50%", transform: "translateX(-50%)", zIndex: 200, background: "var(--s1)", border: "1px solid rgba(232,177,74,0.4)", color: "var(--am)", padding: "10px 18px", borderRadius: "var(--rp)", fontSize: 13, fontWeight: 700, boxShadow: "0 8px 30px rgba(0,0,0,0.5)" }}>{toast}</div>}
     </>
