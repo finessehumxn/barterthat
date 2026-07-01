@@ -1377,7 +1377,11 @@ function ListingCard({ l, user, onView, onSave, onPropose, i = 0 }) {
               {l.b2b && <span className="b2b-badge">{l.verifiedPro === false ? "Pro · pending" : "Licensed Pro"}</span>}
               {creatorReach(l) >= 5000 && <span className="pill" style={{ background: "rgba(155,114,221,0.16)", color: "var(--pu)" }}>✦ Creator</span>}
             </div>
-            <Stars r={l.rating} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 1 }}>
+              <Stars r={l.rating} />
+              {l.verified && <span style={{ fontSize: 10, color: "var(--g)", fontWeight: 700 }} title="ID verified">✓ Verified</span>}
+              {l.swaps > 0 && <span style={{ fontSize: 10, color: "var(--t3)" }}>· {l.swaps} swap{l.swaps === 1 ? "" : "s"}</span>}
+            </div>
           </div>
         </div>
         <button onClick={e => { e.stopPropagation(); onSave(l.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: user && l.saved?.includes(user.id) ? "var(--g)" : "var(--t3)", transition: "color .15s", flexShrink: 0 }}>♡</button>
