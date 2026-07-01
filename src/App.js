@@ -3220,7 +3220,11 @@ export default function App() {
     (async () => {
       // Shared marketplace: everyone's real listings, prepended to demo content.
       const real = await db.loadListings();
-      if (real && real.length) setListings([...real, ...LISTINGS]);
+      // Safety net: never surface obvious test/placeholder listings, even if one slipped
+      // into the live data (also worth deleting at the source in Supabase).
+      const isJunk = s => { s = String(s || "").trim().toLowerCase(); return !s || /^(test|testing|tester|sample|placeholder|asdf+|qwerty|1234?5?|x+|todo|n\/?a|\.|demo)$/.test(s); };
+      const clean = (real || []).filter(l => l && l.title && !isJunk(l.title));
+      if (clean.length) setListings([...clean, ...LISTINGS]);
     })();
     // Single source of truth for sessions: fires on load (existing session) and
     // right after the user clicks their email-verification link and returns.
