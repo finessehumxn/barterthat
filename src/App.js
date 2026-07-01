@@ -2439,8 +2439,34 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
   const done = trades.filter(t => t.status === "completed").length;
   const noShows = trades.filter(t => t.flaggedByPartner).length;
   const reliability = Math.max(40, 100 - noShows * 15);
+  // New-user activation checklist — drives the key first actions, disappears when complete.
+  const gsItems = [
+    { done: !!mine, label: "Post your first listing", cta: "Post", nav: "post" },
+    { done: (user.wants?.length || 0) > 0, label: "Add what you're looking for", cta: "Add", nav: "match" },
+    { done: !!user.idVerified, label: "Verify your ID", cta: "Verify", action: true },
+    { done: done > 0, label: "Complete your first swap", cta: "Find", nav: "match" },
+  ];
+  const gsDone = gsItems.filter(x => x.done).length;
   return (
     <div style={{ padding: "14px 14px 90px" }}>
+      {gsDone < gsItems.length && (
+        <div className="card" style={{ marginBottom: 10, background: "radial-gradient(circle at 100% 0%, rgba(155,114,221,0.16), var(--s2) 62%)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 15, fontWeight: 800 }}>🚀 Get started</div>
+            <span className="pill pp">{gsDone}/{gsItems.length} done</span>
+          </div>
+          <div style={{ height: 6, borderRadius: 100, background: "var(--s4)", overflow: "hidden", marginBottom: 10 }}>
+            <div style={{ width: `${(gsDone / gsItems.length) * 100}%`, height: "100%", background: "var(--g)", transition: "width .3s" }} />
+          </div>
+          {gsItems.map((it, n) => (
+            <div key={n} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: n ? "1px solid var(--bd)" : "none" }}>
+              <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: it.done ? "none" : "2px solid var(--bd2)", background: it.done ? "var(--g)" : "transparent", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>{it.done ? "✓" : ""}</span>
+              <span style={{ flex: 1, fontSize: 13, color: it.done ? "var(--t3)" : "var(--tx)", textDecoration: it.done ? "line-through" : "none" }}>{it.label}</span>
+              {!it.done && <button className="btn bp bsm" onClick={() => it.action ? (onVerify && onVerify()) : onNav(it.nav)}>{it.cta}</button>}
+            </div>
+          ))}
+        </div>
+      )}
       <div className="card" style={{ marginBottom: 10 }}>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <Av ini={user.ini} avc={user.avc} size={56} />
