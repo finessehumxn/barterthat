@@ -1440,6 +1440,13 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
     return true;
   });
 
+  // Personalized feed: float listings that match what the user is looking for.
+  const wants = user?.wants || [];
+  const ranked = wants.length ? [...filtered].sort((a, b) => (wants.includes(b.cat) ? 1 : 0) - (wants.includes(a.cat) ? 1 : 0)) : filtered;
+  // Trending near you: hottest categories by live-listing count.
+  const trending = Object.entries(listings.reduce((a, l) => { a[l.cat] = (a[l.cat] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const personalized = wants.length > 0 && cat === "All" && !q;
+
   return (
     <div style={{ paddingBottom: 90 }}>
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--bd)", padding: "10px 14px 8px" }}>
@@ -1528,10 +1535,31 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
         )}
       </div>
 
+      {view === "list" && cat === "All" && !q && trending.length > 0 && (
+        <div style={{ padding: "12px 14px 2px" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>🔥 Trending near you</div>
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+            {trending.map(([c, n], i) => {
+              const cd = CATS.find(x => x.label === c);
+              return (
+                <button key={c} onClick={() => setCat(c)} style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", gap: 3, minWidth: 130, textAlign: "left", padding: "11px 13px", borderRadius: "var(--r)", border: "1px solid var(--bd)", background: "linear-gradient(180deg,#21345C,#1A2A49)", boxShadow: "var(--sh1)", cursor: "pointer" }}>
+                  <span style={{ fontSize: 18 }}>{cd?.icon || "◆"}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--tx)", lineHeight: 1.2 }}>{c}</span>
+                  <span style={{ fontSize: 10.5, color: "var(--g)", fontWeight: 600 }}>{n} live · {["🔥 hot", "↑ rising", "● active"][i % 3]}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {view === "list" && <>
-        <div style={{ padding: "0 14px", fontSize: 11, color: "var(--t3)", marginBottom: 10 }}>{filtered.length} result{filtered.length !== 1 ? "s" : ""} found</div>
+        <div style={{ padding: "12px 14px 10px", fontSize: 11, color: "var(--t3)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>{filtered.length} result{filtered.length !== 1 ? "s" : ""} found</span>
+          {personalized && <span className="pill pp" style={{ fontSize: 10 }}>✨ picked for your wants</span>}
+        </div>
         <div style={{ padding: "0 14px", display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(275px,1fr))", gap: 10 }}>
-          {filtered.map((l, i) => <ListingCard key={l.id} l={l} user={user} onView={onView} onSave={onSave} onPropose={onPropose} i={i} />)}
+          {ranked.map((l, i) => <ListingCard key={l.id} l={l} user={user} onView={onView} onSave={onSave} onPropose={onPropose} i={i} />)}
         </div>
         {filtered.length === 0 && <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--t3)" }}><div style={{ fontSize: 28, marginBottom: 10 }}>◎</div><div>no listings match — try different filters</div></div>}
       </>}
