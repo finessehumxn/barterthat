@@ -695,7 +695,7 @@ function Splash({ onEnter, onHow }) {
           ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 8, maxWidth: 560, margin: "0 auto 28px" }}>
-          {[`${PITCH.traders} traders`, `${PITCH.gmvTotal} swapped`, `${PITCH.cities} cities`, "22 categories", "B2B + ventures", "Mutual aid"].map(t => (
+          {["⏳ Older than money", "🤝 Humanity's first economy", "$12B+ bartered / year", "🌍 Available worldwide", "39 categories", "New: safe & accountable"].map(t => (
             <div key={t} style={{ background: "transparent", border: "1px solid var(--bd)", borderRadius: "var(--rp)", padding: "7px 12px", fontSize: 12, color: "var(--t2)" }}>{t}</div>
           ))}
         </div>
