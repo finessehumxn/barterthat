@@ -2145,10 +2145,11 @@ function ProposeModal({ l, user, onClose, onSend }) {
 // ── TRADES ────────────────────────────────────────────────────────────────────
 // Live chat thread for one trade — realtime messages, translate, read-aloud,
 // links, photos/videos, voice notes, and the secured video call.
-function ChatThread({ t, user, onAccept, onComplete, onRate }) {
+function ChatThread({ t, user, onAccept, onComplete, onRate, onReport }) {
   const [msgs, setMsgs] = useState(t._real ? null : (t.msgs || []).map((m, i) => ({ id: "s" + i, from_uid: m.from === "me" ? user?.id : "them", data: { text: m.txt } })));
   const [rStars, setRStars] = useState(t.myRating || 0);
   const [rText, setRText] = useState("");
+  const [rIssue, setRIssue] = useState("");
   const [rDone, setRDone] = useState(!!t.myRating);
   const [text, setText] = useState("");
   const [lang, setLang] = useState(user?.lang || "English");
@@ -2272,6 +2273,13 @@ function ChatThread({ t, user, onAccept, onComplete, onRate }) {
           <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 3, lineHeight: 1.5 }}>Waiting for {String(t.wu || "them").split(" ")[0]} to confirm too — then tokens release and you both earn reputation. This two-sided confirm is what makes BarterThat ratings real.</div>
         </div>
       )}
+      {t.flagged
+        ? <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 11.5, color: "var(--am)" }}>⚠ You reported: {t.flagged} · on record</div>
+        : (t.status === "pending" || t.status === "escrow" || t.status === "confirming") && (
+          <div style={{ padding: "0 14px 9px", textAlign: "center" }}>
+            <button onClick={() => { if (window.confirm(`Report ${String(t.wu || "them").split(" ")[0]} for a no-show or broken deal?\n\nThis dents their Reliability and is permanently on record. Only report real problems.`)) onReport && onReport(t, "No-show / broken deal"); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t3)", fontSize: 11, textDecoration: "underline", padding: 4 }}>⚠ report a no-show or broken deal</button>
+          </div>
+        )}
       {t.status === "completed"
         ? ((rDone || t.myRating)
             ? <div style={{ padding: "12px 14px", borderTop: "1px solid var(--bd)", textAlign: "center", fontSize: 12, color: "var(--g)" }}>✓ swap completed · you rated {String(t.wu || "them").split(" ")[0]} <span style={{ color: "var(--am)" }}>{"★".repeat(rStars || t.myRating || 0)}</span></div>
@@ -2282,9 +2290,21 @@ function ChatThread({ t, user, onAccept, onComplete, onRate }) {
                     <button key={n} onClick={() => setRStars(n)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 27, lineHeight: 1, padding: 0, color: n <= rStars ? "var(--am)" : "var(--s4)", transition: "color .1s, transform .1s" }}>★</button>
                   ))}
                 </div>
+                {rStars > 0 && rStars <= 3 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: "var(--t2)", marginBottom: 6, fontWeight: 600 }}>What went wrong?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                      {["No-show", "Broke the deal", "Misrepresented", "Wasted my time", "Too slow"].map(iss => (
+                        <button key={iss} onClick={() => setRIssue(rIssue === iss ? "" : iss)} className={"chip" + (rIssue === iss ? " on" : "")} style={{ fontSize: 11 }}>{iss}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <input className="ifield" value={rText} onChange={e => setRText(e.target.value)} placeholder="Add a quick review (optional)…" style={{ marginBottom: 9 }} />
-                <button className="btn bp bsm" disabled={!rStars} style={{ width: "100%" }} onClick={() => { onRate && onRate(t, rStars, rText.trim()); setRDone(true); }}>submit rating</button>
-                <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 7, lineHeight: 1.5 }}>Your review builds {String(t.wu || "their").split(" ")[0]}'s reputation — real reviews from real completed trades are what make cashless trade safe.</div>
+                <button className="btn bp bsm" disabled={!rStars} style={{ width: "100%" }} onClick={() => { onRate && onRate(t, rStars, rText.trim(), rIssue); setRDone(true); }}>submit rating</button>
+                <div style={{ fontSize: 10.5, color: rStars > 0 && rStars <= 3 ? "var(--am)" : "var(--t3)", marginTop: 7, lineHeight: 1.5 }}>{rStars > 0 && rStars <= 3
+                  ? `A flag like this lowers ${String(t.wu || "their").split(" ")[0]}'s Reliability and can limit their future matches — we take wasting people's time seriously.`
+                  : `Your review builds ${String(t.wu || "their").split(" ")[0]}'s reputation — real reviews from real completed trades are what make cashless trade safe.`}</div>
               </div>)
         : <div style={{ padding: "9px 12px", borderTop: "1px solid var(--bd)", display: "flex", gap: 6, alignItems: "center" }}>
             <label style={{ cursor: "pointer", fontSize: 19, color: "var(--t2)" }} title="Photo or video">📎<input type="file" accept="image/*,video/*" style={{ display: "none" }} onChange={e => { attach(e.target.files[0]); e.target.value = ""; }} /></label>
@@ -2296,7 +2316,7 @@ function ChatThread({ t, user, onAccept, onComplete, onRate }) {
   );
 }
 
-function Trades({ trades, user, onAccept, onComplete, onRate }) {
+function Trades({ trades, user, onAccept, onComplete, onRate, onReport }) {
   const [active, setActive] = useState(null);
 
   if (active != null) {
@@ -2304,7 +2324,7 @@ function Trades({ trades, user, onAccept, onComplete, onRate }) {
     if (!t) { setActive(null); return null; }
     const back = () => setActive(null);
     const acceptFn = tr => onAccept(tr); acceptFn._back = back;
-    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} />;
+    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} onReport={onReport} />;
   }
 
   return (
@@ -2343,6 +2363,8 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
+  const noShows = trades.filter(t => t.flaggedByPartner).length;
+  const reliability = Math.max(40, 100 - noShows * 15);
   return (
     <div style={{ padding: "14px 14px 90px" }}>
       <div className="card" style={{ marginBottom: 10 }}>
@@ -2384,6 +2406,22 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
             <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 2 }}>{s.l}</div>
           </div>
         ))}
+      </div>
+
+      <div className="card" style={{ marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", textTransform: "uppercase", letterSpacing: ".06em" }}>reliability & accountability</div>
+          <span className={`pill ${reliability >= 85 ? "pg" : reliability >= 60 ? "pa" : "pr"}`}>{reliability}% reliable</span>
+        </div>
+        <div style={{ display: "flex", gap: 7, marginBottom: 10 }}>
+          {[{ n: done, l: "honored", c: "var(--g)" }, { n: noShows, l: "no-shows", c: noShows ? "var(--am)" : "var(--t2)" }, { n: reliability >= 85 ? "priority" : "standard", l: "match rank", c: reliability >= 85 ? "var(--g)" : "var(--t2)" }].map(s => (
+            <div key={s.l} style={{ flex: 1, background: "var(--s3)", borderRadius: "var(--rs)", padding: "10px 6px", textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--fd)", fontSize: 15, fontWeight: 800, color: s.c }}>{s.n}</div>
+              <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 2 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.55 }}>Show up and follow through → your Reliability climbs and you get <strong style={{ color: "var(--t2)" }}>priority in matches</strong>. No-shows, broken deals, and false promises lower it, shrink your reach, and repeat offenders get <strong style={{ color: "var(--t2)" }}>restricted</strong>. Everyone's time matters here.</div>
       </div>
 
       {user.wants?.length > 0 && <div className="card" style={{ marginBottom: 10 }}>
@@ -2919,11 +2957,22 @@ export default function App() {
 
   // Post-trade rating — closes the loop (propose → trade → complete → rate) and
   // feeds real, earned-from-completed-trades reputation. Persists on real trades.
-  const handleRate = async (t, stars, review) => {
-    const patch = { myRating: stars, myReview: review || "" };
+  const handleRate = async (t, stars, review, issue) => {
+    const patch = { myRating: stars, myReview: review || "", issue: issue || "" };
     if (t._real) await db.updateTrade(t.id, patch);
     setTrades(p => p.map(x => x.id === t.id ? { ...x, ...patch } : x));
-    flash(`★ Thanks — you rated ${String(t.wu || "them").split(" ")[0]} ${stars}/5`);
+    const nm = String(t.wu || "their").split(" ")[0];
+    if (stars <= 3 && (issue || stars <= 2)) flash(`⚠ Flag recorded${issue ? ` (${issue})` : ""} — ${nm}'s Reliability took a hit.`);
+    else flash(`★ Thanks — you rated ${nm} ${stars}/5`);
+  };
+
+  // Accountability: report a no-show / broken deal on a trade that never completed.
+  // Real consequences — flags the partner and dents their Reliability.
+  const handleTradeReport = async (t, reason) => {
+    const patch = { flagged: reason, unread: false };
+    if (t._real) await db.updateTrade(t.id, patch);
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, ...patch } : x));
+    flash(`⚠ Reported: "${reason}". ${String(t.wu || "They").split(" ")[0]}'s Reliability was dinged and this is on record.`);
   };
 
   const handleEarn = (amount, patch = {}) => {
@@ -3030,7 +3079,7 @@ export default function App() {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
       case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} />;
+      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} onReport={handleTradeReport} />;
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
