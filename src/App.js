@@ -182,7 +182,7 @@ function genGlobalSamples(startId) {
   const typeFor = { "Collectibles, Valuables & Big Trades": "goods", "Tech & Digital Services": "digital", "Travel, Stays & Experiences": "experience" };
   const out = []; let id = startId;
   CATS.forEach((c, ci) => {
-    const n = 3 + (ci % 2); // 3–4 per category
+    const n = 5 + (ci % 2); // 5–6 per category (~250 sample members globally)
     for (let k = 0; k < n; k++) {
       const fi = (ci * 7 + k * 13) % first.length, li = (ci * 3 + k * 5) % last.length;
       const sub = (c.subs && c.subs.length) ? c.subs[(ci * 2 + k * 9) % c.subs.length] : c.label;
