@@ -2774,42 +2774,45 @@ function CoachMarks({ onDone }) {
 // ── HOW-IT-WORKS VIDEO ───────────────────────────────────────────────────────
 // Plays the bundled 60-sec explainer. If REACT_APP_INTRO_VIDEO (a YouTube URL)
 // is set, it embeds that instead — so you can swap in a real promo video later.
-// First-run interactive demo — plays the explainer video first, then step-through
-// visuals reinforce the concept (esp. the multi-way loop), so nobody lands confused.
+// First-run instructions — teaches new users exactly how to use BarterThat, step by
+// step, so every user knows what to do. No video/voiceover dependency.
 function InteractiveDemo({ onDone }) {
   const [i, setI] = useState(0);
-  const yt = process.env.REACT_APP_INTRO_VIDEO;
-  const embed = yt ? yt.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/") : null;
-  const A = (ini, c, on) => <div className="av" style={{ width: 40, height: 40, background: c, color: "#fff", fontSize: 13, border: on ? "2px solid var(--g)" : "2px solid transparent" }}>{ini}</div>;
+  const A = (ini, c, on) => <div className="av" style={{ width: 38, height: 38, background: c, color: "#fff", fontSize: 12, border: on ? "2px solid var(--g)" : "2px solid transparent" }}>{ini}</div>;
   const steps = [
     {
-      icon: "▶", title: "Watch: how BarterThat works", video: true,
-      body: <>A quick tour of cashless swaps and multi-way loops. Prefer to click through? Just tap <b style={{ color: "var(--tx)" }}>next</b>.</>,
-    },
-    {
       icon: "⇄", title: "Trade without cash",
-      body: <>You've got skills, gear, or stuff — so does everyone here. BarterThat helps you <b style={{ color: "var(--tx)" }}>swap for what you actually want</b>. No money changes hands.</>,
+      body: <>You've got skills, gear, or stuff — so does everyone here. BarterThat swaps them so <b style={{ color: "var(--tx)" }}>nobody spends a dime</b>. Here's exactly how to use it — 4 quick steps.</>,
       visual: <div style={{ fontSize: 52, textAlign: "center" }}>⇄</div>,
     },
     {
-      icon: "🤝", title: "Sometimes it's a simple swap",
-      body: <>You want what they offer, they want what you offer. That's a <b style={{ color: "var(--tx)" }}>direct swap</b> — you both win, done.</>,
-      visual: <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--am)", fontSize: 22 }}>⇄</span>{A("AN", "#7A5FD0")}</div>,
+      icon: "①", title: "Post what you offer & want",
+      body: <>Tap <b style={{ color: "var(--g)" }}>✦ Post</b> in the bottom bar. Add what you can <b>give</b> (a service, item, or skill) and what you're <b>looking for</b>. That's your listing — it takes a minute.</>,
+      visual: <div style={{ display: "flex", flexDirection: "column", gap: 7, alignItems: "center" }}>
+        <span className="pill pg" style={{ fontSize: 12 }}>you give · Graphic design</span>
+        <span style={{ color: "var(--t3)", fontSize: 16 }}>＋</span>
+        <span className="pill pd" style={{ fontSize: 12 }}>you want · A website</span>
+      </div>,
     },
     {
-      icon: "🔄", title: "The magic: multi-way loops", accent: true,
-      body: <>Usually there's no perfect 1:1 match. So our AI finds a <b style={{ color: "var(--pu)" }}>chain</b>: you help someone, they help someone, that person helps <b style={{ color: "var(--g)" }}>you</b>. Everyone gives once — everyone gets what they wanted — <b style={{ color: "var(--tx)" }}>nobody pays</b>.</>,
-      visual: <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      icon: "②", title: "Find your swaps", accent: true,
+      body: <>Tap <b style={{ color: "var(--g)" }}>◆ Find Swaps</b>. Our AI shows your best trades — direct <b>and</b> multi-way <b style={{ color: "var(--pu)" }}>loops</b>, where everyone gives once and gets what they wanted. <b style={{ color: "var(--tx)" }}>Nobody pays.</b></>,
+      visual: <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--t2)" }}>give design →</span>{A("AN", "#7A5FD0")}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("AN", "#7A5FD0")}<span style={{ color: "var(--t2)" }}>gives photos →</span>{A("MR", "#C98A3A")}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("MR", "#C98A3A")}<span style={{ color: "var(--t2)" }}>gives you a website →</span>{A("YOU", "var(--g)", true)}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>{A("MR", "#C98A3A")}<span style={{ color: "var(--t2)" }}>→ your website →</span>{A("YOU", "var(--g)", true)}</div>
         <div style={{ fontSize: 12, color: "var(--g)", fontWeight: 700, marginTop: 2 }}>✓ everybody wins</div>
       </div>,
     },
     {
-      icon: "🔒", title: "Safe with strangers",
-      body: <>Real <b style={{ color: "var(--tx)" }}>ID verification</b>, two-sided confirmation, and honest ratings mean people show up and follow through. No-shows lose their standing.</>,
-      visual: <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}><span className="pill pg">✓ ID Verified</span><span className="pill pd">both confirm</span><span className="pill pa">★ ratings</span></div>,
+      icon: "③", title: "Propose & agree",
+      body: <>Tap <b style={{ color: "var(--g)" }}>Propose</b> on any swap you like → chat, agree on the details, and lock in a time right in the message thread.</>,
+      visual: <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>{A("YOU", "var(--g)", true)}<span style={{ color: "var(--am)", fontSize: 22 }}>💬</span>{A("AN", "#7A5FD0")}</div>,
+    },
+    {
+      icon: "④", title: "Do it, confirm & rate",
+      body: <>After the swap, <b style={{ color: "var(--tx)" }}>you both confirm</b> it's done — then rate each other. ID verification + no-show tracking keep everyone honest, so trading with strangers is safe.</>,
+      visual: <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}><span className="pill pg">✓ ID Verified</span><span className="pill pd">both confirm</span><span className="pill pa">★ rate</span></div>,
     },
   ];
   const last = i === steps.length - 1;
@@ -2818,16 +2821,10 @@ function InteractiveDemo({ onDone }) {
     <div style={{ position: "fixed", inset: 0, zIndex: 340, background: "rgba(8,12,20,0.94)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 18 }}>
       <div className="card fu" key={i} style={{ width: "100%", maxWidth: 400 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <span className={`pill ${s.accent ? "pp" : "pg"}`}>{s.icon} how it works · {i + 1}/{steps.length}</span>
+          <span className={`pill ${s.accent ? "pp" : "pg"}`}>{s.icon} how to use · {i + 1}/{steps.length}</span>
           <button onClick={onDone} style={{ background: "none", border: "none", color: "var(--t3)", fontSize: 12, cursor: "pointer" }}>skip</button>
         </div>
-        {s.video
-          ? <div style={{ borderRadius: "var(--rs)", overflow: "hidden", marginBottom: 16, background: "#000" }}>
-              {embed
-                ? <div style={{ position: "relative", paddingBottom: "56%", height: 0 }}><iframe title="How BarterThat works" src={embed} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} allow="autoplay; encrypted-media; fullscreen" allowFullScreen /></div>
-                : <video src="/explainer.mp4" controls autoPlay playsInline style={{ width: "100%", maxHeight: "42vh", display: "block", objectFit: "contain", background: "#000" }} />}
-            </div>
-          : <div style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "22px 16px", marginBottom: 16, minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.visual}</div>}
+        <div style={{ background: "var(--s3)", borderRadius: "var(--rs)", padding: "22px 16px", marginBottom: 16, minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center" }}>{s.visual}</div>
         <div style={{ fontFamily: "var(--fd)", fontSize: 19, fontWeight: 800, marginBottom: 8 }}>{s.title}</div>
         <div style={{ fontSize: 14, color: "var(--t2)", lineHeight: 1.6, marginBottom: 18 }}>{s.body}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
