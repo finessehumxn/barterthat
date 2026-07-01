@@ -898,7 +898,7 @@ function InvestorPitch({ onBack, onEnter }) {
   const [showForm, setShowForm] = useState(false);
   return (
     <div style={{ minHeight: "100vh" }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "calc(11px + env(safe-area-inset-top)) 14px 11px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Logo height={26} /><span style={{ fontSize: 11, color: "var(--pu)", fontWeight: 600 }}>· investor brief</span></div>
         <button className="btn bg bsm" onClick={onBack}>← back</button>
       </div>
@@ -1083,7 +1083,7 @@ function AdminLeads({ onBack }) {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "calc(11px + env(safe-area-inset-top)) 14px 11px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Logo height={26} /><span style={{ fontSize: 11, color: "var(--am)", fontWeight: 600 }}>· admin · leads</span></div>
         <button className="btn bg bsm" onClick={onBack}>← back</button>
       </div>
@@ -1250,12 +1250,8 @@ function Signup({ onDone, onLogin }) {
             </select>
             <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>B2B swaps match within 1 bracket — both parties have something to lose</div>
           </div>}
-          <div>
-            <label style={{ fontSize: 11, color: "var(--t2)", display: "block", marginBottom: 5 }}>invite code <span style={{ color: "var(--t3)" }}>— optional · unlocks ✦ Elite</span></label>
-            <input className="ifield" value={form.invite} onChange={e => setForm(f => ({ ...f, invite: e.target.value }))} placeholder="have an Elite invite? enter it" style={{ textTransform: "uppercase" }} />
-            {form.invite.trim() && (isInvite(form.invite)
-              ? <div style={{ fontSize: 11, color: "var(--g)", marginTop: 5 }}>✦ Valid — you'll join as an Elite member</div>
-              : <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 5 }}>Elite is invite-only. No code? You can still join — request one later.</div>)}
+          <div style={{ fontSize: 11, color: "var(--t3)", lineHeight: 1.6, background: "var(--s3)", borderRadius: "var(--rs)", padding: "10px 12px" }}>
+            By joining, you agree to our <a href="/terms.html" target="_blank" rel="noreferrer" style={{ color: "var(--g)", fontWeight: 600 }}>Terms</a> & <a href="/privacy.html" target="_blank" rel="noreferrer" style={{ color: "var(--g)", fontWeight: 600 }}>Privacy Policy</a>. BarterThat has <b style={{ color: "var(--t2)" }}>zero tolerance</b> for objectionable content or abusive behavior — you can report or block anyone, and we act within 24 hours.
           </div>
           <div style={{ background: "var(--amb)", border: "1px solid rgba(232,177,74,0.25)", borderRadius: "var(--rs)", padding: "10px 13px", fontSize: 12, color: "var(--am)" }}>⬡ Sign up today and we'll drop <strong>50 Barter Tokens</strong> in your account to get you trading.</div>
           <div style={{ textAlign: "center", marginTop: 4 }}><button type="button" onClick={onLogin} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--t2)", fontSize: 12, fontWeight: 600 }}>Already have an account? <span style={{ color: "var(--g)" }}>Log in</span></button></div>
@@ -1500,7 +1496,7 @@ function Browse({ listings, user, onView, onSave, onPropose }) {
 
   return (
     <div style={{ paddingBottom: 90 }}>
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--bd)", padding: "10px 14px 8px" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)", borderBottom: "1px solid var(--bd)", padding: "calc(10px + env(safe-area-inset-top)) 14px 8px" }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <input className="ifield" value={q} onChange={e => setQ(e.target.value)} placeholder={SPEECH_OK ? "search or tap 🎤 to say what you need..." : "search — service, item, skill, city..."} style={{ flex: 1 }} />
           <VoiceButton onInterim={setQ} onText={setQ} />
@@ -2691,7 +2687,7 @@ function EliteVerify({ onDone, onClose }) {
   );
 }
 
-function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify, onTaxReport, onEliteVerify }) {
+function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, onRestore, onVerify, onTaxReport, onEliteVerify, onDeleteAccount }) {
   if (!user) return <div style={{ padding: 24, textAlign: "center", color: "var(--t3)" }}>sign in to view your profile</div>;
   const mine = listings.find(l => l.uid === user.id);
   const done = trades.filter(t => t.status === "completed").length;
@@ -2846,6 +2842,8 @@ function Profile({ user, listings, trades, onNav, onLogout, onReset, onPromote, 
         <button className="btn bg" style={{ flex: 1, color: "var(--rd)" }} onClick={onReset}>reset demo data</button>
       </div>
       <div style={{ fontSize: 10, color: "var(--t3)", textAlign: "center", marginTop: 8 }}>reset clears your account, listings & trades back to the original sample data</div>
+      <button className="btn bg" style={{ width: "100%", marginTop: 12, color: "var(--rd)", borderColor: "rgba(239,93,71,0.35)" }} onClick={onDeleteAccount}>🗑 Delete my account</button>
+      <div style={{ fontSize: 10, color: "var(--t3)", textAlign: "center", marginTop: 6, lineHeight: 1.5 }}>Permanently deletes your profile, listings, and data. This cannot be undone.</div>
     </div>
   );
 }
@@ -3131,7 +3129,7 @@ function VideoModal({ onDone }) {
 function Nav({ scr, onNav }) {
   const items = [{ id: "browse", ic: "◫", l: "explore" }, { id: "match", ic: "◆", l: "find swaps" }, { id: "post", ic: "✦", l: "post", prime: true }, { id: "community", ic: "⚇", l: "community" }, { id: "profile", ic: "◎", l: "profile" }];
   return (
-    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(8,8,8,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", padding: "8px 0 18px", zIndex: 50 }}>
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(8,8,8,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid var(--bd)", display: "flex", alignItems: "center", padding: "8px 0 calc(18px + env(safe-area-inset-bottom))", zIndex: 50 }}>
       {items.map(item => (
         <button key={item.id} onClick={() => onNav(item.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", color: scr === item.id ? "var(--g)" : "var(--t3)", transition: "color .15s" }}>
           {item.prime ? (
@@ -3516,6 +3514,16 @@ export default function App() {
 
   const handleLogout = () => { db.signOut(); bootedRef.current = false; storage.remove("bt_user"); setUser(null); setScreen("splash"); setNav("browse"); };
 
+  // Account deletion (Apple 5.1.1(v) / Google Play). In-app, two-step, permanent.
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Delete your account?\n\nThis permanently removes your profile, listings, and data. It cannot be undone.")) return;
+    if (!window.confirm("Are you absolutely sure? This is permanent and immediate.")) return;
+    await db.deleteAccount(user?.id);
+    storage.remove("bt_user"); storage.remove("bt_trades"); storage.remove("bt_listings");
+    bootedRef.current = false; setUser(null); setScreen("splash"); setNav("browse");
+    flash("Your account and data have been permanently deleted.");
+  };
+
   const handleReset = () => {
     ["bt_user", "bt_listings", "bt_trades", "bt_coach"].forEach(k => storage.remove(k));
     setUser(null);
@@ -3546,7 +3554,7 @@ export default function App() {
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
-      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} onTaxReport={handleTaxReport} onEliteVerify={() => setEliteV(true)} />;
+      case "profile": return <Profile user={user} listings={listings} trades={trades} onNav={n => { setViewing(null); if (n === "pitch") setScreen("pitch"); else setNav(n); }} onLogout={handleLogout} onReset={handleReset} onPromote={() => startCheckout("promote")} onRestore={handleRestore} onVerify={handleVerify} onTaxReport={handleTaxReport} onEliteVerify={() => setEliteV(true)} onDeleteAccount={handleDeleteAccount} />;
       default: return null;
     }
   };
@@ -3556,7 +3564,7 @@ export default function App() {
   return (
     <>
       <G />
-      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(8,8,8,0.96)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--bd)", padding: "calc(11px + env(safe-area-inset-top)) 14px 11px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => { setViewing(null); setNav("browse"); }}><Logo height={28} /></div>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {user && <span className="credit" title="Barter Tokens — free store credit you can use to even out any trade. Tap to see your balance & earn more." style={{ cursor: "pointer" }} onClick={() => { setViewing(null); setNav("earn"); }}>⬡ {user.credits ?? 0}</span>}

@@ -29,6 +29,22 @@ export async function signIn(email, password) {
 }
 export async function signOut() { try { await supabase.auth.signOut(); } catch (e) {} }
 
+// Account deletion (Apple 5.1.1(v) / Google Play requirement). Removes the user's
+// listings + profile, asks the backend to delete the auth user, then signs out.
+// (Optional: add a Postgres SECURITY DEFINER function `delete_user` that calls
+// auth.admin deleteUser, so the auth record is fully removed too.)
+export async function deleteAccount(uid) {
+  try {
+    if (uid) {
+      await supabase.from("listings").delete().eq("uid", uid);
+      await supabase.from("profiles").delete().eq("id", uid);
+      try { await supabase.rpc("delete_user"); } catch (e) {}
+    }
+  } catch (e) {}
+  try { await supabase.auth.signOut(); } catch (e) {}
+  return true;
+}
+
 export async function currentUserId() {
   try { const { data } = await supabase.auth.getUser(); return data?.user?.id || null; } catch (e) { return null; }
 }
