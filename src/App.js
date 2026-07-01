@@ -2177,7 +2177,146 @@ function ProposeModal({ l, user, onClose, onSend }) {
 // ── TRADES ────────────────────────────────────────────────────────────────────
 // Live chat thread for one trade — realtime messages, translate, read-aloud,
 // links, photos/videos, voice notes, and the secured video call.
-function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedule }) {
+// ── SAFE SWAP PROTECTION ──────────────────────────────────────────────────────
+// The safety spine of a real-world swap. #1 goal: keep both people safe & fair.
+//  1) mutually confirm where/when to meet (+ reschedule / running-late / cancel)
+//  2) arrival check-in — a no-show owes the other person tokens (time + gas)
+//  3) BEFORE proof (photo+video) both approve → only then does work start
+//  4) work timer with pause (break / multi-day) + live check-in every hour
+//  5) AFTER proof captured in real time, both approve → covered for disputes
+// Everything must stay in-app; off-app deals can't be protected.
+function SafeSwap({ t, user, onUpdate }) {
+  const s = t.safe || {};
+  const [loc, setLoc] = useState("");
+  const [, tickState] = useState(0);
+  const nm = String(t.wu || "them").split(" ")[0];
+  const nowMs = () => Date.now();
+  const patch = (p) => onUpdate(t, { ...(t.safe || {}), ...p });
+  const both = (o) => !!(o && o.me && o.them);
+  // Demo: the other side responds shortly after, so the flow can be walked through.
+  const simThem = (p, ms = 1500) => setTimeout(() => onUpdate(t, { ...(t.safe || {}), ...p }), ms);
+
+  useEffect(() => {
+    if (s.workStart && !s.paused && !s.workDone) { const id = setInterval(() => tickState(x => x + 1), 1000); return () => clearInterval(id); }
+  }, [s.workStart, s.paused, s.workDone]);
+  const elapsedMs = (s.elapsed || 0) + (s.workStart && !s.paused && !s.workDone ? (nowMs() - s.workStart) : 0);
+  const fmt = (ms) => { const sec = Math.floor(ms / 1000), h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), ss = sec % 60; return (h ? h + ":" : "") + String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0"); };
+  const media = (w) => (s[w + "Media"] || []);
+  const addMedia = (w) => { const m = [...media(w), { ts: nowMs(), by: user?.id }]; patch({ [w + "Media"]: m, [w + "Ok"]: { me: true, them: (s[w + "Ok"] || {}).them || false } }); simThem({ [w + "Media"]: m, [w + "Ok"]: { me: true, them: true } }); };
+
+  const box = { border: "1px solid var(--bd)", background: "var(--s3)", borderRadius: "var(--rs)", padding: "12px 13px", marginTop: 8 };
+  const H = ({ n, on, done, children }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: on ? 8 : 0 }}>
+      <span style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", background: done ? "var(--g)" : on ? "var(--pu)" : "var(--s4)", color: done || on ? "#fff" : "var(--t3)" }}>{done ? "✓" : n}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 700, color: on || done ? "var(--tx)" : "var(--t3)" }}>{children}</span>
+    </div>
+  );
+
+  const locOk = s.locConfirmed, arrivedOk = s.meAt && s.themAt, noShow = s.noShow;
+  const beforeOk = both(s.beforeOk), workDone = s.workDone, afterOk = both(s.afterOk);
+  const isService = t.type !== "goods";
+
+  return (
+    <div style={{ padding: "10px 14px", borderTop: "1px solid var(--bd)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+        <span className="pill pp" style={{ fontSize: 11 }}>🛡️ Safe Swap</span>
+        <span style={{ fontSize: 10.5, color: "var(--t3)" }}>your protection · keep it all in-app</span>
+      </div>
+
+      {!locOk && !noShow && (
+        <div style={box}>
+          <H n="1" on>Confirm where you'll meet</H>
+          {s.loc
+            ? (s.locBy === "me"
+                ? <div style={{ fontSize: 12, color: "var(--t2)" }}>📍 <b style={{ color: "var(--tx)" }}>{s.loc}</b> proposed — waiting for {nm} to confirm…</div>
+                : <div><div style={{ fontSize: 12, color: "var(--t2)", marginBottom: 8 }}>{nm} proposed 📍 <b style={{ color: "var(--tx)" }}>{s.loc}</b></div><button className="btn bp bsm" style={{ width: "100%" }} onClick={() => patch({ locConfirmed: true })}>✓ Confirm this spot</button></div>)
+            : <div><input className="ifield" placeholder="Public place, address, or 'their door'…" value={loc} onChange={e => setLoc(e.target.value)} style={{ marginBottom: 8 }} /><button className="btn bp bsm" style={{ width: "100%" }} disabled={!loc.trim()} onClick={() => { patch({ loc: loc.trim(), locBy: "me" }); simThem({ loc: loc.trim(), locBy: "me", locConfirmed: true }); }}>Propose meeting spot</button></div>}
+          <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 8, lineHeight: 1.5 }}>Meet in a public place when you can. After confirming you can reschedule or cancel — but a late cancel or no-show may owe the other person tokens for their time & travel.</div>
+        </div>
+      )}
+
+      {locOk && !arrivedOk && !noShow && (
+        <div style={box}>
+          <H n="1" done>Meeting set: {s.loc}</H>
+          <H n="2" on>Head there & check in</H>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+            {!s.meAt
+              ? <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => { patch({ meAt: nowMs() }); simThem({ meAt: nowMs(), themAt: nowMs() }); }}>📍 I've arrived</button>
+              : <span className="pill pg" style={{ fontSize: 12 }}>✓ You're here{s.themAt ? " · both arrived" : ` · waiting for ${nm}`}</span>}
+            <button className="btn bg bsm" onClick={() => alert(`${nm} has been notified you're running late.`)}>running late</button>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <button className="btn bg bsm" style={{ fontSize: 11 }} onClick={() => { setLoc(""); patch({ loc: "", locBy: "", locConfirmed: false, meAt: false, themAt: false }); }}>reschedule</button>
+            <button className="btn bg bsm" style={{ fontSize: 11 }} onClick={() => { if (window.confirm("Cancel this meetup? A late cancel may owe the other person tokens.")) patch({ canceled: true, loc: "", locConfirmed: false }); }}>cancel</button>
+            {s.meAt && !s.themAt && <button className="btn bpu bsm" style={{ fontSize: 11 }} onClick={() => { if (window.confirm(`Report ${nm} as a no-show? They'll owe you tokens for your time & travel.`)) patch({ noShow: "them" }); }}>⚠ they didn't show</button>}
+          </div>
+        </div>
+      )}
+
+      {noShow && (
+        <div style={{ ...box, borderColor: "rgba(239,93,71,0.4)" }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--g)", marginBottom: 3 }}>⚠ No-show reported</div>
+          <div style={{ fontSize: 11.5, color: "var(--t2)", lineHeight: 1.5 }}>{nm} was marked a no-show — their Reliability took a hit and they owe you <b style={{ color: "var(--am)" }}>compensation tokens</b> for your wasted time & travel, credited to you. On record.</div>
+        </div>
+      )}
+
+      {arrivedOk && isService && !beforeOk && !noShow && (
+        <div style={box}>
+          <H n="2" done>Both arrived</H>
+          <H n="3" on>Before proof — both approve to start</H>
+          <div style={{ fontSize: 11.5, color: "var(--t2)", marginBottom: 8, lineHeight: 1.5 }}>Capture the starting condition (photo + short video). The work timer unlocks only when <b style={{ color: "var(--tx)" }}>both of you approve</b> — a fair, shared baseline.</div>
+          <label className="btn bg bsm" style={{ width: "100%", cursor: "pointer", justifyContent: "center", marginBottom: 6 }}>📸 Capture before photo / video<input type="file" accept="image/*,video/*" capture="environment" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) addMedia("before"); e.target.value = ""; }} /></label>
+          {media("before").length > 0 && <div style={{ fontSize: 11, color: "var(--t2)" }}>✓ {media("before").length} captured · {both(s.beforeOk) ? "✓ both approved" : `waiting for ${nm}`}</div>}
+        </div>
+      )}
+
+      {arrivedOk && isService && beforeOk && !workDone && !noShow && (
+        <div style={box}>
+          <H n="3" done>Before proof approved</H>
+          <H n="4" on>Work in progress</H>
+          <div style={{ textAlign: "center", margin: "6px 0 10px" }}>
+            <div style={{ fontFamily: "var(--fd)", fontSize: 30, fontWeight: 800, color: s.paused ? "var(--am)" : "var(--g)" }}>{fmt(elapsedMs)}</div>
+            <div style={{ fontSize: 10.5, color: "var(--t3)" }}>{s.paused ? "paused" : "tracking — protects you both"}</div>
+          </div>
+          {!s.workStart
+            ? <button className="btn bp bsm" style={{ width: "100%" }} onClick={() => patch({ workStart: nowMs() })}>▶ Start work timer</button>
+            : <div style={{ display: "flex", gap: 6 }}>
+                {s.paused
+                  ? <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => patch({ workStart: nowMs(), paused: false })}>▶ Resume</button>
+                  : <button className="btn bg bsm" style={{ flex: 1 }} onClick={() => patch({ elapsed: elapsedMs, paused: true, workStart: null })}>⏸ Pause</button>}
+                <button className="btn bpu bsm" style={{ flex: 1 }} onClick={() => patch({ elapsed: elapsedMs, workStart: null, workDone: true })}>🏁 Complete</button>
+              </div>}
+          {elapsedMs > 3600000 && (s.checkins || []).length * 3600000 < elapsedMs && (
+            <div style={{ marginTop: 8, background: "var(--amb)", borderRadius: "var(--rs)", padding: "8px 10px" }}>
+              <div style={{ fontSize: 11.5, color: "var(--am)", fontWeight: 700, marginBottom: 5 }}>⏱ Hourly check-in required</div>
+              <label className="btn bg bsm" style={{ width: "100%", cursor: "pointer", justifyContent: "center", fontSize: 11 }}>📹 Add live progress footage<input type="file" accept="image/*,video/*" capture="environment" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) patch({ checkins: [...(s.checkins || []), { ts: nowMs() }] }); e.target.value = ""; }} /></label>
+            </div>
+          )}
+          <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 8, lineHeight: 1.5 }}>Pause for a break or lunch. Multi-day job? Pause and resume tomorrow — every session is timestamped.</div>
+        </div>
+      )}
+
+      {((isService && workDone) || (!isService && arrivedOk)) && !afterOk && !noShow && (
+        <div style={box}>
+          <H n="4" done>{isService ? `Work done · ${fmt(elapsedMs)}` : "Both arrived"}</H>
+          <H n="5" on>After proof — capture now, both approve</H>
+          <div style={{ fontSize: 11.5, color: "var(--t2)", marginBottom: 8, lineHeight: 1.5 }}>Capture the finished result <b style={{ color: "var(--tx)" }}>right now</b> (live photo + video). It's timestamped so it can't be an old or borrowed screenshot. Both approve to close the swap.</div>
+          <label className="btn bp bsm" style={{ width: "100%", cursor: "pointer", justifyContent: "center", marginBottom: 6 }}>📸 Capture after photo / video now<input type="file" accept="image/*,video/*" capture="environment" style={{ display: "none" }} onChange={e => { if (e.target.files[0]) addMedia("after"); e.target.value = ""; }} /></label>
+          {media("after").length > 0 && <div style={{ fontSize: 11, color: "var(--t2)" }}>✓ {media("after").length} captured · {both(s.afterOk) ? "✓ both approved" : `waiting for ${nm}`}</div>}
+        </div>
+      )}
+
+      {afterOk && (
+        <div style={{ ...box, borderColor: "rgba(46,196,140,0.4)" }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--g)" }}>✓ Safe Swap complete — proof on file</div>
+          <div style={{ fontSize: 11, color: "var(--t2)", marginTop: 3 }}>Before & after proof approved by both. You're covered if anything's disputed — confirm & rate below.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedule, onSafeUpdate }) {
   const [msgs, setMsgs] = useState(t._real ? null : (t.msgs || []).map((m, i) => ({ id: "s" + i, from_uid: m.from === "me" ? user?.id : "them", data: { text: m.txt } })));
   const [rStars, setRStars] = useState(t.myRating || 0);
   const [rText, setRText] = useState("");
@@ -2317,6 +2456,10 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedul
         </div>
       )}
 
+      {t.status !== "completed" && t.status !== "disputed" && (
+        <div style={{ padding: "8px 14px", background: "rgba(232,177,74,0.07)", borderTop: "1px solid var(--bd)", fontSize: 10.5, color: "var(--am)", lineHeight: 1.5 }}>🛡️ Keep chat, plans & payment inside BarterThat. Move off-app and we can't protect you, resolve disputes, reimburse, or count it toward ratings & tokens.</div>
+      )}
+      {(t.status === "escrow" || t.status === "confirming") && <SafeSwap t={t} user={user} onUpdate={onSafeUpdate} />}
       {t.status === "pending" && t._incoming && (
         <div style={{ padding: "9px 14px", borderTop: "1px solid var(--bd)", display: "flex", gap: 7 }}>
           <button className="btn bp bsm" style={{ flex: 1 }} onClick={() => onAccept(t)}>accept swap ✓</button>
@@ -2394,7 +2537,7 @@ function ChatThread({ t, user, onAccept, onComplete, onRate, onReport, onSchedul
   );
 }
 
-function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedule }) {
+function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedule, onSafeUpdate }) {
   const [active, setActive] = useState(null);
 
   if (active != null) {
@@ -2402,7 +2545,7 @@ function Trades({ trades, user, onAccept, onComplete, onRate, onReport, onSchedu
     if (!t) { setActive(null); return null; }
     const back = () => setActive(null);
     const acceptFn = tr => onAccept(tr); acceptFn._back = back;
-    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} onReport={onReport} onSchedule={onSchedule} />;
+    return <ChatThread t={t} user={user} onAccept={acceptFn} onComplete={onComplete} onRate={onRate} onReport={onReport} onSchedule={onSchedule} onSafeUpdate={onSafeUpdate} />;
   }
 
   return (
@@ -3155,6 +3298,19 @@ export default function App() {
     flash(`📄 Exported ${done.length} trade${done.length > 1 ? "s" : ""} · $${total} barter income`);
   };
 
+  // Safe Swap: persist the protection state (location, arrival, proof, timer). A newly
+  // reported no-show compensates the wronged user with tokens for their time & travel.
+  const handleSafeUpdate = async (t, safe) => {
+    const prev = t.safe || {};
+    if (t._real) await db.updateTrade(t.id, { safe });
+    setTrades(p => p.map(x => x.id === t.id ? { ...x, safe } : x));
+    if (safe.noShow && !prev.noShow) {
+      const comp = Math.max(15, Math.round((t.topup || 60) / 4));
+      if (user) persist({ ...user, credits: (user.credits || 0) + comp });
+      flash(`⚠ No-show logged — +${comp} compensation tokens credited for your time & travel.`);
+    }
+  };
+
   // Scheduling: lock in a time for the swap. A locked time you miss becomes a no-show.
   const handleSchedule = async (t, when) => {
     const patch = { scheduledAt: when };
@@ -3278,7 +3434,7 @@ export default function App() {
       case "browse": return <Browse listings={listings} user={user} onView={setViewing} onSave={handleSave} onPropose={handlePropose} />;
       case "match": return <Match listings={listings} user={user} onView={setViewing} onPropose={handlePropose} />;
       case "community": return <Community listings={listings} user={user} onView={setViewing} onPropose={handlePropose} onNav={n => { setViewing(null); setNav(n); }} />;
-      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} onReport={handleTradeReport} onSchedule={handleSchedule} />;
+      case "trades": return <Trades trades={trades} user={user} onAccept={handleAccept} onComplete={handleComplete} onRate={handleRate} onReport={handleTradeReport} onSchedule={handleSchedule} onSafeUpdate={handleSafeUpdate} />;
       case "post": return <Post user={user} onPost={handlePost} />;
       case "saved": return <Saved listings={listings} user={user} onView={setViewing} />;
       case "earn": return <EarnTokens user={user} listings={listings} onEarn={handleEarn} onNav={n => { setViewing(null); setNav(n); }} onSubscribe={() => startCheckout("plus")} />;
