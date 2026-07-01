@@ -61,3 +61,56 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  # ── GOOGLE PLAY (Android) ─────────────────────────────────────────────────────
+  # SETUP (one time) — full steps in the chat:
+  #   1. Google Play Developer account; create the app (com.barterthat.app).
+  #   2. Generate an upload keystore; add these to a Codemagic env group named
+  #      "google_play" (mark all Secure):
+  #        CM_KEYSTORE  (base64 of the .jks),  CM_KEYSTORE_PASSWORD,
+  #        CM_KEY_ALIAS,  CM_KEY_PASSWORD,
+  #        GCLOUD_SERVICE_ACCOUNT_CREDENTIALS (the Play service-account JSON).
+  #   3. Run "android-release" -> builds a signed .aab and uploads to the internal track.
+  android-release:
+    name: BarterThat Android Release
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      groups:
+        - google_play
+      vars:
+        PACKAGE_NAME: "com.barterthat.app"
+      node: 22
+    scripts:
+      - name: Install npm dependencies
+        script: npm install --no-audit --no-fund
+      - name: Build web app
+        script: CI=false npm run build
+      - name: Capacitor sync (Android)
+        script: npx cap sync android
+      - name: Set up Android signing (from Codemagic secrets)
+        script: |
+          echo "$CM_KEYSTORE" | base64 --decode > "$CM_BUILD_DIR/upload-keystore.jks"
+          cat > android/keystore.properties <<EOF
+          storeFile=$CM_BUILD_DIR/upload-keystore.jks
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+      - name: Bump versionCode (monotonic)
+        script: |
+          cd android
+          sed -i "s/versionCode .*/versionCode $(date +%s)/" app/build.gradle
+      - name: Build signed AAB
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/mapping.txt
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
